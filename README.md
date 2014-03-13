@@ -1,12 +1,8 @@
-[![Build Status](https://travis-ci.org/glue-viz/echo.png)](https://travis-ci.or\
-g/glue-viz/echo?branch=master) [![Coverage Status](https://coveralls.io/repos/g\
-lue-viz/echo/badge.png)](https://coveralls.io/r/glue-viz/echo)
-
 echo: Callback Properties in Python
 ===================================
 
-Echo is a small library for making attaching callback functions
-to property value changes. For example:
+Echo is a small library for attaching callback functions
+to property state changes. For example:
 
 ```
 class Switch(object):
@@ -38,3 +34,7 @@ class Switch(object):
 ```
 
 Full documentation is avilable [here](https://echo.rtfd.org/)
+
+[![Build Status](https://travis-ci.org/glue-viz/echo.png)](https://travis-ci.or\
+g/glue-viz/echo?branch=master) [![Coverage Status](https://coveralls.io/repos/g\
+lue-viz/echo/badge.png)](https://coveralls.io/r/glue-viz/echo)

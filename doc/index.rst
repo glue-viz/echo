@@ -9,21 +9,18 @@ properties that you can attach callback functions to::
     from echo import CallbackProperty, add_callback
 
     class Switch(object):
-        on = CallbackProperty(False)
+        state = CallbackProperty('off')
 
     def alert(value):
-        if value:
-            print "The switch is on"
-        else:
-            print "The switch is off"
+        print "The switch is %s" % value
 
     s = Switch()
-    add_callback(s, 'on', alert)
+    add_callback(s, 'state', alert)
 
-    b.on  # False
-    b.on = True  # print 'The switch is on'
-    assert b.on
-    b.on = False # print 'The switch is off'
+    b.state  # 'off'
+    b.state = 'on'  # print 'The switch is on'
+    assert b.state == 'on'
+    b.state = 'off' # print 'The switch is off'
 
 The main features of Echo are:
 
@@ -42,7 +39,7 @@ You can install echo from PyPI via pip or easy_install::
 Quick Start
 -----------
 There are syntaxes for creating callback properties. The first
-is to declare them at the class level::
+option is to create a CallbackProperty instance at the class level::
 
     class Foo(object):
         bar = CallbackProperty(5)  # initial value is None
