@@ -14,7 +14,7 @@ def report_change(state):
 s = Switch()
 add_callback(s, 'state', report_change)
 
-s.state = 'on'  # prints 'the swtich is on'
+s.state = 'on'  # prints 'the switch is on'
 ```
 
 CalllbackProperties can also be built using decorators
