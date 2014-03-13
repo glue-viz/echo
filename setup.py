@@ -9,6 +9,7 @@ AUTHOR_EMAIL = "cbeaumont@cfa.harvard.edu"
 MAINTAINER = AUTHOR
 MAINTAINER_EMAIL = AUTHOR_EMAIL
 LICENSE = "MIT"
+URL = "https://github.com/glue-viz/echo"
 
 with open('README.md') as infile:
     LONG_DESCRIPTION=infile.read()
@@ -21,6 +22,7 @@ setup(name=NAME,
       author_email=AUTHOR_EMAIL,
       maintainer=MAINTAINER,
       maintainer_email=MAINTAINER_EMAIL,
+      url=URL,
       license=LICENSE,
       py_modules=['echo'],
       classifiers=[
