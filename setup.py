@@ -11,8 +11,12 @@ MAINTAINER_EMAIL = AUTHOR_EMAIL
 LICENSE = "MIT"
 URL = "https://github.com/glue-viz/echo"
 
-with open('README.md') as infile:
-    LONG_DESCRIPTION=infile.read()
+try:
+    import pypandoc
+    LONG_DESCRIPTION = pypandoc.convert('README.md', 'rst')
+except (IOError, ImportError):
+    with open('README.md') as infile:
+        LONG_DESCRIPTION=infile.read()
 
 setup(name=NAME,
       description=DESCRIPTION,
@@ -26,7 +30,7 @@ setup(name=NAME,
       license=LICENSE,
       py_modules=['echo'],
       classifiers=[
-          'Development STatus :: 4 - Beta',
+          'Development Status :: 4 - Beta',
           'Environment :: Console',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: MIT License',
