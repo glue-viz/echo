@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/glue-viz/echo.png)](https://travis-ci.or\
+g/glue-viz/echo?branch=master) [![Coverage Status](https://coveralls.io/repos/g\
+lue-viz/echo/badge.png)](https://coveralls.io/r/glue-viz/echo)
+
 echo
 ====
 
