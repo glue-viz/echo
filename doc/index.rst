@@ -72,7 +72,7 @@ To attach a function to a callback property, use the :func:`add_callback` functi
 
 .. note:: The callback property is referred to by name, as a string.
 
-You can also write callbacks that receive both the old and new value of the property, by setting `echo_old=True` in :func:`add_callback`::
+You can also write callbacks that receive both the old and new value of the property, by setting ``echo_old=True`` in :func:`add_callback`::
 
     def callback(old, new):
         print 'changed from %s to %s' % (old, new)
@@ -98,11 +98,10 @@ temporarily disable callbacks from being called::
 Inside the context manager, none of the callbacks for ``f.bar`` will be called
 -- this is useful in situations where you might be making temporary,
 incremental changes to a callback property. The difference between
-:func:`delay_callback` and :func:`ignore_callback` is that,
-at the end of the context block, callback functions will be invoked a
-single time if the final state of the property has changed. Callbacks are
-not invoked at the end of
-:func:`ignore_callback`.
+:func:`delay_callback` and :func:`ignore_callback` is whether any
+callbacks will be invoked at the end of the context block. Callbacks are
+never triggered inside :func:`ignore_callback`, where as they are triggered
+a single time inside :func:`delay_callback` if the final state has changed.
 
 
 API
