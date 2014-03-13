@@ -38,11 +38,11 @@ You can install echo from PyPI via pip or easy_install::
 
 Quick Start
 -----------
-There are syntaxes for creating callback properties. The first
+There are two syntaxes for creating callback properties. The first
 option is to create a CallbackProperty instance at the class level::
 
     class Foo(object):
-        bar = CallbackProperty(5)  # initial value is None
+        bar = CallbackProperty(5)  # initial value is 5
         baz = CallbackProperty()   # intial value is None
 
 These behave like normal instance attributes. Altnernatively,
