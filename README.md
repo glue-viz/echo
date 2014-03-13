@@ -2,10 +2,8 @@
 g/glue-viz/echo?branch=master) [![Coverage Status](https://coveralls.io/repos/g\
 lue-viz/echo/badge.png)](https://coveralls.io/r/glue-viz/echo)
 
-echo
-====
-
-Callback Properties in Python
+echo: Callback Properties in Python
+===================================
 
 Echo is a small library for making attaching callback functions
 to property value changes. For example:
@@ -36,7 +34,7 @@ class Switch(object):
       def state(self, value):
           if value not in ['on', 'off']:
               raise ValueError("invalid setting")
-          self._value = state
+          self._state = value
 ```
 
 Full documentation is avilable [here](https://echo.rtfd.org/)

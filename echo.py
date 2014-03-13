@@ -132,6 +132,18 @@ def add_callback(instance, prop, callback, echo_old=False):
 
     :param callback: Callback function
     :type callback: Callable
+
+    Example::
+
+        class Foo:
+            bar = CallbackProperty(0)
+
+        def callback(value):
+            pass
+
+        f = Foo()
+        add_callback(f, 'bar', callback)
+
     """
     p = getattr(type(instance), prop)
     if not isinstance(p, CallbackProperty):
@@ -170,6 +182,12 @@ def callback_property(getter):
             @x.setter
             def x(self, value):
                 self._x = value
+
+    In simple cases with no getter or setter logic, it's
+    easier to create a CallbackProperty directly::
+
+        class Foo(object);
+            x = CallbackProperty(initial_value)
     """
     return CallbackProperty(getter=getter)
 
