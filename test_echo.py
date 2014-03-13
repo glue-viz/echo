@@ -26,13 +26,13 @@ class DecoratorStub(object):
         self._val = value
 
 
-def test_transparent_access():
+def test_attribute_like_access():
     stub = Stub()
     assert stub.prop1 is None
     assert stub.prop2 == 5
 
 
-def test_transparent_set():
+def test_attribute_like_set():
     stub = Stub()
     stub.prop1 = 10
     assert stub.prop1 == 10
@@ -43,7 +43,7 @@ def test_class_access():
     assert isinstance(type(stub).prop1, CallbackProperty)
 
 
-def test_add_callback():
+def test_callback_fire_on_change():
     stub = Stub()
     test = MagicMock()
     add_callback(stub, 'prop1', test)
@@ -78,23 +78,40 @@ def test_remove_callback():
     assert test.call_count == 0
 
 
-def test_add_callback_attribute_error():
+def test_add_callback_attribute_error_on_bad_name():
     stub = Stub()
     with pytest.raises(AttributeError):
         add_callback(stub, 'bad_property', None)
 
 
-def test_add_callback_type_error():
+def test_add_callback_type_error_if_not_calllback():
     stub = Stub()
     with pytest.raises(TypeError) as exc:
         add_callback(stub, 'prop3', None)
     assert exc.value.args[0] == "prop3 is not a CallbackProperty"
 
 
-def test_remove_callback_attribute_error():
+def test_remove_callback_attribute_error_on_bad_name():
     stub = Stub()
     with pytest.raises(AttributeError):
         remove_callback(stub, 'bad_property', None)
+
+
+def test_remove_callback_wrong_function():
+    stub = Stub()
+    test = MagicMock()
+    test2 = MagicMock()
+    add_callback(stub, 'prop1', test)
+    with pytest.raises(ValueError) as exc:
+        remove_callback(stub, 'prop1', test2)
+    assert exc.value.args[0].startswith('Callback function not found')
+
+
+def test_remove_non_callback_property():
+    stub = Stub()
+    with pytest.raises(TypeError) as exc:
+        remove_callback(stub, 'prop3', None)
+    assert exc.value.args[0] == 'prop3 is not a CallbackProperty'
 
 
 def test_remove_callback_not_found():
@@ -153,10 +170,11 @@ def test_callback_with_two_arguments():
     on_change.assert_called_once_with(5, 10)
 
 
-def test_delay_type_error():
+@pytest.mark.parametrize('context_func', (delay_callback, ignore_callback))
+def test_context_on_non_callback(context_func):
     stub = Stub()
     with pytest.raises(TypeError) as exc:
-        with delay_callback(stub, 'prop3'):
+        with context_func(stub, 'prop3'):
             pass
     assert exc.value.args[0] == "prop3 is not a CallbackProperty"
 
@@ -170,6 +188,7 @@ def test_delay_multiple():
     add_callback(stub, 'prop2', test2)
 
     with delay_callback(stub, 'prop1', 'prop2'):
+        stub.prop1 = 50
         stub.prop1 = 100
         stub.prop2 = 200
         assert test.call_count == 0

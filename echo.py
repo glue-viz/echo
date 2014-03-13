@@ -39,13 +39,13 @@ class CallbackProperty(object):
         self._getter = getter
         self._setter = setter
 
-    def _default_getter(self, instance, type=None):
+    def _default_getter(self, instance, owner=None):
         return self._values.get(instance, self._default)
 
     def _default_setter(self, instance, value):
         self._values.__setitem__(instance, value)
 
-    def __get__(self, instance, type=None):
+    def __get__(self, instance, owner=None):
         if instance is None:
             return self
         return self._getter(instance)
@@ -115,7 +115,7 @@ class CallbackProperty(object):
                 continue
             try:
                 cb[instance].remove(func)
-                return
+                break
             except ValueError:
                 pass
         else:
