@@ -1,0 +1,15 @@
+language: python
+python:
+  - 2.6
+  - 2.7
+  - 3.2
+  - 3.3
+
+install:
+  - pip install --use-mirrors pytest mock coveralls
+
+script:
+  - py.test --cov echo test_echo.py
+
+after_success:
+  - coveralls

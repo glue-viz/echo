@@ -2,7 +2,7 @@ from setuptools import setup
 
 VERSION = '0.1'
 
-DESCRIPTION = "A little library for using callback properties"
+DESCRIPTION = "Callback Properties in Python"
 NAME = "echo"
 AUTHOR = "Chris Beaumont"
 AUTHOR_EMAIL = "cbeaumont@cfa.harvard.edu"
@@ -10,8 +10,12 @@ MAINTAINER = AUTHOR
 MAINTAINER_EMAIL = AUTHOR_EMAIL
 LICENSE = "MIT"
 
+with open('README.md') as infile:
+    LONG_DESCRIPTION=infile.read()
+
 setup(name=NAME,
       description=DESCRIPTION,
+      long_description=LONG_DESCRIPTION,
       version=VERSION,
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
