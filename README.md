@@ -33,7 +33,7 @@ class Switch(object):
           self._state = value
 ```
 
-Full documentation is avilable [here](https://echo.rtfd.org/)
+Full documentation is avilable [here](http://echo.readthedocs.org/)
 
 [![Build Status](https://travis-ci.org/glue-viz/echo.png)]
 (https://travis-ci.org/glue-viz/echo?branch=master)
