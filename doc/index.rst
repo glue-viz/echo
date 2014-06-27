@@ -54,7 +54,8 @@ logic::
         def bar(self):
             ... getter function ....
 
-        @bar.setter(self, value):
+        @bar.setter
+        def bar(self, value):
            ... setter function ...
 
 .. note:: This syntax uses the lower case :func:`callback_property` decorator instead of the CamelCalse :class:`CallbackProperty` class.
