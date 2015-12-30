@@ -151,6 +151,21 @@ def test_delay_callback():
     test.assert_called_once_with(300)
 
 
+def test_delay_callback_nested():
+    test = MagicMock()
+    stub = Stub()
+
+    add_callback(stub, 'prop1', test)
+    with delay_callback(stub, 'prop1'):
+        with delay_callback(stub, 'prop1'):
+            stub.prop1 = 100
+            stub.prop1 = 200
+            stub.prop1 = 300
+            assert test.call_count == 0
+        assert test.call_count == 0
+    test.assert_called_once_with(300)
+
+
 def test_delay_callback_not_called_if_unmodified():
     test = MagicMock()
     stub = Stub()
