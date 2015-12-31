@@ -35,7 +35,7 @@ class Switch(object):
 
 Full documentation is avilable [here](http://echo.readthedocs.org/)
 
-[![Build Status](https://travis-ci.org/glue-viz/echo.png)]
+[![Build Status](https://travis-ci.org/glue-viz/echo.svg)]
 (https://travis-ci.org/glue-viz/echo?branch=master)
-[![Coverage Status](https://coveralls.io/repos/glue-viz/echo/badge.png)]
+[![Coverage Status](https://coveralls.io/repos/glue-viz/echo/badge.svg)]
 (https://coveralls.io/r/glue-viz/echo)
