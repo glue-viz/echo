@@ -229,7 +229,6 @@ class delay_callback(object):
         for prop in self.props:
 
             p = getattr(type(self.instance), prop)
-
             if not isinstance(p, CallbackProperty):
                 raise TypeError("%s is not a CallbackProperty" % prop)
 
@@ -246,7 +245,8 @@ class delay_callback(object):
         for prop in self.props:
 
             p = getattr(type(self.instance), prop)
-            assert isinstance(p, CallbackProperty)
+            if not isinstance(p, CallbackProperty):
+                raise TypeError("%s is not a CallbackProperty" % prop)
 
             if self.delay_count[self.instance, prop] > 1:
                 self.delay_count[self.instance, prop] -= 1
