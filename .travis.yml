@@ -1,4 +1,7 @@
 language: python
+
+sudo: false
+
 python:
   - 2.6
   - 2.7
@@ -7,7 +10,7 @@ python:
   - 3.5
 
 install:
-  - pip install --use-mirrors pytest mock coveralls pytest-cov
+  - pip install pytest mock coveralls pytest-cov
 
 script:
   - py.test --cov echo test_echo.py
