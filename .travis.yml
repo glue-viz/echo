@@ -11,8 +11,8 @@ python:
 
 env:
   global:
-    - CONDA_DEPENDENCIES="pyqt pytest mock coveralls pytest-cov"
-    - PIP_DEPENDENCIES="qtpy"
+    - CONDA_DEPENDENCIES="pyqt pytest mock pytest-cov"
+    - PIP_DEPENDENCIES="qtpy coveralls"
 
 matrix:
   include:
@@ -20,8 +20,8 @@ matrix:
     # Make sure that things run fine without any Qt framework
     - python: 3.5
       env:
-        - CONDA_DEPENDENCIES="pytest mock coveralls pytest-cov"
-        - PIP_DEPENDENCIES=""
+        - CONDA_DEPENDENCIES="pytest mock pytest-cov"
+        - PIP_DEPENDENCIES="coveralls"
 
 install:
   - git clone git://github.com/astropy/ci-helpers.git
