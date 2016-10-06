@@ -9,8 +9,14 @@ python:
   - 3.4
   - 3.5
 
+env:
+  global:
+    - CONDA_DEPENDENCIES="pyqt pytest mock coveralls pytest-cov"
+    - PIP_DEPENDENCIES="qtpy"
+
 install:
-  - pip install pytest mock coveralls pytest-cov
+  - git clone git://github.com/astropy/ci-helpers.git
+  - source ci-helpers/travis/setup_conda.sh
 
 script:
   - py.test --cov echo echo
