@@ -11,6 +11,7 @@ env:
   global:
     - CONDA_DEPENDENCIES="pyqt pytest mock pytest-cov"
     - PIP_DEPENDENCIES="qtpy coveralls"
+    - SETUP_XVFB=True
 
 matrix:
   include:
