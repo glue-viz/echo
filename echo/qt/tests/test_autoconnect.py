@@ -11,14 +11,11 @@ else:
 
 
 from echo import CallbackProperty
-from echo.qt.tests.helpers import get_qapp
 from echo.qt.autoconnect import autoconnect_callbacks_to_qt
 
 
 @pytest.mark.skipif("not QTPY_INSTALLED")
 def test_autoconnect_callbacks_to_qt():
-
-    app = get_qapp()
 
     class Data(object):
         pass
@@ -118,7 +115,3 @@ def test_autoconnect_callbacks_to_qt():
 
     person.log = False
     assert not widget.bool_log.isChecked()
-
-
-
-    person.dataset = data1

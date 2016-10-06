@@ -5,19 +5,14 @@ import pytest
 try:
     from qtpy import QtWidgets
 except ImportError:
-    QTPY_INSTALLED=False
+    QTPY_INSTALLED = False
 else:
-    QTPY_INSTALLED=True
+    QTPY_INSTALLED = True
 
 from echo import CallbackProperty
 from echo.qt.connect import (connect_checkable_button, connect_text,
                              connect_combo_data, connect_combo_text,
                              connect_float_text, connect_value)
-from echo.qt.tests.helpers import get_qapp
-
-
-def setup_module(module):
-    get_qapp()
 
 
 @pytest.mark.skipif("not QTPY_INSTALLED")
