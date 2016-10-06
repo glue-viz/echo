@@ -10,7 +10,7 @@ else:
     QTPY_INSTALLED=True
 
 from echo import CallbackProperty
-from echo.qt.connect import (connect_bool_button, connect_text,
+from echo.qt.connect import (connect_checkable_button, connect_text,
                              connect_combo_data, connect_combo_text,
                              connect_float_text, connect_value)
 from echo.qt.tests.helpers import get_qapp
@@ -21,7 +21,7 @@ def setup_module(module):
 
 
 @pytest.mark.skipif("not QTPY_INSTALLED")
-def test_connect_bool_button():
+def test_connect_checkable_button():
 
     class Test(object):
         a = CallbackProperty()
@@ -29,7 +29,7 @@ def test_connect_bool_button():
     t = Test()
 
     box = QtWidgets.QCheckBox()
-    connect_bool_button(t, 'a', box)
+    connect_checkable_button(t, 'a', box)
 
     box.setChecked(True)
     assert t.a

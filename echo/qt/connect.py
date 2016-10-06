@@ -8,11 +8,11 @@ from functools import partial
 
 from echo import add_callback
 
-__all__ = ['connect_bool_button', 'connect_text', 'connect_combo_data',
+__all__ = ['connect_checkable_button', 'connect_text', 'connect_combo_data',
            'connect_combo_text', 'connect_float_text', 'connect_value']
 
 
-def connect_bool_button(instance, prop, widget):
+def connect_checkable_button(instance, prop, widget):
     """
     Connect a boolean callback property with a Qt button widget.
 
