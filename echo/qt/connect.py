@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 import math
 from functools import partial
 
-from glue.external.echo import add_callback
+from echo import add_callback
 
 __all__ = ['connect_bool_button', 'connect_text', 'connect_combo_data',
            'connect_combo_text', 'connect_float_text', 'connect_value']
@@ -142,7 +142,7 @@ def connect_combo_text(instance, prop, widget):
     update_widget(getattr(instance, prop))
 
 
-def connect_float_text(instance, prop, widget, fmt):
+def connect_float_text(instance, prop, widget, fmt="{:g}"):
     """
     Connect a numerical callback property with a Qt widget containing text.
 
@@ -160,7 +160,7 @@ def connect_float_text(instance, prop, widget, fmt):
         function that takes a number and returns a string.
     """
 
-    if isinstance(fmt, callable):
+    if callable(fmt):
         format_func = fmt
     else:
         def format_func(x):

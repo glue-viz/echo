@@ -1,5 +1,7 @@
-from mock import MagicMock
+from __future__ import absolute_import, division, print_function
+
 import pytest
+from mock import MagicMock
 
 from echo import (CallbackProperty, add_callback,
                   remove_callback, delay_callback,
@@ -258,3 +260,12 @@ def test_decorator_form():
     test.assert_called_once_with(10)
 
     assert stub.prop == 10
+
+
+def test_docstring():
+
+    class Simple(object):
+        a = CallbackProperty(docstring='important')
+
+    s = Simple()
+    assert type(s).a.__doc__ == 'important'

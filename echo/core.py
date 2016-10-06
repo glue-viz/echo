@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 from contextlib import contextmanager
 from weakref import WeakKeyDictionary
 
@@ -56,7 +58,7 @@ class CallbackProperty(object):
     def __set__(self, instance, value):
         try:
             old = self.__get__(instance)
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             old = None
         self._setter(instance, value)
         new = self.__get__(instance)
