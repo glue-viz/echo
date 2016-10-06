@@ -9,9 +9,10 @@ except ImportError:
 else:
     QTPY_INSTALLED = True
 
+if QTPY_INSTALLED:
+    from echo.qt.autoconnect import autoconnect_callbacks_to_qt
 
 from echo import CallbackProperty
-from echo.qt.autoconnect import autoconnect_callbacks_to_qt
 
 
 @pytest.mark.skipif("not QTPY_INSTALLED")
