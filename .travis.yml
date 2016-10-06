@@ -13,7 +13,7 @@ install:
   - pip install pytest mock coveralls pytest-cov
 
 script:
-  - py.test --cov echo test_echo.py
+  - py.test --cov echo echo
 
 after_success:
   - coveralls
