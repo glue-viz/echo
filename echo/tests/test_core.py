@@ -5,7 +5,8 @@ from mock import MagicMock
 
 from echo import (CallbackProperty, add_callback,
                   remove_callback, delay_callback,
-                  ignore_callback, callback_property)
+                  ignore_callback, callback_property,
+                  HasCallbackProperties)
 
 
 class Stub(object):
@@ -269,3 +270,113 @@ def test_docstring():
 
     s = Simple()
     assert type(s).a.__doc__ == 'important'
+
+
+class State(HasCallbackProperties):
+
+    a = CallbackProperty()
+    b = CallbackProperty()
+    c = CallbackProperty()
+    d = 1
+
+def test_class_add_remove_callback():
+
+    state = State()
+
+    class mockclass(object):
+        def __init__(self):
+            self.call_count = 0
+        def __call__(self, *args, **kwargs):
+            if self.call_count == 1:
+                raise ValueError("what why are we here")
+            self.call_count += 1
+
+    test1 = mockclass()
+    state.add_callback('a', test1)
+
+    # Deliberaty adding to c twice to make sure it works fine with two callbacks
+    test2 = MagicMock()
+    state.add_callback('c', test2)
+
+    test3 = MagicMock()
+    state.add_callback('c', test3)
+
+    test4 = MagicMock()
+    state.add_callback('*', test4)
+
+    state.a = 1
+    assert test1.call_count == 1
+    assert test2.call_count == 0
+    assert test3.call_count == 0
+    assert test4.call_count == 1
+
+    state.b = 1
+    assert test1.call_count == 1
+    assert test2.call_count == 0
+    assert test3.call_count == 0
+    assert test4.call_count == 2
+
+    state.c = 1
+    assert test1.call_count == 1
+    assert test2.call_count == 1
+    assert test3.call_count == 1
+    assert test4.call_count == 3
+
+    state.remove_callback('a', test1)
+
+    state.a = 2
+    state.b = 2
+    state.c = 2
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 2
+    assert test4.call_count == 6
+
+    state.remove_callback('c', test2)
+
+    state.a = 3
+    state.b = 3
+    state.c = 3
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 3
+    assert test4.call_count == 9
+
+    state.remove_callback('c', test3)
+
+    state.a = 4
+    state.b = 4
+    state.c = 4
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 3
+    assert test4.call_count == 12
+
+    state.remove_callback('a', test4)
+
+    state.a = 5
+    state.b = 5
+    state.c = 5
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 3
+    assert test4.call_count == 14
+
+    state.remove_callback('*', test4)
+
+    state.a = 6
+    state.b = 6
+    state.c = 6
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 3
+    assert test4.call_count == 14
+
+
+def test_class_is_callback_property():
+
+    state = State()
+    assert state.is_callback_property('a')
+    assert state.is_callback_property('b')
+    assert state.is_callback_property('c')
+    assert not state.is_callback_property('d')
