@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 import pytest
 from mock import MagicMock
 
@@ -52,7 +53,10 @@ def test_list_change_callback():
     assert test1.call_count == 1
     assert stub.prop1 == [3]
 
-    stub.prop1.clear()
+    if sys.version_info[0] == 2:
+        stub.prop1[:] = []
+    else:
+        stub.prop1.clear()
     assert test1.call_count == 2
     assert stub.prop1 == []
 
@@ -80,6 +84,14 @@ def test_list_change_callback():
     stub.prop1.sort()
     assert test1.call_count == 8
     assert stub.prop1 == [-1, 2]
+
+    stub.prop1[0] = 3
+    assert test1.call_count == 9
+    assert stub.prop1 == [3, 2]
+
+    stub.prop1[:] = []
+    assert test1.call_count == 10
+    assert stub.prop1 == []
 
 
 class Simple(HasCallbackProperties):

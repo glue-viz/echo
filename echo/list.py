@@ -55,6 +55,28 @@ class CallbackList(list):
         super(CallbackList, self).sort(key=key, reverse=reverse)
         self.callback()
 
+    def __setitem__(self, slc, new_value):
+
+        old_values = self[slc]
+        if not isinstance(slc, slice):
+            old_values = [old_values]
+
+        for old_value in old_values:
+            if isinstance(old_value, HasCallbackProperties):
+                old_value.remove_callback('*', self.callback)
+
+        if isinstance(slc, slice):
+            new_values = new_value
+        else:
+            new_values = [new_value]
+
+        for value in new_values:
+            if isinstance(value, HasCallbackProperties):
+                value.add_callback('*', self.callback)
+
+        super(CallbackList, self).__setitem__(slc, new_value)
+        self.callback()
+
     if sys.version_info[0] >= 3:
 
         def clear(self):
