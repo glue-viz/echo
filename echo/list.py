@@ -86,6 +86,26 @@ class CallbackList(list):
             super(CallbackList, self).clear()
             self.callback()
 
+    else:
+
+        def __setslice__(self, start, end, new_values):
+
+            slc = slice(start, end)
+
+            old_values = self[slc]
+
+            for old_value in old_values:
+                if isinstance(old_value, HasCallbackProperties):
+                    old_value.remove_callback('*', self.callback)
+
+            for value in new_values:
+                if isinstance(value, HasCallbackProperties):
+                    value.add_callback('*', self.callback)
+
+            super(CallbackList, self).__setslice__(start, end, new_values)
+            self.callback()
+
+
 
 class ListCallbackProperty(CallbackProperty):
     """
