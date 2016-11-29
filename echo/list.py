@@ -12,30 +12,30 @@ class CallbackList(list):
     """
 
     def __init__(self, callback, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(CallbackList, self).__init__(*args, **kwargs)
         self.callback = callback
 
     def append(self, value):
-        super().append(value)
+        super(CallbackList, self).append(value)
         if isinstance(value, HasCallbackProperties):
             value.add_callback('*', self.callback)
         self.callback()
 
     def extend(self, iterable):
-        super().extend(iterable)
+        super(CallbackList, self).extend(iterable)
         for item in iterable:
             if isinstance(item, HasCallbackProperties):
                 item.add_callback('*', self.callback)
         self.callback()
 
     def insert(self, index, value):
-        super().insert(index, value)
+        super(CallbackList, self).insert(index, value)
         if isinstance(value, HasCallbackProperties):
             value.add_callback('*', self.callback)
         self.callback()
 
     def pop(self, index=-1):
-        result = super().pop(index)
+        result = super(CallbackList, self).pop(index)
         if isinstance(result, HasCallbackProperties):
             result.remove_callback('*', self.callback)
         self.callback()
@@ -44,15 +44,15 @@ class CallbackList(list):
     def remove(self, value):
         if isinstance(value, HasCallbackProperties):
             value.remove_callback('*', self.callback)
-        super().remove(value)
+        super(CallbackList, self).remove(value)
         self.callback()
 
     def reverse(self):
-        super().reverse()
+        super(CallbackList, self).reverse()
         self.callback()
 
     def sort(self, key=None, reverse=False):
-        super().sort(key=key, reverse=reverse)
+        super(CallbackList, self).sort(key=key, reverse=reverse)
         self.callback()
 
     if sys.version_info[0] >= 3:
@@ -61,7 +61,7 @@ class CallbackList(list):
             for item in self:
                 if isinstance(item, HasCallbackProperties):
                     item.remove_callback('*', self.callback)
-            super().clear()
+            super(CallbackList, self).clear()
             self.callback()
 
 
@@ -73,7 +73,7 @@ class ListCallbackProperty(CallbackProperty):
     def _default_getter(self, instance, owner=None):
         if instance not in self._values:
             self._default_setter(instance, [])
-        return super()._default_getter(instance, owner)
+        return super(ListCallbackProperty, self)._default_getter(instance, owner)
 
     def _default_setter(self, instance, value):
 
@@ -84,4 +84,4 @@ class ListCallbackProperty(CallbackProperty):
             self.notify(instance, value, value)
 
         wrapped_list = CallbackList(callback, value)
-        super()._default_setter(instance, wrapped_list)
+        super(ListCallbackProperty, self)._default_setter(instance, wrapped_list)

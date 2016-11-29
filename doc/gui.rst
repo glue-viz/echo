@@ -18,7 +18,7 @@ Let's assume we have a simple Qt window with a single checkbox::
     class MySimpleWindow(QtWidgets.QMainWindow):
 
         def __init__(self, parent=None):
-            super().__init__(parent=parent)
+            super(MySimpleWindow, self).__init__(parent=parent)
             self.checkbox = QtWidgets.QCheckBox()
 
 We can now add a callback property to the class and connect the property to the
@@ -33,7 +33,7 @@ Qt checkbox::
         active = CallbackProperty(True)
 
         def __init__(self, parent=None):
-            super().__init__(parent=parent)
+            super(MySimpleWindow, self).__init__(parent=parent)
             self.checkbox = QtWidgets.QCheckBox()
             self.setCentralWidget(self.checkbox)
             connect_checkable_button(self, 'active', self.checkbox)
