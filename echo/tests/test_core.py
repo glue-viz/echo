@@ -389,3 +389,18 @@ def test_class_is_callback_property():
     assert state.is_callback_property('b')
     assert state.is_callback_property('c')
     assert not state.is_callback_property('d')
+
+
+def test_class_add_remove_callback_invalid():
+
+    def callback():
+        pass
+
+    state = State()
+    state.z = 'banana'
+    with pytest.raises(TypeError) as exc:
+        state.add_callback('banana', callback)
+    assert exc.value.args[0] == "attribute 'banana' is not a callback property"
+    with pytest.raises(TypeError) as exc:
+        state.remove_callback('banana', callback)
+    assert exc.value.args[0] == "attribute 'banana' is not a callback property"

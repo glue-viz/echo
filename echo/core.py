@@ -205,7 +205,7 @@ class HasCallbackProperties(object):
                 prop = getattr(type(self), name)
                 prop.add_callback(self, callback, echo_old=echo_old)
             else:
-                raise TypeError('attribute {0} is not a callback property'.format(name))
+                raise TypeError("attribute '{0}' is not a callback property".format(name))
 
     def remove_callback(self, name, callback):
         """
@@ -234,7 +234,7 @@ class HasCallbackProperties(object):
                 except ValueError:
                     pass  # Be forgiving if callback was already removed before
             else:
-                raise TypeError('attribute {0} is not a callback property'.format(name))
+                raise TypeError("attribute '{0}' is not a callback property".format(name))
 
     def is_callback_property(self, name):
         return isinstance(getattr(type(self), name, None), CallbackProperty)

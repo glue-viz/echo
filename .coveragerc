@@ -1,0 +1,2 @@
+[report]
+omit = echo/tests/*, echo/conftest.py, echo/qt/tests/*
