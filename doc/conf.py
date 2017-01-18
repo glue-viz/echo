@@ -32,6 +32,9 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
+    'sphinx.ext.intersphinx',
+    'sphinx_automodapi.automodapi',
+    'sphinx_automodapi.smart_resolver',
     'numpydoc',
 ]
 
@@ -264,3 +267,14 @@ texinfo_documents = [
 
 # Enable nitpicky mode - which ensures that all references in the docs
 nitpicky = True
+
+# This is needed to avoid sphinx-automodapi warnings
+numpydoc_class_members_toctree = False
+
+# Intersphinx options
+intersphinx_cache_limit = 10  # days to keep the cached inventories
+intersphinx_mapping = {
+    'sphinx': ('http://www.sphinx-doc.org/en/latest/', None),
+    'python': ('https://docs.python.org/2.7', None),
+}
+
