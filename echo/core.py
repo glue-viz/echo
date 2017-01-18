@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 from contextlib import contextmanager
 from weakref import WeakKeyDictionary
-
+from functools import partial
 
 __all__ = ['CallbackProperty', 'callback_property',
            'add_callback', 'remove_callback',
@@ -192,8 +192,8 @@ class HasCallbackProperties(object):
             (the default), will be invoked as ``func(new)``
         """
         if name == '*':
-            for prop in self.iter_callback_properties():
-                prop.add_callback(self, callback, echo_old=echo_old)
+            for name, prop in self.iter_callback_properties():
+                prop.add_callback(self, partial(callback, name), echo_old=echo_old)
         else:
             if self.is_callback_property(name):
                 prop = getattr(type(self), name)
@@ -215,7 +215,7 @@ class HasCallbackProperties(object):
             The callback function to remove
         """
         if name == '*':
-            for prop in self.iter_callback_properties():
+            for name, prop in self.iter_callback_properties():
                 try:
                     prop.remove_callback(self, callback)
                 except ValueError:
@@ -234,7 +234,7 @@ class HasCallbackProperties(object):
     def iter_callback_properties(self):
         for name in dir(self):
             if self.is_callback_property(name):
-                yield getattr(type(self), name)
+                yield name, getattr(type(self), name)
 
 
 def add_callback(instance, prop, callback, echo_old=False):
