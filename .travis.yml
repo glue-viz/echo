@@ -10,9 +10,10 @@ python:
 
 env:
   global:
-    - CONDA_DEPENDENCIES="pyqt pytest mock pytest-cov"
-    - PIP_DEPENDENCIES="qtpy coveralls"
     - SETUP_XVFB=True
+  matrix:
+    - TEST="test" CONDA_DEPENDENCIES="pyqt pytest mock pytest-cov" PIP_DEPENDENCIES="qtpy coveralls"
+    - TEST="docs" CONDA_DEPENDENCIES="pyqt sphinx" PIP_DEPENDENCIES="qtpy numpydoc sphinx-automodapi"
 
 matrix:
   include:
@@ -28,7 +29,8 @@ install:
   - source ci-helpers/travis/setup_conda.sh
 
 script:
-  - py.test --cov echo echo
+  - if [[ $TEST == test ]]; then pytest echo --cov echo; fi
+  - if [[ $TEST == docs ]]; then python setup.py install; cd doc; make html; fi
 
 after_success:
-  - coveralls
+  - if [[ $TEST == test ]]; then coveralls; fi

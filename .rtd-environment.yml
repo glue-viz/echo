@@ -1,0 +1,8 @@
+name: echo
+
+dependencies:
+  - qtpy
+  - pyqt
+  - pip:
+    - sphinx-automodapi
+    - numpydoc
