@@ -167,13 +167,11 @@ class HasCallbackProperties(object):
     A class that adds functionality to subclasses that use callback properties.
     """
 
-    @property
-    def _global_callbacks(self):
-        if not hasattr(self, '_global_callbacks_'):
-            self._global_callbacks_ = []
-        return self._global_callbacks_
+    def __init__(self):
+        self._global_callbacks = []
+        self._callback_partials = {}
 
-    def add_callback(self, name, callback, echo_old=False):
+    def add_callback(self, name, callback, echo_old=False, echo_name=False):
         """
         Add a callback that gets triggered when a callback property of the
         class changes.
@@ -190,12 +188,20 @@ class HasCallbackProperties(object):
             If `True`, the callback function will be invoked with both the old
             and new values of the property, as ``func(old, new)``. If `False`
             (the default), will be invoked as ``func(new)``
+        echo_name : bool, optional
+            If `True`, the callback function will be invoked with the name of
+            the attribute as the first argument, followed by the value of the
+            property.
         """
+
         if name == '*':
-            for name, prop in self.iter_callback_properties():
-                prop.add_callback(self, partial(callback, name), echo_old=echo_old)
+            for prop_name, prop in self.iter_callback_properties():
+                self.add_callback(prop_name, callback, echo_old=echo_old, echo_name=echo_name)
         else:
             if self.is_callback_property(name):
+                if echo_name:
+                    self._callback_partials[(name, callback)] = partial(callback, name)
+                    callback = self._callback_partials[(name, callback)]
                 prop = getattr(type(self), name)
                 prop.add_callback(self, callback, echo_old=echo_old)
             else:
@@ -214,17 +220,19 @@ class HasCallbackProperties(object):
         func : func
             The callback function to remove
         """
+
         if name == '*':
-            for name, prop in self.iter_callback_properties():
+            for prop_name, prop in self.iter_callback_properties():
+                self.remove_callback(prop_name, callback)
+        else:
+            if self.is_callback_property(name):
+                if (name, callback) in self._callback_partials:
+                    callback = self._callback_partials.pop((name, callback))
+                prop = getattr(type(self), name)
                 try:
                     prop.remove_callback(self, callback)
                 except ValueError:
-                    # Be forgiving if callback was already removed before
-                    pass
-        else:
-            if self.is_callback_property(name):
-                prop = getattr(type(self), name)
-                prop.remove_callback(self, callback)
+                    pass  # Be forgiving if callback was already removed before
             else:
                 raise TypeError('attribute {0} is not a callback property'.format(name))
 
