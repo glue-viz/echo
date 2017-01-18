@@ -2,11 +2,12 @@ from __future__ import absolute_import, division, print_function
 
 from contextlib import contextmanager
 from weakref import WeakKeyDictionary
-
+from functools import partial
 
 __all__ = ['CallbackProperty', 'callback_property',
            'add_callback', 'remove_callback',
-           'delay_callback', 'ignore_callback']
+           'delay_callback', 'ignore_callback',
+           'HasCallbackProperties']
 
 
 class CallbackProperty(object):
@@ -159,6 +160,89 @@ class CallbackProperty(object):
                 pass
         else:
             raise ValueError("Callback function not found: %s" % func)
+
+
+class HasCallbackProperties(object):
+    """
+    A class that adds functionality to subclasses that use callback properties.
+    """
+
+    def __init__(self):
+        self._global_callbacks = []
+        self._callback_partials = {}
+
+    def add_callback(self, name, callback, echo_old=False, echo_name=False):
+        """
+        Add a callback that gets triggered when a callback property of the
+        class changes.
+
+        Parameters
+        ----------
+        name : str
+            The instance to add the callback to. This can be ``'*'`` to
+            indicate that the callback should be added to all callback
+            properties.
+        func : func
+            The callback function to add
+        echo_old : bool, optional
+            If `True`, the callback function will be invoked with both the old
+            and new values of the property, as ``func(old, new)``. If `False`
+            (the default), will be invoked as ``func(new)``
+        echo_name : bool, optional
+            If `True`, the callback function will be invoked with the name of
+            the attribute as the first argument, followed by the value of the
+            property.
+        """
+
+        if name == '*':
+            for prop_name, prop in self.iter_callback_properties():
+                self.add_callback(prop_name, callback, echo_old=echo_old, echo_name=echo_name)
+        else:
+            if self.is_callback_property(name):
+                if echo_name:
+                    self._callback_partials[(name, callback)] = partial(callback, name)
+                    callback = self._callback_partials[(name, callback)]
+                prop = getattr(type(self), name)
+                prop.add_callback(self, callback, echo_old=echo_old)
+            else:
+                raise TypeError("attribute '{0}' is not a callback property".format(name))
+
+    def remove_callback(self, name, callback):
+        """
+        Remove a previously-added callback
+
+        Parameters
+        ----------
+        name : str
+            The instance to remove the callback from. This can be ``'*'`` to
+            indicate that the callback should be removed from all callback
+            properties.
+        func : func
+            The callback function to remove
+        """
+
+        if name == '*':
+            for prop_name, prop in self.iter_callback_properties():
+                self.remove_callback(prop_name, callback)
+        else:
+            if self.is_callback_property(name):
+                if (name, callback) in self._callback_partials:
+                    callback = self._callback_partials.pop((name, callback))
+                prop = getattr(type(self), name)
+                try:
+                    prop.remove_callback(self, callback)
+                except ValueError:
+                    pass  # Be forgiving if callback was already removed before
+            else:
+                raise TypeError("attribute '{0}' is not a callback property".format(name))
+
+    def is_callback_property(self, name):
+        return isinstance(getattr(type(self), name, None), CallbackProperty)
+
+    def iter_callback_properties(self):
+        for name in dir(self):
+            if self.is_callback_property(name):
+                yield name, getattr(type(self), name)
 
 
 def add_callback(instance, prop, callback, echo_old=False):

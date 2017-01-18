@@ -5,7 +5,8 @@ from mock import MagicMock
 
 from echo import (CallbackProperty, add_callback,
                   remove_callback, delay_callback,
-                  ignore_callback, callback_property)
+                  ignore_callback, callback_property,
+                  HasCallbackProperties)
 
 
 class Stub(object):
@@ -269,3 +270,137 @@ def test_docstring():
 
     s = Simple()
     assert type(s).a.__doc__ == 'important'
+
+
+class State(HasCallbackProperties):
+
+    a = CallbackProperty()
+    b = CallbackProperty()
+    c = CallbackProperty()
+    d = 1
+
+
+def test_class_add_remove_callback():
+
+    state = State()
+
+    class mockclass(object):
+        def __init__(self):
+            self.call_count = 0
+            self.args = ()
+            self.kwargs = {}
+        def __call__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+            self.call_count += 1
+
+    test1 = mockclass()
+    state.add_callback('a', test1)
+
+    # Deliberaty adding to c twice to make sure it works fine with two callbacks
+    test2 = mockclass()
+    state.add_callback('c', test2, echo_name=True)
+
+    test3 = mockclass()
+    state.add_callback('c', test3, echo_old=True)
+
+    test4 = mockclass()
+    state.add_callback('*', test4, echo_name=True)
+
+    state.a = 1
+    assert test1.call_count == 1
+    assert test1.args == (1,)
+    assert test2.call_count == 0
+    assert test3.call_count == 0
+    assert test4.call_count == 1
+    assert test4.args == ('a', 1)
+
+    state.b = 1
+    assert test1.call_count == 1
+    assert test2.call_count == 0
+    assert test3.call_count == 0
+    assert test4.call_count == 2
+    assert test4.args == ('b', 1)
+
+    state.c = 1
+    assert test1.call_count == 1
+    assert test2.call_count == 1
+    assert test4.args == ('c', 1)
+    assert test3.call_count == 1
+    assert test3.args == (None, 1)
+    assert test4.call_count == 3
+    assert test4.args == ('c', 1)
+
+    state.remove_callback('a', test1)
+
+    state.a = 2
+    state.b = 2
+    state.c = 2
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 2
+    assert test4.call_count == 6
+
+    state.remove_callback('c', test2)
+
+    state.a = 3
+    state.b = 3
+    state.c = 3
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 3
+    assert test4.call_count == 9
+
+    state.remove_callback('c', test3)
+
+    state.a = 4
+    state.b = 4
+    state.c = 4
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 3
+    assert test4.call_count == 12
+
+    state.remove_callback('a', test4)
+
+    state.a = 5
+    state.b = 5
+    state.c = 5
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 3
+    assert test4.call_count == 14
+
+    state.remove_callback('*', test4)
+
+    state.a = 6
+    state.b = 6
+    state.c = 6
+    assert test1.call_count == 1
+    assert test2.call_count == 2
+    assert test3.call_count == 3
+    assert test4.call_count == 14
+
+
+def test_class_is_callback_property():
+
+    state = State()
+    assert state.is_callback_property('a')
+    assert state.is_callback_property('b')
+    assert state.is_callback_property('c')
+    assert not state.is_callback_property('d')
+
+
+def test_class_add_remove_callback_invalid():
+
+    def callback():
+        pass
+
+    state = State()
+    state.z = 'banana'
+    with pytest.raises(TypeError) as exc:
+        state.add_callback('banana', callback)
+    assert exc.value.args[0] == "attribute 'banana' is not a callback property"
+    with pytest.raises(TypeError) as exc:
+        state.remove_callback('banana', callback)
+    assert exc.value.args[0] == "attribute 'banana' is not a callback property"
