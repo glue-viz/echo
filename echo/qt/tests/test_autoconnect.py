@@ -118,6 +118,7 @@ def test_autoconnect_callbacks_to_qt():
     assert not widget.bool_log.isChecked()
 
 
+@pytest.mark.skipif("not QTPY_INSTALLED")
 def test_autoconnect_with_empty_qt_item():
 
     # The following test just makes sure that if a widget without children
