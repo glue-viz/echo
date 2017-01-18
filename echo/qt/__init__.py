@@ -1,7 +1,7 @@
 try:
     import pytest
     pytest.importorskip('qtpy')
-except ImportError:
+except ImportError:  # pragma: nocover
     pass
 
 from .connect import *   # noqa
