@@ -1,21 +1,11 @@
 from __future__ import absolute_import, division, print_function
 
-import pytest
+from qtpy import QtWidgets, QtGui
 
-try:
-    from qtpy import QtWidgets, QtGui
-except ImportError:
-    QTPY_INSTALLED = False
-else:
-    QTPY_INSTALLED = True
-
-if QTPY_INSTALLED:
-    from echo.qt.autoconnect import autoconnect_callbacks_to_qt
-
+from echo.qt.autoconnect import autoconnect_callbacks_to_qt
 from echo import CallbackProperty
 
 
-@pytest.mark.skipif("not QTPY_INSTALLED")
 def test_autoconnect_callbacks_to_qt():
 
     class Data(object):
@@ -117,8 +107,6 @@ def test_autoconnect_callbacks_to_qt():
     person.log = False
     assert not widget.bool_log.isChecked()
 
-
-@pytest.mark.skipif("not QTPY_INSTALLED")
 def test_autoconnect_with_empty_qt_item():
 
     # The following test just makes sure that if a widget without children

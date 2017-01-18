@@ -2,12 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import pytest
 
-try:
-    from qtpy import QtWidgets
-except ImportError:
-    QTPY_INSTALLED = False
-else:
-    QTPY_INSTALLED = True
+from qtpy import QtWidgets
 
 from echo import CallbackProperty
 from echo.qt.connect import (connect_checkable_button, connect_text,
@@ -15,7 +10,6 @@ from echo.qt.connect import (connect_checkable_button, connect_text,
                              connect_float_text, connect_value)
 
 
-@pytest.mark.skipif("not QTPY_INSTALLED")
 def test_connect_checkable_button():
 
     class Test(object):
@@ -39,7 +33,6 @@ def test_connect_checkable_button():
     assert not box.isChecked()
 
 
-@pytest.mark.skipif("not QTPY_INSTALLED")
 def test_connect_text():
 
     class Test(object):
@@ -65,7 +58,6 @@ def test_connect_text():
     assert label.text() == 'test4'
 
 
-@pytest.mark.skipif("not QTPY_INSTALLED")
 def test_connect_combo():
 
     class Test(object):
@@ -120,7 +112,6 @@ def test_connect_combo():
     assert combo.currentIndex() == -1
 
 
-@pytest.mark.skipif("not QTPY_INSTALLED")
 def test_connect_float_text():
 
     class Test(object):
@@ -161,7 +152,6 @@ def test_connect_float_text():
     assert line3.text() == '-2'
 
 
-@pytest.mark.skipif("not QTPY_INSTALLED")
 def test_connect_value():
 
     class Test(object):
