@@ -67,7 +67,7 @@ def autoconnect_callbacks_to_qt(instance, widget, connect_kwargs={}):
     Applications can also define additional mappings between type and
     auto-linking. To do this, simply add a new entry to the ``HANDLERS`` object::
 
-        >>> from glue.echo.qt.autoconnect import HANDLERS
+        >>> echo.qt.autoconnect import HANDLERS
         >>> HANDLERS['color'] = connect_color
 
     The handler function (``connect_color`` in the example above) should take
