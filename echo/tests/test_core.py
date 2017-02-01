@@ -299,13 +299,13 @@ def test_class_add_remove_callback():
 
     # Deliberaty adding to c twice to make sure it works fine with two callbacks
     test2 = mockclass()
-    state.add_callback('c', test2, echo_name=True)
+    state.add_callback('c', test2, as_kwargs=True)
 
     test3 = mockclass()
     state.add_callback('c', test3, echo_old=True)
 
     test4 = mockclass()
-    state.add_callback('*', test4, echo_name=True)
+    state.add_callback('*', test4, as_kwargs=True)
 
     state.a = 1
     assert test1.call_count == 1
@@ -313,23 +313,23 @@ def test_class_add_remove_callback():
     assert test2.call_count == 0
     assert test3.call_count == 0
     assert test4.call_count == 1
-    assert test4.args == ('a', 1)
+    assert test4.kwargs == dict(a=1)
 
     state.b = 1
     assert test1.call_count == 1
     assert test2.call_count == 0
     assert test3.call_count == 0
     assert test4.call_count == 2
-    assert test4.args == ('b', 1)
+    assert test4.kwargs == dict(b=1)
 
     state.c = 1
     assert test1.call_count == 1
     assert test2.call_count == 1
-    assert test4.args == ('c', 1)
+    assert test4.kwargs == dict(c=1)
     assert test3.call_count == 1
     assert test3.args == (None, 1)
     assert test4.call_count == 3
-    assert test4.args == ('c', 1)
+    assert test4.kwargs == dict(c=1)
 
     state.remove_callback('a', test1)
 
