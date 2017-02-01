@@ -2,12 +2,12 @@ from __future__ import absolute_import, division, print_function
 
 from qtpy import QtWidgets
 
-from echo.qt.connect import (connect_checkable_button,
-                             connect_value,
-                             connect_combo_data,
-                             connect_combo_text,
-                             connect_float_text,
-                             connect_text)
+from .connect import (connect_checkable_button,
+                      connect_value,
+                      connect_combo_data,
+                      connect_combo_text,
+                      connect_float_text,
+                      connect_text)
 
 __all__ = ['autoconnect_callbacks_to_qt']
 

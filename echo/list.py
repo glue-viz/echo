@@ -1,6 +1,6 @@
 import sys
 
-from echo import CallbackProperty, HasCallbackProperties
+from . import CallbackProperty, HasCallbackProperties
 
 
 class CallbackList(list):

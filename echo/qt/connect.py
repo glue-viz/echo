@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 import math
 from functools import partial
 
-from echo import add_callback
+from .. import add_callback
 
 __all__ = ['connect_checkable_button', 'connect_text', 'connect_combo_data',
            'connect_combo_text', 'connect_float_text', 'connect_value']
