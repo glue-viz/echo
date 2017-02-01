@@ -92,7 +92,12 @@ def autoconnect_callbacks_to_qt(instance, widget, connect_kwargs={}):
         full_name = child.objectName()
         if '_' in full_name:
             wtype, wname = full_name.split('_', 1)
-            kwargs = connect_kwargs.get(wname, {})
+            if full_name in connect_kwargs:
+                kwargs = connect_kwargs[full_name]
+            elif wname in connect_kwargs:
+                kwargs = connect_kwargs[wname]
+            else:
+                kwargs = {}
             if hasattr(instance, wname):
                 if wtype in HANDLERS:
                     HANDLERS[wtype](instance, wname, child, **kwargs)
