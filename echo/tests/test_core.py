@@ -6,7 +6,7 @@ from mock import MagicMock
 from echo import (CallbackProperty, add_callback,
                   remove_callback, delay_callback,
                   ignore_callback, callback_property,
-                  HasCallbackProperties)
+                  HasCallbackProperties, keep_in_sync)
 
 
 class Stub(object):
@@ -404,3 +404,48 @@ def test_class_add_remove_callback_invalid():
     with pytest.raises(TypeError) as exc:
         state.remove_callback('banana', callback)
     assert exc.value.args[0] == "attribute 'banana' is not a callback property"
+
+
+def test_keep_in_sync():
+
+    class State1(object):
+        a = CallbackProperty()
+        b = CallbackProperty()
+
+    class State2(object):
+        c = CallbackProperty()
+
+    state1 = State1()
+    state2 = State2()
+
+    state1_control = State1()
+    state2_control = State2()
+
+    s1 = keep_in_sync(state1, 'a', state1, 'b')
+    s2 = keep_in_sync(state1, 'a', state2, 'c')
+
+    state1.a = 1
+    assert state1.b == 1
+    assert state1_control.b is None
+    assert state2.c == 1
+    assert state2_control.c is None
+
+    state1.b = 3
+    assert state1.a == 3
+    assert state1_control.a is None
+    assert state2.c == 3
+    assert state2_control.c is None
+
+    state2.c = 5
+    assert state1.a == 5
+    assert state1_control.a is None
+    assert state1.b == 5
+    assert state1_control.b is None
+
+    s1.stop_syncing()
+
+    state1.a = 7
+    assert state1.b == 5
+    assert state1_control.b is None
+    assert state2.c == 7
+    assert state2_control.c is None
