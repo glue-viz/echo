@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 from contextlib import contextmanager
 from weakref import WeakKeyDictionary
 
-from echo.callback_container import CallbackContainer
+from .callback_container import CallbackContainer
 
 __all__ = ['CallbackProperty', 'callback_property',
            'add_callback', 'remove_callback',
@@ -178,7 +178,7 @@ class HasCallbackProperties(object):
     """
 
     def __init__(self):
-        from echo.list import ListCallbackProperty
+        from .list import ListCallbackProperty
         self._global_callbacks = CallbackContainer()
         self._callback_wrappers = {}
         for prop_name, prop in self.iter_callback_properties():
@@ -186,7 +186,7 @@ class HasCallbackProperties(object):
                 prop.add_callback(self, self.notify_global_lists)
 
     def notify_global_lists(self, *args):
-        from echo.list import ListCallbackProperty
+        from .list import ListCallbackProperty
         properties = {}
         for prop_name, prop in self.iter_callback_properties():
             if isinstance(prop, ListCallbackProperty):
@@ -206,9 +206,9 @@ class HasCallbackProperties(object):
                 callback(**kwargs)
 
     def __setattr__(self, attribute, value):
+        super(HasCallbackProperties, self).__setattr__(attribute, value)
         if self.is_callback_property(attribute):
             self.notify_global(**{attribute: value})
-        super(HasCallbackProperties, self).__setattr__(attribute, value)
 
     def add_callback(self, name, callback, echo_old=False):
         """

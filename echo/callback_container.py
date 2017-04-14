@@ -71,4 +71,5 @@ class CallbackContainer(object):
                 if isinstance(callback, tuple) and value.__func__ is callback[0]() and value.__self__ is callback[1]():
                     self.callbacks.remove(callback)
         else:
-            self.callbacks.remove(value)
+            if value in self.callbacks:
+                self.callbacks.remove(value)
