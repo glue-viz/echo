@@ -441,13 +441,6 @@ def test_keep_in_sync():
     assert state2_control.c is None
 
 
-
-class Stub(object):
-    prop1 = CallbackProperty()
-    prop2 = CallbackProperty(5)
-    prop3 = 5
-
-
 def test_cleanup_when_objects_destroyed():
 
     state = State()
