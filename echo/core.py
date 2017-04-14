@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
+import weakref
 from contextlib import contextmanager
 from weakref import WeakKeyDictionary
-from functools import partial
 
 __all__ = ['CallbackProperty', 'callback_property',
            'add_callback', 'remove_callback',
@@ -103,9 +103,19 @@ class CallbackProperty(object):
         if self._disabled.get(instance, False):
             return
         for cback in self._callbacks.get(instance, []):
-            cback(new)
+            if isinstance(cback, tuple):
+                func = cback[0]()
+                instance = cback[1]()
+                func(instance, new)
+            else:
+                cback(new)
         for cback in self._2arg_callbacks.get(instance, []):
-            cback(old, new)
+            if isinstance(cback, tuple):
+                func = cback[0]()
+                instance = cback[1]()
+                func(instance, old, new)
+            else:
+                cback(old, new)
 
     def disable(self, instance):
         """
@@ -134,10 +144,41 @@ class CallbackProperty(object):
             and new values of the property, as ``func(old, new)``. If `False`
             (the default), will be invoked as ``func(new)``
         """
-        if echo_old:
-            self._2arg_callbacks.setdefault(instance, []).append(func)
+
+        # We need to be careful with storing references to methods, because
+        # if the callback method is on a class which contains both the callback
+        # and the callback property, a circular reference is created which
+        # results in a memory leak. Instead, we need to use a weak reference
+        # which results in the callback being removed if the instance is
+        # destroyed.
+
+        if not hasattr(func, '__func__') or getattr(func, '__self__', None) is None:
+
+            # We are dealing with a function or unbound method, so we don't
+            # need to do anything special
+
+            callback_ref = func
+
         else:
-            self._callbacks.setdefault(instance, []).append(func)
+
+            # We are dealing with a bound method. Method references aren't
+            # persistent, so instead we store a reference to the function
+            # and instance.
+
+            callback_ref = (weakref.ref(func.__func__, self._remove_method_callback),
+                            weakref.ref(func.__self__, self._remove_method_callback))
+
+        if echo_old:
+            self._2arg_callbacks.setdefault(instance, []).append(callback_ref)
+        else:
+            self._callbacks.setdefault(instance, []).append(callback_ref)
+
+    def _remove_method_callback(self, method_instance):
+        for cb in [self._callbacks, self._2arg_callbacks]:
+            for instance in cb:
+                for callback_ref in cb[instance][:]:
+                    if isinstance(callback_ref, tuple) and callback_ref[1] is method_instance:
+                        cb[instance].remove(callback_ref)
 
     def remove_callback(self, instance, func):
         """
@@ -153,11 +194,14 @@ class CallbackProperty(object):
         for cb in [self._callbacks, self._2arg_callbacks]:
             if instance not in cb:
                 continue
-            try:
+            elif func in cb[instance]:
                 cb[instance].remove(func)
-                break
-            except ValueError:
-                pass
+                return
+            elif hasattr(func, '__func__') and getattr(func, '__self__', None) is not None:
+                for callback_ref in cb[instance][:]:
+                    if isinstance(callback_ref, tuple) and func.__func__ is callback_ref[0]() and func.__self__ is callback_ref[1]():
+                        cb[instance].remove(callback_ref)
+                        return
         else:
             raise ValueError("Callback function not found: %s" % func)
 

@@ -449,3 +449,35 @@ def test_keep_in_sync():
     assert state1_control.b is None
     assert state2.c == 7
     assert state2_control.c is None
+
+
+
+class Stub(object):
+    prop1 = CallbackProperty()
+    prop2 = CallbackProperty(5)
+    prop3 = 5
+
+
+def test_cleanup_when_objects_destroyed():
+
+    state = State()
+
+    class BasicClass():
+
+        def __init__(self, s):
+            self.s = s
+            self.s.add_callback('a', self.callback)
+            self.raise_error = False
+
+        def callback(self, arg):
+            if self.raise_error:
+                raise ValueError('Should never get here')
+
+    def isolated(state):
+        c = BasicClass(state)
+        state.a = 1
+        c.raise_error = True
+
+    isolated(state)
+
+    state.a = 2
