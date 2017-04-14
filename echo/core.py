@@ -104,19 +104,9 @@ class CallbackProperty(object):
         if self._disabled.get(instance, False):
             return
         for cback in self._callbacks.get(instance, []):
-            if isinstance(cback, tuple):
-                func = cback[0]()
-                instance = cback[1]()
-                func(instance, new)
-            else:
-                cback(new)
+            cback(new)
         for cback in self._2arg_callbacks.get(instance, []):
-            if isinstance(cback, tuple):
-                func = cback[0]()
-                instance = cback[1]()
-                func(instance, old, new)
-            else:
-                cback(old, new)
+            cback(old, new)
 
     def disable(self, instance):
         """
@@ -198,12 +188,7 @@ class HasCallbackProperties(object):
 
     def notify_global(self, **kwargs):
         for callback in self._global_callbacks:
-            if isinstance(callback, tuple):
-                func = callback[0]()
-                instance = callback[1]()
-                func(instance, **kwargs)
-            else:
-                callback(**kwargs)
+            callback(**kwargs)
 
     def __setattr__(self, attribute, value):
         super(HasCallbackProperties, self).__setattr__(attribute, value)

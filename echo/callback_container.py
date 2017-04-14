@@ -1,4 +1,5 @@
 import weakref
+from functools import partial
 
 __all__ = ['CallbackContainer']
 
@@ -55,7 +56,12 @@ class CallbackContainer(object):
 
     def __iter__(self):
         for callback in self.callbacks:
-            yield callback
+            if isinstance(callback, tuple):
+                func = callback[0]()
+                inst = callback[1]()
+                yield partial(func, inst)
+            else:
+                yield callback
 
     def __len__(self):
         return len(self.callbacks)
