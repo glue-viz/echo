@@ -299,13 +299,13 @@ def test_class_add_remove_callback():
 
     # Deliberaty adding to c twice to make sure it works fine with two callbacks
     test2 = mockclass()
-    state.add_callback('c', test2, as_kwargs=True)
+    state.add_callback('c', test2)
 
     test3 = mockclass()
     state.add_callback('c', test3, echo_old=True)
 
     test4 = mockclass()
-    state.add_callback('*', test4, as_kwargs=True)
+    state.add_global_callback(test4)
 
     state.a = 1
     assert test1.call_count == 1
@@ -361,17 +361,7 @@ def test_class_add_remove_callback():
     assert test3.call_count == 3
     assert test4.call_count == 12
 
-    state.remove_callback('a', test4)
-
-    state.a = 5
-    state.b = 5
-    state.c = 5
-    assert test1.call_count == 1
-    assert test2.call_count == 2
-    assert test3.call_count == 3
-    assert test4.call_count == 14
-
-    state.remove_callback('*', test4)
+    state.remove_global_callback(test4)
 
     state.a = 6
     state.b = 6
@@ -379,7 +369,7 @@ def test_class_add_remove_callback():
     assert test1.call_count == 1
     assert test2.call_count == 2
     assert test3.call_count == 3
-    assert test4.call_count == 14
+    assert test4.call_count == 12
 
 
 def test_class_is_callback_property():
@@ -449,3 +439,53 @@ def test_keep_in_sync():
     assert state1_control.b is None
     assert state2.c == 7
     assert state2_control.c is None
+
+
+def test_cleanup_when_objects_destroyed():
+
+    state = State()
+
+    class BasicClass():
+
+        def __init__(self, s):
+            self.s = s
+            self.s.add_callback('a', self.callback)
+            self.raise_error = False
+
+        def callback(self, arg):
+            if self.raise_error:
+                raise ValueError('Should never get here')
+
+    def isolated(state):
+        c = BasicClass(state)
+        state.a = 1
+        c.raise_error = True
+
+    isolated(state)
+
+    state.a = 2
+
+
+def test_cleanup_when_objects_destroyed_kwargs():
+
+    state = State()
+
+    class BasicClass():
+
+        def __init__(self, s):
+            self.s = s
+            self.s.add_global_callback(self.callback)
+            self.raise_error = False
+
+        def callback(self, **kwargs):
+            if self.raise_error:
+                raise ValueError('Should never get here')
+
+    def isolated(state):
+        c = BasicClass(state)
+        state.a = 1
+        c.raise_error = True
+
+    isolated(state)
+
+    state.a = 2

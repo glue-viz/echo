@@ -114,13 +114,13 @@ def test_state_in_a_list():
     stub.prop1.insert(1, state3)
     stub.prop1[3] = state4
 
-    # Check that all states except state 4 have a callback added
+    # Check that all states except state 5 have a callback added
     prop = getattr(Simple, 'a')
-    assert len(prop._callbacks[state1]) == 1
-    assert len(prop._callbacks[state2]) == 1
-    assert len(prop._callbacks[state3]) == 1
-    assert len(prop._callbacks[state4]) == 1
-    assert state5 not in prop._callbacks
+    assert len(state1._global_callbacks) == 1
+    assert len(state2._global_callbacks) == 1
+    assert len(state3._global_callbacks) == 1
+    assert len(state4._global_callbacks) == 1
+    assert len(state5._global_callbacks) == 0
 
     # Add a callback to the main list
     callback = MagicMock()
@@ -143,11 +143,11 @@ def test_state_in_a_list():
     # Remove one of the state objects and try again
     stub.prop1.pop(0)
     assert callback.call_count == 5
-    assert len(prop._callbacks[state1]) == 0
-    assert len(prop._callbacks[state2]) == 1
-    assert len(prop._callbacks[state3]) == 1
-    assert len(prop._callbacks[state4]) == 1
-    assert state5 not in prop._callbacks
+    assert len(state1._global_callbacks) == 0
+    assert len(state2._global_callbacks) == 1
+    assert len(state3._global_callbacks) == 1
+    assert len(state4._global_callbacks) == 1
+    assert len(state5._global_callbacks) == 0
 
     # Now modifying state1 sholdn't affect the call cont
     state1.a = 2
@@ -164,11 +164,11 @@ def test_state_in_a_list():
     # Remove again this time using remove
     stub.prop1.remove(state2)
     assert callback.call_count == 9
-    assert len(prop._callbacks[state1]) == 0
-    assert len(prop._callbacks[state2]) == 0
-    assert len(prop._callbacks[state3]) == 1
-    assert len(prop._callbacks[state4]) == 1
-    assert state5 not in prop._callbacks
+    assert len(state1._global_callbacks) == 0
+    assert len(state2._global_callbacks) == 0
+    assert len(state3._global_callbacks) == 1
+    assert len(state4._global_callbacks) == 1
+    assert len(state5._global_callbacks) == 0
 
     # Now modifying state2 sholdn't affect the call cont
     state1.a = 3
@@ -185,11 +185,11 @@ def test_state_in_a_list():
     # Remove using item access
     stub.prop1[1] = 3.3
     assert callback.call_count == 12
-    assert len(prop._callbacks[state1]) == 0
-    assert len(prop._callbacks[state2]) == 0
-    assert len(prop._callbacks[state3]) == 1
-    assert len(prop._callbacks[state4]) == 0
-    assert state5 not in prop._callbacks
+    assert len(state1._global_callbacks) == 0
+    assert len(state2._global_callbacks) == 0
+    assert len(state3._global_callbacks) == 1
+    assert len(state4._global_callbacks) == 0
+    assert len(state5._global_callbacks) == 0
 
     # Now modifying state4 sholdn't affect the call cont
     state1.a = 4
@@ -206,11 +206,11 @@ def test_state_in_a_list():
     # Now use slice access to remove state3 and add state5 in one go
     stub.prop1[0:2] = [2.2, state5]
     assert callback.call_count == 14
-    assert len(prop._callbacks[state1]) == 0
-    assert len(prop._callbacks[state2]) == 0
-    assert len(prop._callbacks[state3]) == 0
-    assert len(prop._callbacks[state4]) == 0
-    assert len(prop._callbacks[state5]) == 1
+    assert len(state1._global_callbacks) == 0
+    assert len(state2._global_callbacks) == 0
+    assert len(state3._global_callbacks) == 0
+    assert len(state4._global_callbacks) == 0
+    assert len(state5._global_callbacks) == 1
 
     # Now only modifying state5 should have an effect
     state1.a = 5
@@ -229,11 +229,11 @@ def test_state_in_a_list():
         # On Python 3, check that clear does the right thing
         stub.prop1.clear()
         assert callback.call_count == 16
-        assert len(prop._callbacks[state1]) == 0
-        assert len(prop._callbacks[state2]) == 0
-        assert len(prop._callbacks[state3]) == 0
-        assert len(prop._callbacks[state4]) == 0
-        assert len(prop._callbacks[state5]) == 0
+        assert len(state1._global_callbacks) == 0
+        assert len(state2._global_callbacks) == 0
+        assert len(state3._global_callbacks) == 0
+        assert len(state4._global_callbacks) == 0
+        assert len(state5._global_callbacks) == 0
 
         # Now the callback should never be called
         state1.a = 6
