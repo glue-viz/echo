@@ -1,8 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
-import weakref
 from contextlib import contextmanager
 from weakref import WeakKeyDictionary
+
+from echo.callback_container import CallbackContainer
 
 __all__ = ['CallbackProperty', 'callback_property',
            'add_callback', 'remove_callback',
@@ -145,40 +146,10 @@ class CallbackProperty(object):
             (the default), will be invoked as ``func(new)``
         """
 
-        # We need to be careful with storing references to methods, because
-        # if the callback method is on a class which contains both the callback
-        # and the callback property, a circular reference is created which
-        # results in a memory leak. Instead, we need to use a weak reference
-        # which results in the callback being removed if the instance is
-        # destroyed.
-
-        if not hasattr(func, '__func__') or getattr(func, '__self__', None) is None:
-
-            # We are dealing with a function or unbound method, so we don't
-            # need to do anything special
-
-            callback_ref = func
-
-        else:
-
-            # We are dealing with a bound method. Method references aren't
-            # persistent, so instead we store a reference to the function
-            # and instance.
-
-            callback_ref = (weakref.ref(func.__func__, self._remove_method_callback),
-                            weakref.ref(func.__self__, self._remove_method_callback))
-
         if echo_old:
-            self._2arg_callbacks.setdefault(instance, []).append(callback_ref)
+            self._2arg_callbacks.setdefault(instance, CallbackContainer()).append(func)
         else:
-            self._callbacks.setdefault(instance, []).append(callback_ref)
-
-    def _remove_method_callback(self, method_instance):
-        for cb in [self._callbacks, self._2arg_callbacks]:
-            for instance in cb:
-                for callback_ref in cb[instance][:]:
-                    if isinstance(callback_ref, tuple) and callback_ref[1] is method_instance:
-                        cb[instance].remove(callback_ref)
+            self._callbacks.setdefault(instance, CallbackContainer()).append(func)
 
     def remove_callback(self, instance, func):
         """
@@ -194,14 +165,9 @@ class CallbackProperty(object):
         for cb in [self._callbacks, self._2arg_callbacks]:
             if instance not in cb:
                 continue
-            elif func in cb[instance]:
+            if func in cb[instance]:
                 cb[instance].remove(func)
                 return
-            elif hasattr(func, '__func__') and getattr(func, '__self__', None) is not None:
-                for callback_ref in cb[instance][:]:
-                    if isinstance(callback_ref, tuple) and func.__func__ is callback_ref[0]() and func.__self__ is callback_ref[1]():
-                        cb[instance].remove(callback_ref)
-                        return
         else:
             raise ValueError("Callback function not found: %s" % func)
 
@@ -212,21 +178,39 @@ class HasCallbackProperties(object):
     """
 
     def __init__(self):
-        self._global_callbacks = []
+        from echo.list import ListCallbackProperty
+        self._global_callbacks = CallbackContainer()
         self._callback_wrappers = {}
+        for prop_name, prop in self.iter_callback_properties():
+            if isinstance(prop, ListCallbackProperty):
+                prop.add_callback(self, self.notify_global_lists)
+
+    def notify_global_lists(self, *args):
+        from echo.list import ListCallbackProperty
+        properties = {}
+        for prop_name, prop in self.iter_callback_properties():
+            if isinstance(prop, ListCallbackProperty):
+                callback_list = getattr(self, prop_name)
+                if callback_list is args[0]:
+                    properties[prop_name] = callback_list
+                    break
+        self.notify_global(**properties)
+
+    def notify_global(self, **kwargs):
+        for callback in self._global_callbacks:
+            if isinstance(callback, tuple):
+                func = callback[0]()
+                instance = callback[1]()
+                func(instance, **kwargs)
+            else:
+                callback(**kwargs)
 
     def __setattr__(self, attribute, value):
         if self.is_callback_property(attribute):
-            for callback in self._global_callbacks:
-                if isinstance(callback, tuple):
-                    func = callback[0]()
-                    instance = callback[1]()
-                    func(instance, **{'attribute': value})
-                else:
-                    callback(**{'attribute': value})
+            self.notify_global(**{attribute: value})
         super(HasCallbackProperties, self).__setattr__(attribute, value)
 
-    def add_callback(self, name, callback, echo_old=False, as_kwargs=False):
+    def add_callback(self, name, callback, echo_old=False):
         """
         Add a callback that gets triggered when a callback property of the
         class changes.
@@ -243,53 +227,15 @@ class HasCallbackProperties(object):
             If `True`, the callback function will be invoked with both the old
             and new values of the property, as ``func(old, new)``. If `False`
             (the default), will be invoked as ``func(new)``
-        as_kwargs : bool, optional
-            If `True`, the callback function will be invoked using keyword arguments
-            where the keyword is the name of the attribute, and the value is either
-            the new value or a tuple of (old, new) if echo_old is `True`.
         """
-
-        if name == '*':
-            for prop_name, prop in self.iter_callback_properties():
-                self.add_callback(prop_name, callback, echo_old=echo_old, as_kwargs=as_kwargs)
+        if self.is_callback_property(name):
+            prop = getattr(type(self), name)
+            prop.add_callback(self, callback, echo_old=echo_old)
         else:
-            if self.is_callback_property(name):
-                if as_kwargs:
-                    def wrap_callback(function, name):
-                        def callback_wrapper(value):
-                            return function(**{name: value})
-                        return callback_wrapper
-                    self._callback_wrappers[(name, callback)] = wrap_callback(callback, name)
-                    callback = self._callback_wrappers[(name, callback)]
-                prop = getattr(type(self), name)
-                prop.add_callback(self, callback, echo_old=echo_old)
-            else:
-                raise TypeError("attribute '{0}' is not a callback property".format(name))
+            raise TypeError("attribute '{0}' is not a callback property".format(name))
 
-    def add_global_callback(self, func):
-
-        if not hasattr(func, '__func__') or getattr(func, '__self__', None) is None:
-
-            # We are dealing with a function or unbound method, so we don't
-            # need to do anything special
-
-            callback_ref = func
-
-        else:
-
-            # We are dealing with a bound method. Method references aren't
-            # persistent, so instead we store a reference to the function
-            # and instance.
-
-            callback_ref = (weakref.ref(func.__func__, self._remove_method_callback),
-                            weakref.ref(func.__self__, self._remove_method_callback))
-
-        self._global_callbacks.append(callback_ref)
-
-    def _remove_method_callback(self, method_instance):
-        for callback_ref in self._global_callbacks:
-            if isinstance(callback_ref, tuple) and callback_ref[1] is method_instance:
-                self._global_callbacks.remove(callback_ref)
+    def add_global_callback(self, callback):
+        self._global_callbacks.append(callback)
 
     def remove_global_callback(self, callback):
         self._global_callbacks.remove(callback)
