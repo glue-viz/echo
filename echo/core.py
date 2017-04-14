@@ -203,27 +203,19 @@ class HasCallbackProperties(object):
         Parameters
         ----------
         name : str
-            The instance to add the callback to. This can be ``'*'`` to
-            indicate that the callback should be added to all callback
-            properties.
-        func : func
+            The instance to add the callback to.
+        callback : func
             The callback function to add
         echo_old : bool, optional
             If `True`, the callback function will be invoked with both the old
-            and new values of the property, as ``func(old, new)``. If `False`
-            (the default), will be invoked as ``func(new)``
+            and new values of the property, as ``callback(old, new)``. If `False`
+            (the default), will be invoked as ``callback(new)``
         """
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
             prop.add_callback(self, callback, echo_old=echo_old)
         else:
             raise TypeError("attribute '{0}' is not a callback property".format(name))
-
-    def add_global_callback(self, callback):
-        self._global_callbacks.append(callback)
-
-    def remove_global_callback(self, callback):
-        self._global_callbacks.remove(callback)
 
     def remove_callback(self, name, callback):
         """
@@ -232,27 +224,42 @@ class HasCallbackProperties(object):
         Parameters
         ----------
         name : str
-            The instance to remove the callback from. This can be ``'*'`` to
-            indicate that the callback should be removed from all callback
-            properties.
+            The instance to remove the callback from.
         func : func
             The callback function to remove
         """
 
-        if name == '*':
-            for prop_name, prop in self.iter_callback_properties():
-                self.remove_callback(prop_name, callback)
+        if self.is_callback_property(name):
+            prop = getattr(type(self), name)
+            try:
+                prop.remove_callback(self, callback)
+            except ValueError:  # pragma: nocover
+                pass  # Be forgiving if callback was already removed before
         else:
-            if self.is_callback_property(name):
-                if (name, callback) in self._callback_wrappers:
-                    callback = self._callback_wrappers.pop((name, callback))
-                prop = getattr(type(self), name)
-                try:
-                    prop.remove_callback(self, callback)
-                except ValueError:
-                    pass  # Be forgiving if callback was already removed before
-            else:
-                raise TypeError("attribute '{0}' is not a callback property".format(name))
+            raise TypeError("attribute '{0}' is not a callback property".format(name))
+
+    def add_global_callback(self, callback):
+        """
+        Add a global callback function, which is a callback that gets triggered
+        when any callback properties on the class change.
+
+        Parameters
+        ----------
+        callback : func
+            The callback function to add
+        """
+        self._global_callbacks.append(callback)
+
+    def remove_global_callback(self, callback):
+        """
+        Remove a global callback function.
+
+        Parameters
+        ----------
+        callback : func
+            The callback function to remove
+        """
+        self._global_callbacks.remove(callback)
 
     def is_callback_property(self, name):
         return isinstance(getattr(type(self), name, None), CallbackProperty)
