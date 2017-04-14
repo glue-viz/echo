@@ -215,6 +215,17 @@ class HasCallbackProperties(object):
         self._global_callbacks = []
         self._callback_wrappers = {}
 
+    def __setattr__(self, attribute, value):
+        if self.is_callback_property(attribute):
+            for callback in self._global_callbacks:
+                if isinstance(callback, tuple):
+                    func = callback[0]()
+                    instance = callback[1]()
+                    func(instance, **{'attribute': value})
+                else:
+                    callback(**{'attribute': value})
+        super(HasCallbackProperties, self).__setattr__(attribute, value)
+
     def add_callback(self, name, callback, echo_old=False, as_kwargs=False):
         """
         Add a callback that gets triggered when a callback property of the
@@ -254,6 +265,34 @@ class HasCallbackProperties(object):
                 prop.add_callback(self, callback, echo_old=echo_old)
             else:
                 raise TypeError("attribute '{0}' is not a callback property".format(name))
+
+    def add_global_callback(self, func):
+
+        if not hasattr(func, '__func__') or getattr(func, '__self__', None) is None:
+
+            # We are dealing with a function or unbound method, so we don't
+            # need to do anything special
+
+            callback_ref = func
+
+        else:
+
+            # We are dealing with a bound method. Method references aren't
+            # persistent, so instead we store a reference to the function
+            # and instance.
+
+            callback_ref = (weakref.ref(func.__func__, self._remove_method_callback),
+                            weakref.ref(func.__self__, self._remove_method_callback))
+
+        self._global_callbacks.append(callback_ref)
+
+    def _remove_method_callback(self, method_instance):
+        for callback_ref in self._global_callbacks:
+            if isinstance(callback_ref, tuple) and callback_ref[1] is method_instance:
+                self._global_callbacks.remove(callback_ref)
+
+    def remove_global_callback(self, callback):
+        self._global_callbacks.remove(callback)
 
     def remove_callback(self, name, callback):
         """

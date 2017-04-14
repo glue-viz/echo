@@ -481,3 +481,28 @@ def test_cleanup_when_objects_destroyed():
     isolated(state)
 
     state.a = 2
+
+
+def test_cleanup_when_objects_destroyed_kwargs():
+
+    state = State()
+
+    class BasicClass():
+
+        def __init__(self, s):
+            self.s = s
+            self.s.add_global_callback(self.callback)
+            self.raise_error = False
+
+        def callback(self, **kwargs):
+            if self.raise_error:
+                raise ValueError('Should never get here')
+
+    def isolated(state):
+        c = BasicClass(state)
+        state.a = 1
+        c.raise_error = True
+
+    isolated(state)
+
+    state.a = 2
