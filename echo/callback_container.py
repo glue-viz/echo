@@ -5,7 +5,12 @@ __all__ = ['CallbackContainer']
 
 class CallbackContainer(object):
     """
-    A list of callback functions, which ...
+    A list-like container for callback functions. We need to be careful with
+    storing references to methods, because if a callback method is on a class
+    which contains both the callback and a callback property, a circular
+    reference is created which results in a memory leak. Instead, we need to use
+    a weak reference which results in the callback being removed if the instance
+    is destroyed. This container class takes care of this automatically.
     """
 
     def __init__(self):
@@ -13,14 +18,9 @@ class CallbackContainer(object):
 
     def _wrap(self, value):
         """
+        Given a function/method, this will automatically wrap a method using
+        weakref to avoid circular references.
         """
-
-        # We need to be careful with storing references to methods, because
-        # if the callback method is on a class which contains both the callback
-        # and the callback property, a circular reference is created which
-        # results in a memory leak. Instead, we need to use a weak reference
-        # which results in the callback being removed if the instance is
-        # destroyed.
 
         if not callable(value):
             raise TypeError("Only callable values can be stored in CallbackContainer")
@@ -37,6 +37,8 @@ class CallbackContainer(object):
         return value
 
     def _auto_remove(self, method_instance):
+        # Called when weakref detects that the instance on which a method was
+        # defined has been garbage collected.
         for value in self.callbacks[:]:
             if isinstance(value, tuple) and value[1] is method_instance:
                 self.callbacks.remove(value)
