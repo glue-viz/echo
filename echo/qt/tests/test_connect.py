@@ -14,23 +14,33 @@ def test_connect_checkable_button():
 
     class Test(object):
         a = CallbackProperty()
+        b = CallbackProperty(True)
 
     t = Test()
 
-    box = QtWidgets.QCheckBox()
-    connect_checkable_button(t, 'a', box)
+    box1 = QtWidgets.QCheckBox()
+    connect_checkable_button(t, 'a', box1)
 
-    box.setChecked(True)
+    box1.setChecked(True)
     assert t.a
 
-    box.setChecked(False)
+    box1.setChecked(False)
     assert not t.a
 
     t.a = True
-    assert box.isChecked()
+    assert box1.isChecked()
 
     t.a = False
-    assert not box.isChecked()
+    assert not box1.isChecked()
+
+    # Make sure that the default value of the callback property is recognized
+
+    box2 = QtWidgets.QCheckBox()
+    connect_checkable_button(t, 'b', box2)
+
+    assert box2.isChecked()
+
+
 
 
 def test_connect_text():
