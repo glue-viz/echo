@@ -137,7 +137,7 @@ class CallbackProperty(object):
             (the default), will be invoked as ``func(new)``
         priority : int, optional
             This can optionally be used to force a certain order of execution of
-            callbacks.
+            callbacks (larger values indicate a higher priority).
         """
 
         if echo_old:
@@ -216,7 +216,7 @@ class HasCallbackProperties(object):
             (the default), will be invoked as ``callback(new)``
         priority : int, optional
             This can optionally be used to force a certain order of execution of
-            callbacks.
+            callbacks (larger values indicate a higher priority).
         """
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
@@ -295,7 +295,7 @@ def add_callback(instance, prop, callback, echo_old=False, priority=0):
         (the default), will be invoked as ``func(new)``
     priority : int, optional
         This can optionally be used to force a certain order of execution of
-        callbacks.
+        callbacks (larger values indicate a higher priority).
 
     Examples
     --------
