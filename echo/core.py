@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
-from contextlib import contextmanager
+import weakref
 from weakref import WeakKeyDictionary
+from contextlib import contextmanager
 
 from .callback_container import CallbackContainer
 
@@ -481,29 +482,34 @@ class keep_in_sync(object):
 
     def __init__(self, instance1, prop1, instance2, prop2):
 
-        self.instance1 = instance1
+        self.instance1 = weakref.ref(instance1, self.disable_syncing)
         self.prop1 = prop1
 
-        self.instance2 = instance2
+        self.instance2 = weakref.ref(instance2, self.disable_syncing)
         self.prop2 = prop2
 
         self._syncing = False
 
-        add_callback(self.instance1, self.prop1, self.prop2_from_prop1)
-        add_callback(self.instance2, self.prop2, self.prop1_from_prop2)
+        self.enable_syncing()
 
     def prop1_from_prop2(self, value):
         if not self._syncing:
             self._syncing = True
-            setattr(self.instance1, self.prop1, getattr(self.instance2, self.prop2))
+            setattr(self.instance1(), self.prop1, getattr(self.instance2(), self.prop2))
             self._syncing = False
 
     def prop2_from_prop1(self, value):
         if not self._syncing:
             self._syncing = True
-            setattr(self.instance2, self.prop2, getattr(self.instance1, self.prop1))
+            setattr(self.instance2(), self.prop2, getattr(self.instance1(), self.prop1))
             self._syncing = False
 
-    def stop_syncing(self):
-        remove_callback(self.instance1, self.prop1, self.prop2_from_prop1)
-        remove_callback(self.instance2, self.prop2, self.prop1_from_prop2)
+    def enable_syncing(self, *args):
+        add_callback(self.instance1(), self.prop1, self.prop2_from_prop1)
+        add_callback(self.instance2(), self.prop2, self.prop1_from_prop2)
+
+    def disable_syncing(self, *args):
+        if self.instance1() is not None:
+            remove_callback(self.instance1(), self.prop1, self.prop2_from_prop1)
+        if self.instance2() is not None:
+            remove_callback(self.instance2(), self.prop2, self.prop1_from_prop2)
