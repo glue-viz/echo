@@ -120,7 +120,7 @@ class CallbackProperty(object):
         """
         self._disabled[instance] = False
 
-    def add_callback(self, instance, func, echo_old=False):
+    def add_callback(self, instance, func, echo_old=False, priority=0):
         """
         Add a callback to a specific instance that manages this property
 
@@ -134,12 +134,15 @@ class CallbackProperty(object):
             If `True`, the callback function will be invoked with both the old
             and new values of the property, as ``func(old, new)``. If `False`
             (the default), will be invoked as ``func(new)``
+        priority : int, optional
+            This can optionally be used to force a certain order of execution of
+            callbacks.
         """
 
         if echo_old:
-            self._2arg_callbacks.setdefault(instance, CallbackContainer()).append(func)
+            self._2arg_callbacks.setdefault(instance, CallbackContainer()).append(func, priority=priority)
         else:
-            self._callbacks.setdefault(instance, CallbackContainer()).append(func)
+            self._callbacks.setdefault(instance, CallbackContainer()).append(func, priority=priority)
 
     def remove_callback(self, instance, func):
         """
@@ -195,7 +198,7 @@ class HasCallbackProperties(object):
         if self.is_callback_property(attribute):
             self.notify_global(**{attribute: value})
 
-    def add_callback(self, name, callback, echo_old=False):
+    def add_callback(self, name, callback, echo_old=False, priority=0):
         """
         Add a callback that gets triggered when a callback property of the
         class changes.
@@ -210,10 +213,13 @@ class HasCallbackProperties(object):
             If `True`, the callback function will be invoked with both the old
             and new values of the property, as ``callback(old, new)``. If `False`
             (the default), will be invoked as ``callback(new)``
+        priority : int, optional
+            This can optionally be used to force a certain order of execution of
+            callbacks.
         """
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
-            prop.add_callback(self, callback, echo_old=echo_old)
+            prop.add_callback(self, callback, echo_old=echo_old, priority=priority)
         else:
             raise TypeError("attribute '{0}' is not a callback property".format(name))
 
@@ -270,7 +276,7 @@ class HasCallbackProperties(object):
                 yield name, getattr(type(self), name)
 
 
-def add_callback(instance, prop, callback, echo_old=False):
+def add_callback(instance, prop, callback, echo_old=False, priority=0):
     """
     Attach a callback function to a property in an instance
 
@@ -286,6 +292,9 @@ def add_callback(instance, prop, callback, echo_old=False):
         If `True`, the callback function will be invoked with both the old
         and new values of the property, as ``func(old, new)``. If `False`
         (the default), will be invoked as ``func(new)``
+    priority : int, optional
+        This can optionally be used to force a certain order of execution of
+        callbacks.
 
     Examples
     --------
@@ -305,7 +314,7 @@ def add_callback(instance, prop, callback, echo_old=False):
     p = getattr(type(instance), prop)
     if not isinstance(p, CallbackProperty):
         raise TypeError("%s is not a CallbackProperty" % prop)
-    p.add_callback(instance, callback, echo_old=echo_old)
+    p.add_callback(instance, callback, echo_old=echo_old, priority=priority)
 
 
 def remove_callback(instance, prop, callback):
