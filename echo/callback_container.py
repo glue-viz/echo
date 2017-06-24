@@ -58,7 +58,7 @@ class CallbackContainer(object):
                 return False
         else:
             for callback in self.callbacks[:]:
-                if len(callback) == 2 and value.__func__ is callback[0]:
+                if len(callback) == 2 and value is callback[0]:
                     return True
             else:
                 return False

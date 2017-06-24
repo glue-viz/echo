@@ -432,7 +432,7 @@ def test_keep_in_sync():
     assert state1.b == 5
     assert state1_control.b is None
 
-    s1.stop_syncing()
+    s1.disable_syncing()
 
     state1.a = 7
     assert state1.b == 5
