@@ -489,3 +489,115 @@ def test_cleanup_when_objects_destroyed_kwargs():
     isolated(state)
 
     state.a = 2
+
+
+def test_delay_global_callback():
+
+    # Regression test to make sure that delay_callback works for global
+    # callbacks too.
+
+    state = State()
+
+    test1 = MagicMock()
+    state.add_callback('a', test1)
+
+    test2 = MagicMock()
+    state.add_global_callback(test2)
+
+    with delay_callback(state, 'a'):
+        state.a = 100
+        assert test1.call_count == 0
+        assert test2.call_count == 0
+
+    test1.assert_called_once_with(100)
+    test2.assert_called_once_with(a=100)
+
+    test2.reset_mock()
+
+    with delay_callback(state, 'a'):
+        state.b = 200
+        assert test2.call_count == 1
+
+    test2.assert_called_once_with(b=200)
+
+    test2.reset_mock()
+
+    with delay_callback(state, 'a', 'b'):
+        state.a = 300
+        state.b = 400
+        assert test2.call_count == 0
+
+    test2.assert_called_once_with(a=300, b=400)
+
+
+def test_delay_global_callback_stub():
+
+    # Make sure that adding the global callback delay functionality doesn't
+    # break things when we are dealing with a plain class without HasCallbackProperties
+
+    stub = Stub()
+
+    test1 = MagicMock()
+    add_callback(stub, 'prop1', test1)
+
+    with delay_callback(stub, 'prop1'):
+        stub.prop1 = 100
+        assert test1.call_count == 0
+
+    test1.assert_called_once_with(100)
+
+
+def test_ignore_global_callback():
+
+    # Regression test to make sure that ignore_callback works for global
+    # callbacks too.
+
+    state = State()
+
+    test1 = MagicMock()
+    state.add_callback('a', test1)
+
+    test2 = MagicMock()
+    state.add_global_callback(test2)
+
+    with ignore_callback(state, 'a'):
+        state.a = 100
+        assert test1.call_count == 0
+        assert test2.call_count == 0
+
+    assert test1.call_count == 0
+    assert test2.call_count == 0
+
+    test2.reset_mock()
+
+    with ignore_callback(state, 'a'):
+        state.b = 200
+        assert test2.call_count == 1
+
+    test2.assert_called_once_with(b=200)
+
+    test2.reset_mock()
+
+    with ignore_callback(state, 'a', 'b'):
+        state.a = 300
+        state.b = 400
+        assert test2.call_count == 0
+
+    assert test2.call_count == 0
+
+
+def test_ignore_global_callback_stub():
+
+    # Make sure that adding the global callback ignore functionality doesn't
+    # break things when we are dealing with a plain class without HasCallbackProperties
+
+    stub = Stub()
+
+    test1 = MagicMock()
+    add_callback(stub, 'prop1', test1)
+
+    with ignore_callback(stub, 'prop1'):
+        stub.prop1 = 100
+        assert test1.call_count == 0
+
+    assert test1.call_count == 0
