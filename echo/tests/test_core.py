@@ -601,3 +601,37 @@ def test_ignore_global_callback_stub():
         assert test1.call_count == 0
 
     assert test1.call_count == 0
+
+
+def test_delay_in_delayed_callback():
+
+    # Regression test for a bug that occurred if a delayed callback included
+    # a delay itself.
+
+    state = State()
+
+    def callback(*args, **kwargs):
+        with delay_callback(state, 'a'):
+            state.a = 2
+
+    state.add_callback('a', callback)
+
+    with delay_callback(state, 'a', 'b'):
+        state.a = 100
+
+
+def test_ignore_in_ignored_callback():
+
+    # Regression test for a bug that occurred if a delayed callback included
+    # a delay itself.
+
+    state = State()
+
+    def callback(*args, **kwargs):
+        with ignore_callback(state, 'a'):
+            state.a = 2
+
+    state.add_callback('a', callback)
+
+    with ignore_callback(state, 'a', 'b'):
+        state.a = 100

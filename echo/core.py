@@ -471,6 +471,8 @@ class delay_callback(object):
 
         resume_props = {}
 
+        notifications = []
+
         for prop in self.props:
 
             p = getattr(type(self.instance), prop)
@@ -485,11 +487,14 @@ class delay_callback(object):
                 p.enable(self.instance)
                 new = p.__get__(self.instance)
                 if old != new:
-                    p.notify(self.instance, old, new)
+                    notifications.append((p, (self.instance, old, new)))
                 resume_props[prop] = new
 
         if isinstance(self.instance, HasCallbackProperties):
             self.instance._process_delayed_global_callbacks(resume_props)
+
+        for p, args in notifications:
+            p.notify(*args)
 
 
 @contextmanager
