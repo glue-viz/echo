@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import weakref
+from itertools import chain
 from weakref import WeakKeyDictionary
 from contextlib import contextmanager
 
@@ -83,6 +84,15 @@ class CallbackProperty(object):
         """
         self._setter = func
         return self
+
+    def _get_full_info(self, instance):
+        # Some callback subclasses may contain additional info in addition
+        # to the main value, and we need to use this full information when
+        # comparing old and new 'values', so this method is used in that
+        # case. The result should be a tuple where the first item is the
+        # actual primary value of the property and the second item is any
+        # additional data to use in the comparison.
+        return self.__get__(instance), None
 
     def notify(self, instance, old, new):
         """
@@ -205,7 +215,7 @@ class HasCallbackProperties(object):
         for prop, new_value in properties.items():
             old_value = self._delayed_properties.pop(prop)
             if old_value != new_value:
-                kwargs[prop] = new_value
+                kwargs[prop] = new_value[0]
         self._notify_global(**kwargs)
 
     def _notify_global_lists(self, *args):
@@ -457,8 +467,8 @@ class delay_callback(object):
 
             if (self.instance, prop) not in self.delay_count:
                 self.delay_count[self.instance, prop] = 1
-                self.old_values[self.instance, prop] = p.__get__(self.instance)
-                delay_props[prop] = p.__get__(self.instance)
+                self.old_values[self.instance, prop] = p._get_full_info(self.instance)
+                delay_props[prop] = p._get_full_info(self.instance)
             else:
                 self.delay_count[self.instance, prop] += 1
 
@@ -485,9 +495,9 @@ class delay_callback(object):
                 self.delay_count.pop((self.instance, prop))
                 old = self.old_values.pop((self.instance, prop))
                 p.enable(self.instance)
-                new = p.__get__(self.instance)
+                new = p._get_full_info(self.instance)
                 if old != new:
-                    notifications.append((p, (self.instance, old, new)))
+                    notifications.append((p, (self.instance, old[0], new[0])))
                 resume_props[prop] = new
 
         if isinstance(self.instance, HasCallbackProperties):
@@ -557,6 +567,8 @@ class keep_in_sync(object):
 
         self._syncing = False
 
+        self.enabled = False
+
         self.enable_syncing()
 
     def prop1_from_prop2(self, value):
@@ -572,11 +584,17 @@ class keep_in_sync(object):
             self._syncing = False
 
     def enable_syncing(self, *args):
+        if self.enabled:
+            return
         add_callback(self.instance1(), self.prop1, self.prop2_from_prop1)
         add_callback(self.instance2(), self.prop2, self.prop1_from_prop2)
+        self.enabled = True
 
     def disable_syncing(self, *args):
+        if not self.enabled:
+            return
         if self.instance1() is not None:
             remove_callback(self.instance1(), self.prop1, self.prop2_from_prop1)
         if self.instance2() is not None:
             remove_callback(self.instance2(), self.prop2, self.prop1_from_prop2)
+        self.enabled = False

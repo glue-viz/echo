@@ -1,13 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
 import pytest
+from mock import MagicMock
 
 from qtpy import QtWidgets
 
 from echo import CallbackProperty
 from echo.qt.connect import (connect_checkable_button, connect_text,
                              connect_combo_data, connect_combo_text,
-                             connect_float_text, connect_value)
+                             connect_float_text, connect_value, connect_button)
 
 
 def test_connect_checkable_button():
@@ -197,3 +198,19 @@ def test_connect_value():
 
     t.c = 10
     assert slider.value() == 75
+
+
+def test_connect_button():
+
+    class Example(object):
+        a = MagicMock()
+
+    e = Example()
+
+    button = QtWidgets.QPushButton('OK')
+
+    connect_button(e, 'a', button)
+
+    assert e.a.call_count == 0
+    button.clicked.emit()
+    assert e.a.call_count == 1
