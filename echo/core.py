@@ -1,5 +1,4 @@
 import weakref
-from itertools import chain
 from weakref import WeakKeyDictionary
 from contextlib import contextmanager
 

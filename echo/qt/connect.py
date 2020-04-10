@@ -2,7 +2,6 @@
 # widgets.
 
 import math
-from functools import partial
 
 from qtpy import QtGui, QtWidgets
 from qtpy.QtCore import Qt
@@ -322,7 +321,8 @@ class connect_value(BaseConnection):
         value = self._widget.value()
         if self._value_range is not None:
             imin, imax = self._widget.minimum(), self._widget.maximum()
-            value = (value - imin) / (imax - imin) * (self._value_range[1] - self._value_range[0]) + self._value_range[0]
+            value = ((value - imin) / (imax - imin)
+                     * (self._value_range[1] - self._value_range[0]) + self._value_range[0])
         if self._log:
             value = 10 ** value
         setattr(self._instance, self._prop, value)
@@ -335,7 +335,8 @@ class connect_value(BaseConnection):
             value = math.log10(value)
         if self._value_range is not None:
             imin, imax = self._widget.minimum(), self._widget.maximum()
-            value = (value - self._value_range[0]) / (self._value_range[1] - self._value_range[0]) * (imax - imin) + imin
+            value = ((value - self._value_range[0])
+                     / (self._value_range[1] - self._value_range[0]) * (imax - imin) + imin)
         if isinstance(self._widget, QtWidgets.QSlider):
             self._widget.setValue(int(value))
         else:
@@ -540,9 +541,7 @@ class connect_list_selection(BaseConnection):
 
                 # We interpret None data as being disabled rows (used for headers)
                 if isinstance(choice, ChoiceSeparator):
-                    palette = self._widget.palette()
                     item.setFlags(Qt.ItemFlags(int(item.flags()) & int(~(Qt.ItemIsSelectable | Qt.ItemIsEnabled))))
-                    # item.setData(palette.color(QtGui.QPalette.Disabled, QtGui.QPalette.Text))
 
         if len(self._widget.selectedItems()) == 0:
             current_index = -1

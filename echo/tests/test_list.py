@@ -113,7 +113,6 @@ def test_state_in_a_list():
     stub.prop1[3] = state4
 
     # Check that all states except state 5 have a callback added
-    prop = getattr(Simple, 'a')
     assert len(state1._global_callbacks) == 1
     assert len(state2._global_callbacks) == 1
     assert len(state3._global_callbacks) == 1

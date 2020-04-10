@@ -1,5 +1,12 @@
 from __future__ import absolute_import, division, print_function
 
+try:
+    import qtpy  # noqa
+except Exception:
+    QT_INSTALLED = False
+else:
+    QT_INSTALLED = True
+
 qapp = None
 
 
@@ -13,10 +20,13 @@ def get_qapp():
 
 
 def pytest_configure(config):
-
-    try:
+    if QT_INSTALLED:
         from qtpy import QtWidgets  # noqa
-    except ImportError:
-        pass
-    else:
         app = get_qapp()  # noqa
+
+
+def pytest_unconfigure(config):
+    if QT_INSTALLED:
+        global qapp
+        qapp.exit()
+        qapp = None

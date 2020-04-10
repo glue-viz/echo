@@ -22,7 +22,7 @@ def test_connect_combo_selection():
 
     combo = QtWidgets.QComboBox()
 
-    c = connect_combo_selection(t, 'a', combo)
+    c1 = connect_combo_selection(t, 'a', combo)  # noqa
 
     assert combo.itemText(0) == 'value: 4'
     assert combo.itemText(1) == 'value: 3.5'

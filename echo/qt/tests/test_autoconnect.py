@@ -60,9 +60,9 @@ def test_autoconnect_callbacks_to_qt():
     person = Person()
 
     connect_kwargs = {'height': {'value_range': (0, 100)},
-                      'age': {'fmt':'{:.2f}'}}
+                      'age': {'fmt': '{:.2f}'}}
 
-    connections = autoconnect_callbacks_to_qt(person, widget, connect_kwargs=connect_kwargs)
+    c1 = autoconnect_callbacks_to_qt(person, widget, connect_kwargs=connect_kwargs)  # noqa
 
     # Check that modifying things in the Qt widget updates the callback properties
 
@@ -105,6 +105,7 @@ def test_autoconnect_callbacks_to_qt():
 
     person.log = False
     assert not widget.bool_log.isChecked()
+
 
 def test_autoconnect_with_empty_qt_item():
 
