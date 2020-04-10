@@ -36,7 +36,10 @@ Qt checkbox::
             super(MySimpleWindow, self).__init__(parent=parent)
             self.checkbox = QtWidgets.QCheckBox()
             self.setCentralWidget(self.checkbox)
-            connect_checkable_button(self, 'active', self.checkbox)
+            self._connection = connect_checkable_button(self, 'active', self.checkbox)
+
+Note that the connection object needs to be stored in a variable, as one there
+are no references left to the connection object, the connection is removed.
 
 Let's now write a small script that uses this Qt window and adds a callback
 when ``active`` is changed::

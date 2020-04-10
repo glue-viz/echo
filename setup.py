@@ -1,39 +1,15 @@
-from setuptools import setup, find_packages
+#!/usr/bin/env python
 
-VERSION = '0.1'
+import sys
+from distutils.version import LooseVersion
 
-DESCRIPTION = "Callback Properties in Python"
-NAME = "echo"
-AUTHOR = "Chris Beaumont"
-AUTHOR_EMAIL = "cbeaumont@cfa.harvard.edu"
-MAINTAINER = AUTHOR
-MAINTAINER_EMAIL = AUTHOR_EMAIL
-LICENSE = "MIT"
-URL = "https://github.com/glue-viz/echo"
+try:
+    import setuptools
+    assert LooseVersion(setuptools.__version__) >= LooseVersion('30.3')
+except (ImportError, AssertionError):
+    sys.stderr.write("ERROR: setuptools 30.3 or later is required\n")
+    sys.exit(1)
 
-with open('README.rst') as infile:
-    LONG_DESCRIPTION=infile.read()
+from setuptools import setup
 
-setup(name=NAME,
-      description=DESCRIPTION,
-      long_description=LONG_DESCRIPTION,
-      version=VERSION,
-      author=AUTHOR,
-      author_email=AUTHOR_EMAIL,
-      maintainer=MAINTAINER,
-      maintainer_email=MAINTAINER_EMAIL,
-      url=URL,
-      license=LICENSE,
-      packages=find_packages(),
-      classifiers=[
-          'Development Status :: 4 - Beta',
-          'Environment :: Console',
-          'Intended Audience :: Developers',
-          'License :: OSI Approved :: MIT License',
-          'Natural Language :: English',
-          'Programming Language :: Python :: 2.6',
-          'Programming Language :: Python :: 2.7',
-          'Programming Language :: Python :: 3.3',
-          'Operating System :: OS Independent',
-          'Topic :: Utilities'],
-      )
+setup(use_scm_version=True)

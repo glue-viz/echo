@@ -4,8 +4,9 @@ Full changelog
 0.2 (unreleased)
 ----------------
 
-* Ensure that when adding method callbacks, we use weak references to avoid
-  any circular references.
+* Python 3.6 or later is now required. [#20]
+
+* Significant refactoring of the package. [#20]
 
 0.1 (2014-03-13)
 ----------------

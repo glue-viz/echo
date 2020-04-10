@@ -1,5 +1,5 @@
 import pytest
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from ..core import HasCallbackProperties, delay_callback
 from ..selection import SelectionCallbackProperty, ChoiceSeparator
@@ -36,7 +36,7 @@ class TestSelectionCallbackProperty():
         # any values yet.
         with pytest.raises(ValueError) as exc:
             self.state.a = 1
-        assert exc.value.args[0] == "value 1 is not in valid choices"
+        assert exc.value.args[0] == "value 1 is not in valid choices: []"
 
         self.a.set_choices(self.state, [1, 2])
 
@@ -46,7 +46,7 @@ class TestSelectionCallbackProperty():
         # Again if we try and set to an invalid value, things break
         with pytest.raises(ValueError) as exc:
             self.state.a = 3
-        assert exc.value.args[0] == "value 3 is not in valid choices"
+        assert exc.value.args[0] == "value 3 is not in valid choices: [1, 2]"
 
     def test_value_constant(self):
 

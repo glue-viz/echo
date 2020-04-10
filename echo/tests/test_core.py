@@ -1,7 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 import pytest
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from echo import (CallbackProperty, add_callback,
                   remove_callback, delay_callback,
@@ -285,10 +283,12 @@ def test_class_add_remove_callback():
     state = State()
 
     class mockclass(object):
+
         def __init__(self):
             self.call_count = 0
             self.args = ()
             self.kwargs = {}
+
         def __call__(self, *args, **kwargs):
             self.args = args
             self.kwargs = kwargs
@@ -439,6 +439,8 @@ def test_keep_in_sync():
     assert state1_control.b is None
     assert state2.c == 7
     assert state2_control.c is None
+
+    s2.disable_syncing()
 
 
 def test_cleanup_when_objects_destroyed():

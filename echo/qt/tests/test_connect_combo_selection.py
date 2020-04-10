@@ -1,12 +1,10 @@
-from __future__ import absolute_import, division, print_function
-
 import pytest
 
 from qtpy import QtWidgets
 
-from ...core import CallbackProperty
-from ...selection import SelectionCallbackProperty, ChoiceSeparator
-from ..connect import connect_combo_selection
+from echo.core import CallbackProperty
+from echo.selection import SelectionCallbackProperty, ChoiceSeparator
+from echo.qt.connect import connect_combo_selection
 
 
 class Example(object):
@@ -24,12 +22,12 @@ def test_connect_combo_selection():
 
     combo = QtWidgets.QComboBox()
 
-    connect_combo_selection(t, 'a', combo)
+    c1 = connect_combo_selection(t, 'a', combo)  # noqa
 
     assert combo.itemText(0) == 'value: 4'
     assert combo.itemText(1) == 'value: 3.5'
-    assert combo.itemData(0) == 4
-    assert combo.itemData(1) == 3.5
+    assert combo.itemData(0).data == 4
+    assert combo.itemData(1).data == 3.5
 
     combo.setCurrentIndex(1)
     assert t.a == 3.5
@@ -48,7 +46,7 @@ def test_connect_combo_selection():
 
     with pytest.raises(ValueError) as exc:
         t.a = 2
-    assert exc.value.args[0] == 'value 2 is not in valid choices'
+    assert exc.value.args[0] == 'value 2 is not in valid choices: [4, 3.5]'
 
     t.a = None
     assert combo.currentIndex() == -1
@@ -68,9 +66,9 @@ def test_connect_combo_selection():
     assert combo.itemText(0) == 'value: 4'
     assert combo.itemText(1) == 'value: 5'
     assert combo.itemText(2) == 'value: 3.5'
-    assert combo.itemData(0) == 4
-    assert combo.itemData(1) == 5
-    assert combo.itemData(2) == 3.5
+    assert combo.itemData(0).data == 4
+    assert combo.itemData(1).data == 5
+    assert combo.itemData(2).data == 3.5
 
     # Now we change the choices so that there is no matching data - in this case
     # the index should change to that given by default_index
@@ -84,9 +82,9 @@ def test_connect_combo_selection():
     assert combo.itemText(0) == 'value: 4'
     assert combo.itemText(1) == 'value: 5'
     assert combo.itemText(2) == 'value: 6'
-    assert combo.itemData(0) == 4
-    assert combo.itemData(1) == 5
-    assert combo.itemData(2) == 6
+    assert combo.itemData(0).data == 4
+    assert combo.itemData(1).data == 5
+    assert combo.itemData(2).data == 6
 
     # Finally, if there are too few choices for the default_index to be valid,
     # pick the last item in the combo
@@ -98,7 +96,7 @@ def test_connect_combo_selection():
     assert combo.count() == 1
 
     assert combo.itemText(0) == 'value: 9'
-    assert combo.itemData(0) == 9
+    assert combo.itemData(0).data == 9
 
     # Now just make sure that ChoiceSeparator works
 
@@ -107,7 +105,7 @@ def test_connect_combo_selection():
 
     assert combo.count() == 3
     assert combo.itemText(0) == 'header'
-    assert combo.itemData(0) is separator
+    assert combo.itemData(0).data is separator
 
     # And setting choices to an empty iterable shouldn't cause issues
 

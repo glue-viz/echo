@@ -1,0 +1,48 @@
+resources:
+  repositories:
+  - repository: OpenAstronomy
+    type: github
+    endpoint: glue-viz
+    name: OpenAstronomy/azure-pipelines-templates
+    ref: master
+
+jobs:
+
+- template: run-tox-env.yml@OpenAstronomy
+  parameters:
+
+    xvfb: true
+    coverage: codecov
+    libraries:
+      apt:
+        - libxkbcommon-x11-0
+
+    envs:
+
+    - linux: codestyle
+      libraries: {}
+      coverage: 'false'
+
+    - linux: py36-test-pyqt59
+    - linux: py37-test-pyqt510
+    - linux: py37-test-pyqt511
+    - linux: py37-test-pyqt512
+    - linux: py37-test-pyqt513
+    - linux: py38-test-pyqt514
+    - linux: py36-test-pyside512
+    - linux: py37-test-pyside513
+    - linux: py38-test-pyside514
+
+    - macos: py36-test-pyqt59
+    - windows: py37-test-pyqt510
+    - macos: py37-test-pyqt511
+    - windows: py37-test-pyqt512
+    - macos: py37-test-pyqt513
+    - windows: py38-test-pyqt514
+    - macos: py36-test-pyside512
+    - windows: py37-test-pyside513
+    - macos: py38-test-pyside514
+
+    - linux: py36-docs-pyqt513
+    - macos: py37-docs-pyqt513
+    - windows: py38-docs-pyqt513

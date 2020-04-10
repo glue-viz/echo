@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
 import weakref
-from itertools import chain
 from weakref import WeakKeyDictionary
 from contextlib import contextmanager
 
@@ -86,13 +83,23 @@ class CallbackProperty(object):
         return self
 
     def _get_full_info(self, instance):
+
         # Some callback subclasses may contain additional info in addition
         # to the main value, and we need to use this full information when
         # comparing old and new 'values', so this method is used in that
         # case. The result should be a tuple where the first item is the
         # actual primary value of the property and the second item is any
         # additional data to use in the comparison.
-        return self.__get__(instance), None
+
+        # Note that we need to make sure we convert any list here to a tuple
+        # to make sure the value is immutable, otherwise comparisons of
+        # old != new will not show any difference (since the list can still)
+        # be modified in-place
+
+        value = self.__get__(instance)
+        if isinstance(value, list):
+            value = tuple(value)
+        return value, None
 
     def notify(self, instance, old, new):
         """
@@ -112,7 +119,7 @@ class CallbackProperty(object):
         new
             The new value of the property
         """
-        if self._disabled.get(instance, False):
+        if not self.enabled(instance):
             return
         for cback in self._callbacks.get(instance, []):
             cback(new)
@@ -130,6 +137,9 @@ class CallbackProperty(object):
         Enable previously-disabled callbacks for a specific instance
         """
         self._disabled[instance] = False
+
+    def enabled(self, instance):
+        return not self._disabled.get(instance, False)
 
     def add_callback(self, instance, func, echo_old=False, priority=0):
         """
@@ -174,6 +184,16 @@ class CallbackProperty(object):
                 return
         else:
             raise ValueError("Callback function not found: %s" % func)
+
+    def clear_callbacks(self, instance):
+        """
+        Remove all callbacks on this property.
+        """
+        for cb in [self._callbacks, self._2arg_callbacks]:
+            if instance in cb:
+                cb[instance].clear()
+        if instance in self._disabled:
+            self._disabled.pop(instance)
 
 
 class HasCallbackProperties(object):
@@ -329,6 +349,17 @@ class HasCallbackProperties(object):
         for name in dir(self):
             if self.is_callback_property(name):
                 yield name, getattr(type(self), name)
+
+    def callback_properties(self):
+        return [name for name in dir(self) if self.is_callback_property(name)]
+
+    def clear_callbacks(self):
+        """
+        Remove all global and property-specific callbacks.
+        """
+        self._global_callbacks.clear()
+        for name, prop in self.iter_callback_properties():
+            prop.clear_callbacks(self)
 
 
 def add_callback(instance, prop, callback, echo_old=False, priority=0):
@@ -513,7 +544,7 @@ def ignore_callback(instance, *props):
     Temporarily ignore any callbacks from one or more callback properties
 
     This is a context manager. Within the context block, no callbacks will be
-    issued. In contrast with :func:`~echo.delay_callback`, no callbakcs will be
+    issued. In contrast with `delay_callback`, no callbacks will be
     called on exiting the context manager
 
     Parameters
