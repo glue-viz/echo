@@ -80,33 +80,12 @@ class CallbackList(list):
         super(CallbackList, self).__setitem__(slc, new_value)
         self.callback()
 
-    if sys.version_info[0] >= 3:
-
-        def clear(self):
-            for item in self:
-                if isinstance(item, HasCallbackProperties):
-                    item.remove_global_callback(self.callback)
-            super(CallbackList, self).clear()
-            self.callback()
-
-    else:
-
-        def __setslice__(self, start, end, new_values):
-
-            slc = slice(start, end)
-
-            old_values = self[slc]
-
-            for old_value in old_values:
-                if isinstance(old_value, HasCallbackProperties):
-                    old_value.remove_global_callback(self.callback)
-
-            for value in new_values:
-                if isinstance(value, HasCallbackProperties):
-                    value.add_global_callback(self.callback)
-
-            super(CallbackList, self).__setslice__(start, end, new_values)
-            self.callback()
+    def clear(self):
+        for item in self:
+            if isinstance(item, HasCallbackProperties):
+                item.remove_global_callback(self.callback)
+        super(CallbackList, self).clear()
+        self.callback()
 
 
 class ListCallbackProperty(CallbackProperty):
