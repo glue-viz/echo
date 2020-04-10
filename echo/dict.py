@@ -26,13 +26,6 @@ class CallbackDict(dict):
         self.callback()
         return result
 
-    def setdefault(self, *args, **kwargs):
-        key = super().setdefault(*args, **kwargs)
-        if isinstance(key, HasCallbackProperties):
-            key.remove_global_callback(self.callback)
-        self.callback()
-        return key
-
     def update(self, *args, **kwargs):
         super().update(*args, **kwargs)
         if len(args) == 1:
@@ -61,15 +54,6 @@ class CallbackDict(dict):
         super().__setitem__(key, value)
         if isinstance(value, HasCallbackProperties):
             value.add_global_callback(self.callback)
-        self.callback()
-
-    def __reversed__(self):
-        result = super().__reversed__()
-        self.callback()
-        return result
-
-    def __delattr__(self, *args):
-        super().__delattr__(*args)
         self.callback()
 
     def __repr__(self):
