@@ -1,14 +1,13 @@
-from __future__ import absolute_import, division, print_function
-
 import pytest
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from qtpy import QtWidgets
 
 from echo import CallbackProperty
 from echo.qt.connect import (connect_checkable_button, connect_text,
-                             connect_combo_data, connect_combo_text,
-                             connect_float_text, connect_value, connect_button)
+                                           connect_combo_data, connect_combo_text,
+                                           connect_float_text, connect_value, connect_button,
+                                           UserDataWrapper)
 
 
 def test_connect_checkable_button():
@@ -20,7 +19,7 @@ def test_connect_checkable_button():
     t = Test()
 
     box1 = QtWidgets.QCheckBox()
-    connect_checkable_button(t, 'a', box1)
+    connection = connect_checkable_button(t, 'a', box1)
 
     box1.setChecked(True)
     assert t.a
@@ -53,10 +52,10 @@ def test_connect_text():
     t = Test()
 
     box = QtWidgets.QLineEdit()
-    connect_text(t, 'a', box)
+    connection1 = connect_text(t, 'a', box)
 
     label = QtWidgets.QLabel()
-    connect_text(t, 'b', label)
+    connection2 = connect_text(t, 'b', label)
 
     box.setText('test1')
     box.editingFinished.emit()
@@ -78,11 +77,11 @@ def test_connect_combo():
     t = Test()
 
     combo = QtWidgets.QComboBox()
-    combo.addItem('label1', 4)
-    combo.addItem('label2', 3.5)
+    combo.addItem('label1', UserDataWrapper(4))
+    combo.addItem('label2', UserDataWrapper(3.5))
 
-    connect_combo_text(t, 'a', combo)
-    connect_combo_data(t, 'b', combo)
+    connection1 = connect_combo_text(t, 'a', combo)
+    connection2 = connect_combo_data(t, 'b', combo)
 
     combo.setCurrentIndex(1)
     assert t.a == 'label2'
@@ -139,9 +138,9 @@ def test_connect_float_text():
     def fmt_func(x):
         return str(int(round(x)))
 
-    connect_float_text(t, 'a', line1)
-    connect_float_text(t, 'b', line2, fmt="{:5.2f}")
-    connect_float_text(t, 'c', line3, fmt=fmt_func)
+    c1 = connect_float_text(t, 'a', line1)
+    c2 = connect_float_text(t, 'b', line2, fmt="{:5.2f}")
+    c3 = connect_float_text(t, 'c', line3, fmt=fmt_func)
 
     for line in (line1, line2):
 
@@ -176,14 +175,14 @@ def test_connect_value():
     slider.setMinimum(0)
     slider.setMaximum(100)
 
-    connect_value(t, 'a', slider)
-    connect_value(t, 'b', slider, value_range=(0, 10))
+    c1 = connect_value(t, 'a', slider)
+    c2 = connect_value(t, 'b', slider, value_range=(0, 10))
 
     with pytest.raises(Exception) as exc:
         connect_value(t, 'c', slider, log=True)
     assert exc.value.args[0] == "log option can only be set if value_range is given"
 
-    connect_value(t, 'c', slider, value_range=(0.01, 100), log=True)
+    c3 = connect_value(t, 'c', slider, value_range=(0.01, 100), log=True)
 
     slider.setValue(25)
     assert t.a == 25

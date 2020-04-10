@@ -1,9 +1,8 @@
-from __future__ import absolute_import, division, print_function
-
 from qtpy import QtWidgets, QtGui
 
 from echo.qt.autoconnect import autoconnect_callbacks_to_qt
 from echo import CallbackProperty
+from echo.qt.connect import UserDataWrapper
 
 
 def test_autoconnect_callbacks_to_qt():
@@ -30,8 +29,8 @@ def test_autoconnect_callbacks_to_qt():
 
             self.combodata_dataset = QtWidgets.QComboBox(objectName='combodata_dataset')
             self.layout.addWidget(self.combodata_dataset)
-            self.combodata_dataset.addItem('data1', data1)
-            self.combodata_dataset.addItem('data2', data2)
+            self.combodata_dataset.addItem('data1', UserDataWrapper(data1))
+            self.combodata_dataset.addItem('data2', UserDataWrapper(data2))
 
             self.text_name = QtWidgets.QLineEdit(objectName='text_name')
             self.layout.addWidget(self.text_name)
@@ -63,7 +62,7 @@ def test_autoconnect_callbacks_to_qt():
     connect_kwargs = {'height': {'value_range': (0, 100)},
                       'age': {'fmt':'{:.2f}'}}
 
-    autoconnect_callbacks_to_qt(person, widget, connect_kwargs=connect_kwargs)
+    connections = autoconnect_callbacks_to_qt(person, widget, connect_kwargs=connect_kwargs)
 
     # Check that modifying things in the Qt widget updates the callback properties
 

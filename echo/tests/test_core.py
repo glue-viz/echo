@@ -1,12 +1,10 @@
-from __future__ import absolute_import, division, print_function
-
 import pytest
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from echo import (CallbackProperty, add_callback,
-                  remove_callback, delay_callback,
-                  ignore_callback, callback_property,
-                  HasCallbackProperties, keep_in_sync)
+                                remove_callback, delay_callback,
+                                ignore_callback, callback_property,
+                                HasCallbackProperties, keep_in_sync)
 
 
 class Stub(object):

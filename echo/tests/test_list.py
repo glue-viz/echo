@@ -1,8 +1,6 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 import pytest
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 from echo import CallbackProperty, ListCallbackProperty, HasCallbackProperties
 
