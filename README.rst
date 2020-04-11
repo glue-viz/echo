@@ -1,4 +1,4 @@
-|Travis Build Status| |AppVeyor Build status| |Coveralls coverage|
+|Azure Status| |Coverage status|
 
 echo: Callback Properties in Python
 ===================================
@@ -37,11 +37,8 @@ CalllbackProperties can also be built using decorators
 
 Full documentation is avilable `here <http://echo.readthedocs.org/>`__
 
-.. |Travis Build Status| image:: https://travis-ci.org/glue-viz/echo.svg?branch=master
-   :target: https://travis-ci.org/glue-viz/echo
-.. |AppVeyor Build status| image:: https://ci.appveyor.com/api/projects/status/rg4p7facvxcdu6jg/branch/master?svg=true
-   :target: https://ci.appveyor.com/project/glue-viz/echo
-.. |Coveralls coverage| image:: https://coveralls.io/repos/glue-viz/echo/badge.svg
-   :target: https://coveralls.io/r/glue-viz/echo
-
+.. |Azure Status| image:: https://dev.azure.com/glue-viz/echo/_apis/build/status/glue-viz.echo?branchName=master
+   :target: https://dev.azure.com/glue-viz/echo/_build/latest?definitionId=4&branchName=master
+.. |Coverage Status| image:: https://codecov.io/gh/glue-viz/echo/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/glue-viz/echo
 
