@@ -33,12 +33,7 @@ class CallbackList(list, ContainerMixin):
         super(CallbackList, self).__init__(*args, **kwargs)
         self.callback = callback
         for index, value in enumerate(self):
-            if isinstance(value, list):
-                super().__setitem__(index, CallbackList(callback, value))
-            if isinstance(value, HasCallbackProperties):
-                value.add_global_callback(self.callback)
-            elif isinstance(value, CallbackList):
-                value.callback = self.callback
+            super().__setitem__(index, self._prepare_add(value))
 
     def __repr__(self):
         return "<CallbackList with {0} elements>".format(len(self))

@@ -311,21 +311,26 @@ def test_dict_change_callback():
     assert test1.call_count == 2
     assert stub.prop1 == {}
 
-    stub.prop1.update({'b': 2, 'c': 3})
+    stub.prop1.update({'b': 2, 'c': 3, 'd': 4})
     assert test1.call_count == 3
-    assert stub.prop1 == {'b': 2, 'c': 3}
+    assert stub.prop1 == {'b': 2, 'c': 3, 'd': 4}
 
     p = stub.prop1.pop('b')
     assert test1.call_count == 4
     assert p == 2
-    assert stub.prop1 == {'c': 3}
+    assert stub.prop1 == {'c': 3, 'd': 4}
 
-    stub.prop1['c'] = 4
+    k, v = stub.prop1.popitem()
     assert test1.call_count == 5
-    assert stub.prop1 == {'c': 4}
+    assert stub.prop1 == {'c': 3} if k == 'd' else {'d': 4}
+    remaining_key = 'c' if k == 'd' else 'd'
+
+    stub.prop1[remaining_key] = 6
+    assert test1.call_count == 6
+    assert stub.prop1 == {remaining_key: 6}
 
     stub.prop1.clear()
-    assert test1.call_count == 6
+    assert test1.call_count == 7
     assert stub.prop1 == {}
 
 
@@ -428,31 +433,60 @@ def test_dict_nested_callbacks():
 
 def test_multiple_nested_list_and_dict():
 
-    stub = StubDict()
+    stubd = StubDict()
 
     test1 = MagicMock()
-    stub.add_callback('prop1', test1)
+    stubd.add_callback('prop1', test1)
 
-    stub.prop1 = {'a': {'b': {'c': 1}}}
+    stubd.prop1 = {'a': {'b': {'c': 1}}}
     assert test1.call_count == 1
 
-    stub.prop1['a']['b']['c'] = 2
+    stubd.prop1['a']['b']['c'] = 2
     assert test1.call_count == 2
 
-    stub.prop1['a']['b']['c'] = {'d': 3}
+    stubd.prop1['a']['b']['c'] = {'d': 3}
     assert test1.call_count == 3
 
-    stub.prop1['a']['b']['c']['d'] = 4
+    stubd.prop1['a']['b']['c']['d'] = 4
     assert test1.call_count == 4
 
-    stub.prop1['a']['b'] = [1, 2, 3]
+    stubd.prop1['a']['b'] = [1, 2, 3]
     assert test1.call_count == 5
 
-    stub.prop1['a']['b'][1] = {'e': 6}
+    stubd.prop1['a']['b'][1] = {'e': 6}
     assert test1.call_count == 6
 
-    stub.prop1['a']['b'][1]['e'] = 7
+    stubd.prop1['a']['b'][1]['e'] = 7
     assert test1.call_count == 7
 
-    stub.prop1['a'] = 2
+    stubd.prop1['a'] = 2
     assert test1.call_count == 8
+
+    stubl = StubList()
+
+    test2 = MagicMock()
+    stubl.add_callback('prop1', test2)
+
+    stubl.prop1 = [1, 2, {'a': 3, 'b': [4, 5, {'c': 6}]}]
+    assert test2.call_count == 1
+
+    stubl.prop1[2]['b'][2]['c'] = 5
+    assert test2.call_count == 2
+
+    stubl.prop1[2]['b'][2] = {'d': 7}
+    assert test2.call_count == 3
+
+    stubl.prop1[2]['b'][2]['d'] = 2
+    assert test2.call_count == 4
+
+    stubl.prop1[2]['b'][2] = [1, 2]
+    assert test2.call_count == 5
+
+    stubl.prop1[2]['b'][2][0] = 3
+    assert test2.call_count == 6
+
+    stubl.prop1[2] = [1, 2]
+    assert test2.call_count == 7
+
+    stubl.prop1[2][1] = 3
+    assert test2.call_count == 8
