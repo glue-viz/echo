@@ -87,7 +87,9 @@ class SelectionCallbackProperty(CallbackProperty):
         # equality not identity (and we really just care about identity here)
         # However, for simple Python types, we also need to check ==.
         for choice in choices:
-            if selection is choice or ((np.isreal(choice) or isinstance(choice, str)) and selection == choice):
+            if selection is choice or (np.isscalar(choice) and
+                                       (np.isreal(choice) or isinstance(choice, str)) and
+                                       selection == choice):
                 return
 
         choices_without_separators = [choice for choice in choices

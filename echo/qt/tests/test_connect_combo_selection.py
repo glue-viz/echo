@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from qtpy import QtWidgets
 
@@ -111,6 +112,9 @@ def test_connect_combo_selection():
 
     a_prop.set_choices(t, ())
     assert combo.count() == 0
+
+    # Try including an array in the choices
+    a_prop.set_choices(t, (4, 5, np.array([1, 2, 3])))
 
 
 def test_connect_combo_selection_invalid():
