@@ -202,8 +202,7 @@ class HasCallbackProperties(object):
     """
 
     def __init__(self):
-        from .list import ListCallbackProperty
-        from .dict import DictCallbackProperty
+        from .containers import ListCallbackProperty, DictCallbackProperty
         self._global_callbacks = CallbackContainer()
         self._ignored_properties = set()
         self._delayed_properties = {}
@@ -240,8 +239,7 @@ class HasCallbackProperties(object):
         self._notify_global(**kwargs)
 
     def _notify_global_listordict(self, *args):
-        from .list import ListCallbackProperty
-        from .dict import DictCallbackProperty
+        from .containers import ListCallbackProperty, DictCallbackProperty
         properties = {}
         for prop_name, prop in self.iter_callback_properties():
             if isinstance(prop, (ListCallbackProperty, DictCallbackProperty)):
