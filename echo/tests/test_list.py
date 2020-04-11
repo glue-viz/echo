@@ -1,4 +1,3 @@
-import sys
 import pytest
 from unittest.mock import MagicMock
 
@@ -51,10 +50,7 @@ def test_list_change_callback():
     assert test1.call_count == 1
     assert stub.prop1 == [3]
 
-    if sys.version_info[0] == 2:
-        stub.prop1[:] = []
-    else:
-        stub.prop1.clear()
+    stub.prop1.clear()
     assert test1.call_count == 2
     assert stub.prop1 == []
 
@@ -221,28 +217,26 @@ def test_state_in_a_list():
     state5.a = 5
     assert callback.call_count == 15
 
-    if sys.version_info[0] >= 3:
+    # On Python 3, check that clear does the right thing
+    stub.prop1.clear()
+    assert callback.call_count == 16
+    assert len(state1._global_callbacks) == 0
+    assert len(state2._global_callbacks) == 0
+    assert len(state3._global_callbacks) == 0
+    assert len(state4._global_callbacks) == 0
+    assert len(state5._global_callbacks) == 0
 
-        # On Python 3, check that clear does the right thing
-        stub.prop1.clear()
-        assert callback.call_count == 16
-        assert len(state1._global_callbacks) == 0
-        assert len(state2._global_callbacks) == 0
-        assert len(state3._global_callbacks) == 0
-        assert len(state4._global_callbacks) == 0
-        assert len(state5._global_callbacks) == 0
-
-        # Now the callback should never be called
-        state1.a = 6
-        assert callback.call_count == 16
-        state2.a = 6
-        assert callback.call_count == 16
-        state3.a = 6
-        assert callback.call_count == 16
-        state4.a = 6
-        assert callback.call_count == 16
-        state5.a = 6
-        assert callback.call_count == 16
+    # Now the callback should never be called
+    state1.a = 6
+    assert callback.call_count == 16
+    state2.a = 6
+    assert callback.call_count == 16
+    state3.a = 6
+    assert callback.call_count == 16
+    state4.a = 6
+    assert callback.call_count == 16
+    state5.a = 6
+    assert callback.call_count == 16
 
 
 def test_nested_callbacks_in_list():

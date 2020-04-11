@@ -203,14 +203,15 @@ class HasCallbackProperties(object):
 
     def __init__(self):
         from .list import ListCallbackProperty
+        from .dict import DictCallbackProperty
         self._global_callbacks = CallbackContainer()
         self._ignored_properties = set()
         self._delayed_properties = {}
         self._delay_global_calls = {}
         self._callback_wrappers = {}
         for prop_name, prop in self.iter_callback_properties():
-            if isinstance(prop, ListCallbackProperty):
-                prop.add_callback(self, self._notify_global_lists)
+            if isinstance(prop, (ListCallbackProperty, DictCallbackProperty)):
+                prop.add_callback(self, self._notify_global_listordict)
 
     def _ignore_global_callbacks(self, properties):
         # This is to allow ignore_callbacks to work for global callbacks
@@ -238,14 +239,15 @@ class HasCallbackProperties(object):
                 kwargs[prop] = new_value[0]
         self._notify_global(**kwargs)
 
-    def _notify_global_lists(self, *args):
+    def _notify_global_listordict(self, *args):
         from .list import ListCallbackProperty
+        from .dict import DictCallbackProperty
         properties = {}
         for prop_name, prop in self.iter_callback_properties():
-            if isinstance(prop, ListCallbackProperty):
-                callback_list = getattr(self, prop_name)
-                if callback_list is args[0]:
-                    properties[prop_name] = callback_list
+            if isinstance(prop, (ListCallbackProperty, DictCallbackProperty)):
+                callback_listordict = getattr(self, prop_name)
+                if callback_listordict is args[0]:
+                    properties[prop_name] = callback_listordict
                     break
         self._notify_global(**properties)
 
