@@ -54,8 +54,15 @@ def test_list_explicit_default():
     class TestList(HasCallbackProperties):
         prop = ListCallbackProperty(default=[1, 2, 3])
 
-    test = TestList()
-    assert test.prop == [1, 2, 3]
+    test1 = TestList()
+    assert test1.prop == [1, 2, 3]
+
+    test2 = TestList()
+    assert test2.prop == [1, 2, 3]
+
+    test1.prop.append(4)
+    assert test1.prop == [1, 2, 3, 4]
+    assert test2.prop == [1, 2, 3]
 
 
 def test_list_change_callback():
@@ -308,8 +315,15 @@ def test_dict_explicit_default():
     class TestDict(HasCallbackProperties):
         prop = DictCallbackProperty(default={'a': 1, 'b': 2})
 
-    test = TestDict()
-    assert test.prop == {'a': 1, 'b': 2}
+    test1 = TestDict()
+    assert test1.prop == {'a': 1, 'b': 2}
+
+    test2 = TestDict()
+    assert test2.prop == {'a': 1, 'b': 2}
+
+    test1.prop['c'] = 3
+    assert test1.prop == {'a': 1, 'b': 2, 'c': 3}
+    assert test2.prop == {'a': 1, 'b': 2}
 
 
 def test_dict_change_callback():
