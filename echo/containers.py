@@ -159,7 +159,7 @@ class ListCallbackProperty(CallbackProperty):
 
     def _default_getter(self, instance, owner=None):
         if instance not in self._values:
-            self._default_setter(instance, [])
+            self._default_setter(instance, self._default or [])
         return super(ListCallbackProperty, self)._default_getter(instance, owner)
 
     def _default_setter(self, instance, value):
@@ -183,7 +183,7 @@ class DictCallbackProperty(CallbackProperty):
     """
     def _default_getter(self, instance, owner=None):
         if instance not in self._values:
-            self._default_setter(instance, {})
+            self._default_setter(instance, self._default or {})
         return super()._default_getter(instance, owner)
 
     def _default_setter(self, instance, value):

@@ -43,10 +43,19 @@ def test_list_invalid():
     assert exc.value.args[0] == "callback property should be a list"
 
 
-def test_list_default():
+def test_list_default_empty():
 
     stub = StubList()
     stub.prop1.append(1)
+
+
+def test_list_explicit_default():
+
+    class TestList(HasCallbackProperties):
+        prop = ListCallbackProperty(default=[1, 2, 3])
+
+    test = TestList()
+    assert test.prop == [1, 2, 3]
 
 
 def test_list_change_callback():
@@ -288,10 +297,19 @@ def test_dict_invalid():
     assert exc.value.args[0] == "Callback property should be a dictionary."
 
 
-def test_dict_default():
+def test_dict_default_empty():
 
     stub = StubDict()
     stub.prop1['a'] = 1
+
+
+def test_dict_explicit_default():
+
+    class TestDict(HasCallbackProperties):
+        prop = DictCallbackProperty(default={'a': 1, 'b': 2})
+
+    test = TestDict()
+    assert test.prop == {'a': 1, 'b': 2}
 
 
 def test_dict_change_callback():
