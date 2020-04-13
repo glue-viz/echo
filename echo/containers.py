@@ -84,8 +84,6 @@ class CallbackList(list, ContainerMixin):
         else:
             new_value = self._prepare_add(new_value)
 
-        print(slc, new_value)
-
         super(CallbackList, self).__setitem__(slc, new_value)
         self.callback()
 
