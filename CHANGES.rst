@@ -5,7 +5,7 @@ Full changelog
 ----------------
 
 * Added the ability to add arbitrary callbacks to ``CallbackDict`` and
- ``CallbackList`` via the ``.callbacks`` attribute.
+ ``CallbackList`` via the ``.callbacks`` attribute. [#25]
 
 0.3 (2020-05-04)
 ----------------
