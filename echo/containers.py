@@ -1,24 +1,28 @@
 from . import CallbackProperty, HasCallbackProperties
+from .callback_container import CallbackContainer
+
+__all__ = ['CallbackList', 'CallbackDict',
+           'ListCallbackProperty', 'DictCallbackProperty']
 
 
 class ContainerMixin:
 
     def _prepare_add(self, value):
         if isinstance(value, list):
-            value = CallbackList(self.callback, value)
+            value = CallbackList(self.notify_all, value)
         elif isinstance(value, dict):
-            value = CallbackDict(self.callback, value)
+            value = CallbackDict(self.notify_all, value)
         if isinstance(value, HasCallbackProperties):
-            value.add_global_callback(self.callback)
+            value.add_global_callback(self.notify_all)
         elif isinstance(value, (CallbackList, CallbackDict)):
-            value.callback = self.callback
+            value.callback = self.notify_all
         return value
 
     def _cleanup_remove(self, value):
         if isinstance(value, HasCallbackProperties):
-            value.remove_global_callback(self.callback)
+            value.remove_global_callback(self.notify_all)
         elif isinstance(value, (CallbackList, CallbackDict)):
-            value.callback = None
+            value.callbacks.remove(self.notify_all)
 
 
 class CallbackList(list, ContainerMixin):
@@ -31,44 +35,49 @@ class CallbackList(list, ContainerMixin):
 
     def __init__(self, callback, *args, **kwargs):
         super(CallbackList, self).__init__(*args, **kwargs)
-        self.callback = callback
+        self.callbacks = CallbackContainer()
+        self.callbacks.append(callback)
         for index, value in enumerate(self):
             super().__setitem__(index, self._prepare_add(value))
+
+    def notify_all(self, *args, **kwargs):
+        for callback in self.callbacks:
+            callback(*args, **kwargs)
 
     def __repr__(self):
         return "<CallbackList with {0} elements>".format(len(self))
 
     def append(self, value):
         super(CallbackList, self).append(self._prepare_add(value))
-        self.callback()
+        self.notify_all()
 
     def extend(self, iterable):
         iterable = [self._prepare_add(value) for value in iterable]
         super(CallbackList, self).extend(iterable)
-        self.callback()
+        self.notify_all()
 
     def insert(self, index, value):
         super(CallbackList, self).insert(index, self._prepare_add(value))
-        self.callback()
+        self.notify_all()
 
     def pop(self, index=-1):
         result = super(CallbackList, self).pop(index)
         self._cleanup_remove(result)
-        self.callback()
+        self.notify_all()
         return result
 
     def remove(self, value):
         super(CallbackList, self).remove(value)
         self._cleanup_remove(value)
-        self.callback()
+        self.notify_all()
 
     def reverse(self):
         super(CallbackList, self).reverse()
-        self.callback()
+        self.notify_all()
 
     def sort(self, key=None, reverse=False):
         super(CallbackList, self).sort(key=key, reverse=reverse)
-        self.callback()
+        self.notify_all()
 
     def __setitem__(self, slc, new_value):
 
@@ -85,13 +94,13 @@ class CallbackList(list, ContainerMixin):
             new_value = self._prepare_add(new_value)
 
         super(CallbackList, self).__setitem__(slc, new_value)
-        self.callback()
+        self.notify_all()
 
     def clear(self):
         for item in self:
             self._cleanup_remove(item)
         super(CallbackList, self).clear()
-        self.callback()
+        self.notify_all()
 
 
 class CallbackDict(dict, ContainerMixin):
@@ -104,20 +113,25 @@ class CallbackDict(dict, ContainerMixin):
 
     def __init__(self, callback, *args, **kwargs):
         super(CallbackDict, self).__init__(*args, **kwargs)
-        self.callback = callback
+        self.callbacks = CallbackContainer()
+        self.callbacks.append(callback)
         for key, value in self.items():
             super().__setitem__(key, self._prepare_add(value))
+
+    def notify_all(self, *args, **kwargs):
+        for callback in self.callbacks:
+            callback(*args, **kwargs)
 
     def clear(self):
         for value in self.values():
             self._cleanup_remove(value)
         super().clear()
-        self.callback()
+        self.notify_all()
 
     def popitem(self):
         result = super().popitem()
         self._cleanup_remove(result)
-        self.callback()
+        self.notify_all()
         return result
 
     def update(self, *args, **kwargs):
@@ -126,19 +140,19 @@ class CallbackDict(dict, ContainerMixin):
         for key, value in values.items():
             values[key] = self._prepare_add(value)
         super().update(values)
-        self.callback()
+        self.notify_all()
 
     def pop(self, *args, **kwargs):
         result = super().pop(*args, **kwargs)
         self._cleanup_remove(result)
-        self.callback()
+        self.notify_all()
         return result
 
     def __setitem__(self, key, value):
         if key in self:
             self._cleanup_remove(self[key])
         super().__setitem__(key, self._prepare_add(value))
-        self.callback()
+        self.notify_all()
 
     def __repr__(self):
         return f"<CallbackDict with {len(self)} elements>"
@@ -167,12 +181,14 @@ class ListCallbackProperty(CallbackProperty):
         if not isinstance(value, list):
             raise TypeError('callback property should be a list')
 
-        wrapped_list = CallbackList(dynamic_callback(), value)
+        dcb = dynamic_callback()
+
+        wrapped_list = CallbackList(dcb, value)
 
         def callback(*args, **kwargs):
             self.notify(instance, wrapped_list, wrapped_list)
 
-        wrapped_list.callback.function = callback
+        dcb.function = callback
 
         super(ListCallbackProperty, self)._default_setter(instance, wrapped_list)
 
@@ -191,11 +207,13 @@ class DictCallbackProperty(CallbackProperty):
         if not isinstance(value, dict):
             raise TypeError("Callback property should be a dictionary.")
 
-        wrapped_dict = CallbackDict(dynamic_callback(), value)
+        dcb = dynamic_callback()
+
+        wrapped_dict = CallbackDict(dcb, value)
 
         def callback(*args, **kwargs):
             self.notify(instance, wrapped_dict, wrapped_dict)
 
-        wrapped_dict.callback.function = callback
+        dcb.function = callback
 
         super()._default_setter(instance, wrapped_dict)

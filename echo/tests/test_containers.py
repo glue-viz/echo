@@ -522,3 +522,63 @@ def test_multiple_nested_list_and_dict():
 
     stubl.prop1[2][1] = 3
     assert test2.call_count == 8
+
+
+def test_list_additional_callbacks():
+
+    stub = StubList()
+
+    test1 = MagicMock()
+    test2 = MagicMock()
+    stub.add_callback('prop1', test1)
+
+    stub.prop1 = [3]
+    stub.prop2 = [4]
+
+    assert test1.call_count == 1
+    assert test2.call_count == 0
+
+    stub.prop1.callbacks.append(test2)
+
+    stub.prop2.append(5)
+    assert test1.call_count == 1
+    assert test2.call_count == 0
+
+    stub.prop1.append(2)
+    assert test1.call_count == 2
+    assert test2.call_count == 1
+
+    stub.prop1.callbacks.remove(test2)
+    stub.prop1.append(4)
+    assert test1.call_count == 3
+    assert test2.call_count == 1
+
+
+def test_dict_additional_callbacks():
+
+    stub = StubDict()
+
+    test1 = MagicMock()
+    test2 = MagicMock()
+    stub.add_callback('prop1', test1)
+
+    stub.prop1 = {'a': 1}
+    stub.prop2 = {'b': 2}
+
+    assert test1.call_count == 1
+    assert test2.call_count == 0
+
+    stub.prop1.callbacks.append(test2)
+
+    stub.prop2['c'] = 3
+    assert test1.call_count == 1
+    assert test2.call_count == 0
+
+    stub.prop1['d'] = 4
+    assert test1.call_count == 2
+    assert test2.call_count == 1
+
+    stub.prop1.callbacks.remove(test2)
+    stub.prop1['e'] = 5
+    assert test1.call_count == 3
+    assert test2.call_count == 1
