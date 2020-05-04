@@ -1,6 +1,11 @@
 Full changelog
 ==============
 
+0.3 (2020-05-04)
+----------------
+
+* Fix setting of defaults in callback list and dict properties. [#24]
+
 0.2 (2020-04-11)
 ----------------
 
