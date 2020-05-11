@@ -14,12 +14,13 @@ class ChoiceSeparator(str):
 
 class SelectionCallbackProperty(CallbackProperty):
 
-    def __init__(self, default_index=0, choices=None, display_func=None, **kwargs):
+    def __init__(self, default_index=0, choices=None, display_func=None, comparison_type=None, **kwargs):
         if choices is not None and 'default' not in kwargs:
             kwargs['default'] = choices[default_index]
         super(SelectionCallbackProperty, self).__init__(**kwargs)
         self.default_index = default_index
         self.default_choices = choices or []
+        self.comparison_type = comparison_type
         self._default_display_func = display_func
         self._choices = WeakKeyDictionary()
         self._display = WeakKeyDictionary()
@@ -31,9 +32,12 @@ class SelectionCallbackProperty(CallbackProperty):
             # For built-in scalar types we use ==, and for other types we use
             # is, otherwise e.g. ComponentID returns something that evaluates
             # to true when using ==.
-            if ((np.isscalar(value) and not any(value == x for x in choices)) or
-                    (not np.isscalar(value) and not any(value is x for x in choices))):
-                raise ValueError('value {0} is not in valid choices: {1}'.format(value, choices))
+            if self.comparison_type == 'equality' or (self.comparison_type is None and np.isscalar(value)):
+                if not any(value == x for x in choices):
+                    raise ValueError('value {0} is not in valid choices: {1}'.format(value, choices))
+            if self.comparison_type == 'identity' or (self.comparison_type is None and not np.isscalar(value)):
+                if not any(value is x for x in choices):
+                    raise ValueError('value {0} is not in valid choices: {1}'.format(value, choices))
         super(SelectionCallbackProperty, self).__set__(instance, value)
 
     def force_next_sync(self, instance):
