@@ -1,6 +1,12 @@
 Full changelog
 ==============
 
+0.5 (unreleased)
+----------------
+
+* Add the ability to specify for ``SelectionCallbackProperty`` whether to
+  compare choices using equality or identity.
+
 0.4 (2020-05-04)
 ----------------
 
