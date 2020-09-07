@@ -71,6 +71,11 @@ class CallbackContainer(object):
             if len(callback) == 3:
                 func = callback[0]()
                 inst = callback[1]()
+                # In some cases it can happen that the instance has been
+                # garbage collected but _auto_remove hasn't been called, so we
+                # just check here that the weakrefs were resolved
+                if func is None or inst is None:
+                    continue
                 yield partial(func, inst)
             else:
                 yield callback[0]
