@@ -1,11 +1,14 @@
 Full changelog
 ==============
 
-0.5 (unreleased)
+0.5 (2020-11-08)
 ----------------
 
 * Add the ability to specify for ``SelectionCallbackProperty`` whether to
-  compare choices using equality or identity.
+  compare choices using equality or identity. [#26]
+
+* Fixed an issue that could lead to ``CallbackContainer`` returning dead
+  weak references during iteration. [#27]
 
 0.4 (2020-05-04)
 ----------------
