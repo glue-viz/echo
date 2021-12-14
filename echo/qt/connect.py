@@ -337,7 +337,7 @@ class connect_value(BaseConnection):
             imin, imax = self._widget.minimum(), self._widget.maximum()
             value = ((value - self._value_range[0])
                      / (self._value_range[1] - self._value_range[0]) * (imax - imin) + imin)
-        if isinstance(self._widget, QtWidgets.QSlider):
+        if isinstance(self._widget, (QtWidgets.QSlider, QtWidgets.QSpinBox)):
             self._widget.setValue(int(value))
         else:
             self._widget.setValue(value)
