@@ -1,6 +1,11 @@
 Full changelog
 ==============
 
+0.6 (2021-12-14)
+----------------
+
+* Fixed compatibility with recent PyQt5 versions.
+
 0.5 (2020-11-08)
 ----------------
 
