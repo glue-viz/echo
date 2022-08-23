@@ -30,28 +30,34 @@ jobs:
 
       envs: |
         # Standard tests
-        # Linux builds - test on all supported PyQt5 and PySide2 versions,
+        # Linux builds - test on all supported PyQt5, PyQt6 and PySide2 versions,
         # and include all dependencies in some builds
         - linux: py37-test-pyqt510
         - linux: py37-test-pyqt511
         - linux: py37-test-pyqt512
         - linux: py37-test-pyqt513
+        - linux: py39-test-pyqt515
+        - linux: py310-test-pyqt63
+
         - linux: py37-test-pyside513
         - linux: py38-test-pyside514
-        - linux: py39-test-pyqt515
         - linux: py310-test-pyside515
 
         # Test a few configurations on MacOS X (Big Sur/Monterey on arm64 for py310)
         - macos: py37-test-pyqt513
         - macos: py38-test-pyqt514
         - macos: py310-test-pyqt515
+        - macos: py310-test-pyqt63
+
         - macos: py39-test-pyside514
           PLAT: arm64
 
         # Test some configurations on Windows
         - windows: py37-test-pyqt510
         - windows: py38-test-pyqt514
-        - windows: py310-test-pyqt515
+        - windows: py39-test-pyqt515
+        - windows: py310-test-pyqt63
+
         - windows: py39-test-pyside515
 
         # Try out documentation build on Linux, macOS and Windows
