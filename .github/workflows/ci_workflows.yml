@@ -24,6 +24,7 @@ jobs:
     with:
       coverage: codecov
       display: true
+      # Linux PyQt 5.15 and 6.3 installations require apt-getting xcb and EGL deps
       libraries: |
         apt:
           - '^libxcb.*-dev'
@@ -43,6 +44,7 @@ jobs:
         - linux: py37-test-pyside513
         - linux: py38-test-pyside514
         - linux: py310-test-pyside515
+        - linux: py310-test-pyside63
 
         # Test a few configurations on MacOS X (ask for arm64 with py310; may not be available yet)
         - macos: py37-test-pyqt513
@@ -53,6 +55,7 @@ jobs:
           PLAT: arm64
 
         - macos: py39-test-pyside515
+        - macos: py310-test-pyside63
 
         # Test some configurations on Windows
         - windows: py37-test-pyqt510
@@ -61,6 +64,7 @@ jobs:
         - windows: py310-test-pyqt63
 
         - windows: py38-test-pyside515
+        - windows: py310-test-pyside63
 
         # Try out documentation build on Linux, macOS and Windows
         - linux: py39-docs-pyqt513
