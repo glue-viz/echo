@@ -450,7 +450,7 @@ class connect_combo_selection(BaseConnection):
                 if isinstance(choice, ChoiceSeparator):
                     item = combo_model.item(index)
                     palette = self._widget.palette()
-                    item.setFlags(Qt.ItemFlags(int(item.flags()) & int(~(Qt.ItemIsSelectable | Qt.ItemIsEnabled))))
+                    item.setFlags(item.flags() & ~(Qt.ItemIsSelectable | Qt.ItemIsEnabled))
                     item.setData(palette.color(QtGui.QPalette.Disabled, QtGui.QPalette.Text))
 
             choices_updated = True
