@@ -516,7 +516,7 @@ class connect_list_selection(BaseConnection):
         choice_labels = getattr(type(self._instance), self._prop).get_choice_labels(self._instance)
 
         for idx in range(len(choices)):
-            if choices[idx] is value:
+            if choices[idx] is value or (choices[idx] == value) is True:
                 break
         else:
             idx = -1
