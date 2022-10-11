@@ -541,7 +541,7 @@ class connect_list_selection(BaseConnection):
 
                 # We interpret None data as being disabled rows (used for headers)
                 if isinstance(choice, ChoiceSeparator):
-                    item.setFlags(Qt.ItemFlags(int(item.flags()) & int(~(Qt.ItemIsSelectable | Qt.ItemIsEnabled))))
+                    item.setFlags(item.flags() & ~(Qt.ItemIsSelectable | Qt.ItemIsEnabled))
 
         if len(self._widget.selectedItems()) == 0:
             current_index = -1
