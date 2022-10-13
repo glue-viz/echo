@@ -516,7 +516,7 @@ class connect_list_selection(BaseConnection):
         choice_labels = getattr(type(self._instance), self._prop).get_choice_labels(self._instance)
 
         for idx in range(len(choices)):
-            if choices[idx] is value:
+            if choices[idx] is value or (choices[idx] == value) is True:
                 break
         else:
             idx = -1
@@ -541,7 +541,7 @@ class connect_list_selection(BaseConnection):
 
                 # We interpret None data as being disabled rows (used for headers)
                 if isinstance(choice, ChoiceSeparator):
-                    item.setFlags(Qt.ItemFlags(int(item.flags()) & int(~(Qt.ItemIsSelectable | Qt.ItemIsEnabled))))
+                    item.setFlags(item.flags() & ~(Qt.ItemIsSelectable | Qt.ItemIsEnabled))
 
         if len(self._widget.selectedItems()) == 0:
             current_index = -1
