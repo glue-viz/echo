@@ -60,7 +60,7 @@ jobs:
         - windows: py310-test-pyside63
 
         # Try out documentation build on Linux, macOS and Windows
-        - linux: py39-docs-pyqt513
+        - linux: py39-docs-pyqt514
           coverage: false
         - linux: py310-docs-pyqt63
           coverage: false
@@ -68,7 +68,7 @@ jobs:
         - macos: py39-docs-pyqt515
           coverage: false
 
-        - windows: py38-docs-pyqt513
+        - windows: py38-docs-pyqt514
           coverage: false
 
   publish:
