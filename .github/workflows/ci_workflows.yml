@@ -36,6 +36,7 @@ jobs:
         # Linux builds - test on all supported PyQt5, PyQt6 and PySide2 versions
         - linux: py39-test-pyqt515
         - linux: py310-test-pyqt63
+        - linux: py311-test-pyqt514
 
         - linux: py38-test-pyside514
         - linux: py310-test-pyside515
