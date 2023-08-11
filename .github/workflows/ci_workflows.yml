@@ -44,7 +44,7 @@ jobs:
 
         # Test a few configurations on MacOS X (ask for arm64 with py310; may not be available yet)
         - macos: py38-test-pyqt514
-        - macos: py310-test-pyqt515
+        - macos: py311-test-pyqt515
           PLAT: arm64
         - macos: py310-test-pyqt63
           PLAT: arm64
