@@ -1,8 +1,10 @@
-from pkg_resources import get_distribution, DistributionNotFound
+import sys
+
+if sys.version_info >= (3, 9):
+    import importlib.metadata as importlib_metadata
+else:
+    import importlib_metadata
 
 __all__ = ['__version__']
 
-try:
-    __version__ = get_distribution('echo').version
-except DistributionNotFound:
-    __version__ = 'undefined'
+__version__ = importlib_metadata.version('echo')
