@@ -6,7 +6,8 @@ from .connect import (connect_checkable_button,
                       connect_text,
                       connect_button,
                       connect_combo_selection,
-                      connect_list_selection)
+                      connect_list_selection,
+                      connect_datetime)
 
 __all__ = ['autoconnect_callbacks_to_qt']
 
@@ -20,6 +21,7 @@ HANDLERS['combotext'] = connect_combo_text
 HANDLERS['button'] = connect_button
 HANDLERS['combosel'] = connect_combo_selection
 HANDLERS['listsel'] = connect_list_selection
+HANDLERS['datetime'] = connect_datetime
 
 
 def autoconnect_callbacks_to_qt(instance, widget, connect_kwargs={}):
@@ -63,6 +65,10 @@ def autoconnect_callbacks_to_qt(instance, widget, connect_kwargs={}):
 
     * ``combotext``: the callback property is linked to a QComboBox based on
       the label of the entries in the combo box.
+
+    * ``datetime``: the callback property is linked to a QDateTimeEdit.
+      Note that this connection will also work for the more specific QDateEdit
+      and QTimeEdit widgets, as they are subclasses of QDateTimeEdit.
 
     Applications can also define additional mappings between type and
     auto-linking. To do this, simply add a new entry to the ``HANDLERS`` object::
