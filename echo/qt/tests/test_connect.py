@@ -1,10 +1,14 @@
+from datetime import datetime
+
 import pytest
+from numpy import datetime64
 from unittest.mock import MagicMock
 
 from qtpy import QtWidgets
+from qtpy.QtCore import QDateTime, Qt
 
 from echo import CallbackProperty
-from echo.qt.connect import (connect_checkable_button, connect_text,
+from echo.qt.connect import (connect_checkable_button, connect_datetime, connect_text,
                              connect_combo_data, connect_combo_text,
                              connect_float_text, connect_value, connect_button,
                              UserDataWrapper)
@@ -211,3 +215,26 @@ def test_connect_button():
     assert e.a.call_count == 0
     button.clicked.emit()
     assert e.a.call_count == 1
+
+
+def test_connect_datetime():
+
+    class Example(object):
+        t = CallbackProperty()
+
+    e = Example()
+
+    widget = QtWidgets.QDateTimeEdit()
+    widget.setTimeSpec(Qt.TimeSpec.UTC)
+
+    conn = connect_datetime(e, 't', widget)  # noqa
+
+    dt = datetime(2010, 5, 7, 13, 15, 3)
+    qdt = QDateTime(dt.date(), dt.time(), Qt.TimeSpec.UTC)
+    widget.setDateTime(qdt)
+    widget.dateTimeChanged.emit(qdt)
+    assert dt == e.t.item()
+
+    dt = datetime(2020, 3, 4, 7, 48, 16)
+    e.t = datetime64(dt)
+    assert widget.dateTime().toUTC().toPython() == dt

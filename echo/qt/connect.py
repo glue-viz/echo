@@ -596,7 +596,6 @@ class connect_datetime(BaseConnection):
 
     def update_prop(self):
         qdatetime = self._widget.dateTime().toUTC()
-        qdatetime = qdatetime.toUTC()
         value = np.datetime64(qdatetime.toPython())
         setattr(self._instance, self._prop, value)
 
@@ -630,4 +629,3 @@ class connect_datetime(BaseConnection):
         self._widget.dateTimeChanged.disconnect(self.update_prop)
         self._widget.dateChanged.disconnect(self.update_prop)
         self._widget.timeChanged.disconnect(self.update_prop)
-        
