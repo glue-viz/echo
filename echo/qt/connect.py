@@ -1,10 +1,11 @@
 # The functions in this module are used to connect callback properties to Qt
 # widgets.
 
+from datetime import datetime
 import math
 
 from qtpy import QtGui, QtWidgets
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QDateTime
 
 import numpy as np
 
@@ -13,7 +14,7 @@ from ..selection import SelectionCallbackProperty, ChoiceSeparator
 
 __all__ = ['connect_checkable_button', 'connect_text', 'connect_combo_data',
            'connect_combo_text', 'connect_float_text', 'connect_value',
-           'connect_combo_selection', 'connect_list_selection',
+           'connect_combo_selection', 'connect_list_selection', 'connect_datetime',
            'BaseConnection']
 
 
@@ -580,3 +581,51 @@ class connect_list_selection(BaseConnection):
     def disconnect(self):
         remove_callback(self._instance, self._prop, self.update_widget)
         self._widget.itemSelectionChanged.disconnect(self.update_prop)
+
+
+class connect_datetime(BaseConnection):
+    """
+    Connect a CallbackProperty to a QDateTimeEdit.
+    Since QDateEdit and QTimeEdit are subclasses of QDateTimeEdit, this connection
+    will work for those more specific widgets as well.
+    """
+
+    def __init__(self, instance, prop, widget):
+        super(connect_datetime, self).__init__(instance, prop, widget)
+        self.connect()
+
+    def update_prop(self):
+        qdatetime = self._widget.dateTime().toUTC()
+        value = np.datetime64(qdatetime.toPython())
+        setattr(self._instance, self._prop, value)
+
+    def update_widget(self, value):
+        if value is None:
+            value = np.datetime64('now')
+        dt = value.item()
+
+        # datetime64::item can return a date
+        # If this happens, we use midnight as our time
+        # (datetime is a subclass of date so we need to check this way)
+        if not isinstance(dt, datetime):
+            date = dt
+            time = datetime.min.time()
+        else:
+            date = dt.date()
+            time = dt.time()
+
+        qdatetime = QDateTime(date, time, Qt.TimeSpec.UTC).toTimeSpec(self._widget.timeSpec())
+        self._widget.setDateTime(qdatetime)
+
+    def connect(self):
+        add_callback(self._instance, self._prop, self.update_widget)
+        self._widget.dateTimeChanged.connect(self.update_prop)
+        self._widget.dateChanged.connect(self.update_prop)
+        self._widget.timeChanged.connect(self.update_prop)
+        self.update_widget(getattr(self._instance, self._prop))
+
+    def disconnect(self):
+        remove_callback(self._instance, self._prop, self.update_widget)
+        self._widget.dateTimeChanged.disconnect(self.update_prop)
+        self._widget.dateChanged.disconnect(self.update_prop)
+        self._widget.timeChanged.disconnect(self.update_prop)

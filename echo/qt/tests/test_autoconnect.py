@@ -1,4 +1,8 @@
+from datetime import datetime
+
+from numpy import datetime64
 from qtpy import QtWidgets, QtGui
+from qtpy.QtCore import QDateTime, Qt
 
 from echo.qt.autoconnect import autoconnect_callbacks_to_qt
 from echo import CallbackProperty
@@ -47,6 +51,10 @@ def test_autoconnect_callbacks_to_qt():
             self.bool_log.setCheckable(True)
             self.layout.addWidget(self.bool_log)
 
+            self.datetime_dob = QtWidgets.QDateTimeEdit(objectName="datetime_dob")
+            self.datetime_dob.setTimeSpec(Qt.TimeSpec.UTC)
+            self.layout.addWidget(self.datetime_dob)
+
     class Person(object):
         planet = CallbackProperty()
         dataset = CallbackProperty()
@@ -54,6 +62,7 @@ def test_autoconnect_callbacks_to_qt():
         age = CallbackProperty()
         height = CallbackProperty()
         log = CallbackProperty()
+        dob = CallbackProperty()
 
     widget = CustomWidget()
 
@@ -86,6 +95,11 @@ def test_autoconnect_callbacks_to_qt():
     widget.bool_log.setChecked(True)
     assert person.log
 
+    dob = datetime(2000, 1, 1, 11, 52, 6)
+    qdob = QDateTime(dob.date(), dob.time(), Qt.TimeSpec.UTC)
+    widget.datetime_dob.setDateTime(qdob)
+    assert person.dob.item() == dob
+
     # Check that modifying the callback properties updates the Qt widget
 
     person.planet = 'mars'
@@ -105,6 +119,11 @@ def test_autoconnect_callbacks_to_qt():
 
     person.log = False
     assert not widget.bool_log.isChecked()
+
+    dob = datetime(2010, 2, 3, 16, 22, 11)
+    person.dob = datetime64(dob)
+    qdatetime = widget.datetime_dob.dateTime().toUTC()
+    assert qdatetime.toPython() == person.dob.item()
 
 
 def test_autoconnect_with_empty_qt_item():
