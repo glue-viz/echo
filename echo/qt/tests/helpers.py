@@ -5,12 +5,14 @@ __all__ = [
     "SKIP_QT_TEST"
 ]
 
+
 def package_installed(package):
     try:
         __import__(package)
         return True
     except ImportError:
         return False
+
 
 PYQT5_INSTALLED = package_installed("PyQt5")
 PYQT6_INSTALLED = package_installed("PyQt6")

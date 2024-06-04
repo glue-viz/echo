@@ -20,8 +20,6 @@ from echo.qt.connect import (connect_checkable_button, connect_datetime, connect
 
 def test_connect_checkable_button():
 
-
-
     class Test(object):
         a = CallbackProperty()
         b = CallbackProperty(True)
