@@ -1,11 +1,17 @@
 from datetime import datetime
 
+import pytest
 from numpy import datetime64
+
+from echo import CallbackProperty
+from echo.qt.tests.helpers import SKIP_QT_TEST
+
+if SKIP_QT_TEST:
+    pytest.skip(allow_module_level=True)
+
 from qtpy import QtWidgets, QtGui
 from qtpy.QtCore import QDateTime, Qt
-
 from echo.qt.autoconnect import autoconnect_callbacks_to_qt
-from echo import CallbackProperty
 from echo.qt.connect import UserDataWrapper
 
 

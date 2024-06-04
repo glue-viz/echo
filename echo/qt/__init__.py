@@ -1,2 +1,5 @@
-from .connect import *   # noqa
-from .autoconnect import *  # noqa
+try:
+    from .connect import *   # noqa
+    from .autoconnect import *  # noqa
+except ImportError:
+    pass

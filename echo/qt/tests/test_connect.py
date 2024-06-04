@@ -4,10 +4,14 @@ import pytest
 from numpy import datetime64
 from unittest.mock import MagicMock
 
+from echo import CallbackProperty
+from echo.qt.tests.helpers import SKIP_QT_TEST
+
+if SKIP_QT_TEST:
+    pytest.skip(allow_module_level=True)
+
 from qtpy import QtWidgets
 from qtpy.QtCore import QDateTime, Qt
-
-from echo import CallbackProperty
 from echo.qt.connect import (connect_checkable_button, connect_datetime, connect_text,
                              connect_combo_data, connect_combo_text,
                              connect_float_text, connect_value, connect_button,
