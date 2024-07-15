@@ -7,11 +7,8 @@ __all__ = [
 
 
 def package_installed(package):
-    try:
-        __import__(package)
-        return True
-    except ImportError:
-        return False
+    from importlib.util import find_spec
+    return find_spec(package) is not None
 
 
 PYQT5_INSTALLED = package_installed("PyQt5")
