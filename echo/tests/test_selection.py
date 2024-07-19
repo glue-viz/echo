@@ -98,13 +98,13 @@ class TestSelectionCallbackProperty():
         self.state.add_callback('a', func)
 
         self.a.set_choices(self.state, [1, 2, 3])
-        assert func.called_once_with(1)
+        func.assert_called_with(1)
 
         self.state.a = 2
-        assert func.called_once_with(2)
+        func.assert_called_with(2)
 
         self.a.set_choices(self.state, [4, 5, 6])
-        assert func.called_once_with(4)
+        func.assert_called_with(4)
 
     def test_choice_separator(self):
 
@@ -128,7 +128,7 @@ class TestSelectionCallbackProperty():
         with delay_callback(self.state, 'a'):
             self.a.set_choices(self.state, [4, 5, 6])
             assert func.call_count == 0
-        assert func.called_once_with(4)
+        func.assert_called_once_with(4)
         func.reset_mock()
 
         # Check that the callback gets called even if only the choices
@@ -136,5 +136,5 @@ class TestSelectionCallbackProperty():
         with delay_callback(self.state, 'a'):
             self.a.set_choices(self.state, [1, 2, 4])
             assert func.call_count == 0
-        assert func.called_once_with(4)
+        func.assert_called_once_with(4)
         func.reset_mock()
