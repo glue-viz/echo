@@ -1,5 +1,29 @@
 # Full changelog
 
+## v0.9.0 - 2024-07-19
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Bug Fixes
+
+* Remove deprecated call to pkg_resources by @jfoster17 in https://github.com/glue-viz/echo/pull/36
+
+#### New Features
+
+* Add Qt connection handler for date/time widgets by @Carifio24 in https://github.com/glue-viz/echo/pull/37
+
+#### Other Changes
+
+* Make qtpy an optional dependency by @Carifio24 in https://github.com/glue-viz/echo/pull/38
+
+### New Contributors
+
+* @jfoster17 made their first contribution in https://github.com/glue-viz/echo/pull/36
+* @Carifio24 made their first contribution in https://github.com/glue-viz/echo/pull/37
+
+**Full Changelog**: https://github.com/glue-viz/echo/compare/v0.8.0...v0.9.0
+
 ## v0.8.0 - 2022-10-13
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
