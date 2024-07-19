@@ -1,10 +1,13 @@
 import pytest
 import numpy as np
 
-from qtpy import QtWidgets
-
 from echo.core import CallbackProperty
 from echo.selection import SelectionCallbackProperty, ChoiceSeparator
+from echo.qt.tests.helpers import SKIP_QT_TEST
+if SKIP_QT_TEST:
+    pytest.skip(allow_module_level=True)
+
+from qtpy import QtWidgets
 from echo.qt.connect import connect_combo_selection
 
 
