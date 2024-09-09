@@ -51,7 +51,7 @@ jobs:
         - macos: py311-test-pyqt515
         - macos: py312-test-pyqt66
         - macos: py310-test-pyqt63
-          PLAT: x64
+          runs-on: macos-13
 
         - macos: py39-test-pyside515
         - macos: py310-test-pyside66
