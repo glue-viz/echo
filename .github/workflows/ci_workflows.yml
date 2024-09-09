@@ -33,7 +33,7 @@ jobs:
 
       envs: |
         # Standard tests
-        # Linux builds - test on all supported PyQt5, PyQt6 and PySide2 versions
+        # Linux builds - test on all supported PyQt5, PyQt6, PySide2 and PySide6 versions and without qtpy
         - linux: py39-test-pyqt515
         - linux: py310-test-pyqt63
         - linux: py311-test-pyqt514
@@ -43,6 +43,8 @@ jobs:
         - linux: py310-test-pyside515
         - linux: py310-test-pyside63
         - linux: py312-test-pyside67
+
+        - linux: py312-test
 
         # Test a few configurations on macOS (arm64 is default on macos-14)
         - macos: py38-test-pyqt514
@@ -54,6 +56,8 @@ jobs:
         - macos: py39-test-pyside515
         - macos: py310-test-pyside66
 
+        - macos: py39-test
+
         # Test some configurations on Windows
         - windows: py38-test-pyqt514
         - windows: py39-test-pyqt515
@@ -61,6 +65,8 @@ jobs:
 
         - windows: py38-test-pyside515
         - windows: py310-test-pyside65
+
+        - windows: py311-test
 
         # Try out documentation build on Linux, macOS and Windows
         - linux: py39-docs-pyqt514
