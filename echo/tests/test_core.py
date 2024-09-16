@@ -1,7 +1,8 @@
 import pytest
 from unittest.mock import MagicMock
 
-from echo import (CallbackProperty, add_callback,
+from echo import (ValidationException, SilentValidationException,
+                  CallbackProperty, add_callback,
                   remove_callback, delay_callback,
                   ignore_callback, callback_property,
                   HasCallbackProperties, keep_in_sync)
@@ -637,3 +638,33 @@ def test_ignore_in_ignored_callback():
 
     with ignore_callback(state, 'a', 'b'):
         state.a = 100
+
+
+def test_validator():
+
+    state = State()
+    state.a = 1
+    state.b = 2.2
+
+    def add_one_and_silent_ignore(new_value):
+        if new_value == 'ignore':
+            raise SilentValidationException()
+        return new_value + 1
+
+    def preserve_type(old_value, new_value):
+        if type(new_value) is not type(old_value):
+            raise ValidationException('types should not change')
+
+    state.add_callback('a', add_one_and_silent_ignore, validator=True)
+    state.add_callback('b', preserve_type, validator=True, echo_old=True)
+
+    state.a = 3
+    assert state.a == 4
+
+    state.a = 'ignore'
+    assert state.a == 4
+
+    state.b = 3.2
+
+    with pytest.raises(ValidationException, match='types should not change'):
+        state.b = 2

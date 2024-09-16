@@ -4,10 +4,20 @@ from contextlib import contextmanager
 
 from .callback_container import CallbackContainer
 
-__all__ = ['CallbackProperty', 'callback_property',
+__all__ = ['ValidationException',
+           'SilentValidationException',
+           'CallbackProperty', 'callback_property',
            'add_callback', 'remove_callback',
            'delay_callback', 'ignore_callback',
            'HasCallbackProperties', 'keep_in_sync']
+
+
+class ValidationException(Exception):
+    pass
+
+
+class SilentValidationException(Exception):
+    pass
 
 
 class CallbackProperty(object):
@@ -37,6 +47,8 @@ class CallbackProperty(object):
         :param default: The initial value for the property
         """
         self._default = default
+        self._validators = WeakKeyDictionary()
+        self._2arg_validators = WeakKeyDictionary()
         self._callbacks = WeakKeyDictionary()
         self._2arg_callbacks = WeakKeyDictionary()
         self._disabled = WeakKeyDictionary()
@@ -66,11 +78,19 @@ class CallbackProperty(object):
         return self._getter(instance)
 
     def __set__(self, instance, value):
+
         try:
             old = self.__get__(instance)
         except AttributeError:  # pragma: no cover
             old = None
+
+        try:
+            value = self._validate(instance, old, value)
+        except SilentValidationException:
+            return
+
         self._setter(instance, value)
+
         new = self.__get__(instance)
         if old != new:
             self.notify(instance, old, new)
@@ -126,6 +146,32 @@ class CallbackProperty(object):
         for cback in self._2arg_callbacks.get(instance, []):
             cback(old, new)
 
+    def _validate(self, instance, old, new):
+        """
+        Call all validators.
+
+        Each validator will either be called using
+        validator(new) or validator(old, new) depending
+        on whether ``echo_old`` was set to `True` when calling
+        :func:`~echo.add_callback`
+
+        Parameters
+        ----------
+        instance
+            The instance to consider
+        old
+            The old value of the property
+        new
+            The new value of the property
+        """
+        # Note: validators can't be delayed so we don't check for
+        # enabled/disabled as in notify()
+        for cback in self._validators.get(instance, []):
+            new = cback(new)
+        for cback in self._2arg_validators.get(instance, []):
+            new = cback(old, new)
+        return new
+
     def disable(self, instance):
         """
         Disable callbacks for a specific instance
@@ -141,7 +187,7 @@ class CallbackProperty(object):
     def enabled(self, instance):
         return not self._disabled.get(instance, False)
 
-    def add_callback(self, instance, func, echo_old=False, priority=0):
+    def add_callback(self, instance, func, echo_old=False, priority=0, validator=False):
         """
         Add a callback to a specific instance that manages this property
 
@@ -158,12 +204,30 @@ class CallbackProperty(object):
         priority : int, optional
             This can optionally be used to force a certain order of execution of
             callbacks (larger values indicate a higher priority).
+        validator : bool, optional
+            Whether the callback is a validator, which is a special kind of
+            callback that gets called *before* the property is set. The
+            validator can return a modified value (for example it can be used
+            to change the types of values or change properties in-place) or it
+            can also raise an `echo.ValidationException` or
+            `echo.SilentValidationException`, the latter of which means the
+            updating of the property will be silently abandonned.
         """
 
-        if echo_old:
-            self._2arg_callbacks.setdefault(instance, CallbackContainer()).append(func, priority=priority)
+        if validator:
+            if echo_old:
+                self._2arg_validators.setdefault(instance, CallbackContainer()).append(func, priority=priority)
+            else:
+                self._validators.setdefault(instance, CallbackContainer()).append(func, priority=priority)
         else:
-            self._callbacks.setdefault(instance, CallbackContainer()).append(func, priority=priority)
+            if echo_old:
+                self._2arg_callbacks.setdefault(instance, CallbackContainer()).append(func, priority=priority)
+            else:
+                self._callbacks.setdefault(instance, CallbackContainer()).append(func, priority=priority)
+
+    @property
+    def _all_callbacks(self):
+        return [self._validators, self._2arg_validators, self._callbacks, self._2arg_callbacks]
 
     def remove_callback(self, instance, func):
         """
@@ -176,7 +240,7 @@ class CallbackProperty(object):
         func : func
             The callback function to remove
         """
-        for cb in [self._callbacks, self._2arg_callbacks]:
+        for cb in self._all_callbacks:
             if instance not in cb:
                 continue
             if func in cb[instance]:
@@ -189,7 +253,7 @@ class CallbackProperty(object):
         """
         Remove all callbacks on this property.
         """
-        for cb in [self._callbacks, self._2arg_callbacks]:
+        for cb in self._all_callbacks:
             if instance in cb:
                 cb[instance].clear()
         if instance in self._disabled:
@@ -262,7 +326,7 @@ class HasCallbackProperties(object):
         if self.is_callback_property(attribute):
             self._notify_global(**{attribute: value})
 
-    def add_callback(self, name, callback, echo_old=False, priority=0):
+    def add_callback(self, name, callback, echo_old=False, priority=0, validator=False):
         """
         Add a callback that gets triggered when a callback property of the
         class changes.
@@ -280,10 +344,18 @@ class HasCallbackProperties(object):
         priority : int, optional
             This can optionally be used to force a certain order of execution of
             callbacks (larger values indicate a higher priority).
+        validator : bool, optional
+            Whether the callback is a validator, which is a special kind of
+            callback that gets called *before* the property is set. The
+            validator can return a modified value (for example it can be used
+            to change the types of values or change properties in-place) or it
+            can also raise an `echo.ValidationException` or
+            `echo.SilentValidationException`, the latter of which means the
+            updating of the property will be silently abandonned.
         """
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
-            prop.add_callback(self, callback, echo_old=echo_old, priority=priority)
+            prop.add_callback(self, callback, echo_old=echo_old, priority=priority, validator=validator)
         else:
             raise TypeError("attribute '{0}' is not a callback property".format(name))
 
@@ -362,7 +434,7 @@ class HasCallbackProperties(object):
             prop.clear_callbacks(self)
 
 
-def add_callback(instance, prop, callback, echo_old=False, priority=0):
+def add_callback(instance, prop, callback, echo_old=False, priority=0, validator=False):
     """
     Attach a callback function to a property in an instance
 
@@ -381,6 +453,14 @@ def add_callback(instance, prop, callback, echo_old=False, priority=0):
     priority : int, optional
         This can optionally be used to force a certain order of execution of
         callbacks (larger values indicate a higher priority).
+    validator : bool, optional
+        Whether the callback is a validator, which is a special kind of
+        callback that gets called *before* the property is set. The
+        validator can return a modified value (for example it can be used
+        to change the types of values or change properties in-place) or it
+        can also raise an `echo.ValidationException` or
+        `echo.SilentValidationException`, the latter of which means the
+        updating of the property will be silently abandonned.
 
     Examples
     --------
@@ -400,7 +480,7 @@ def add_callback(instance, prop, callback, echo_old=False, priority=0):
     p = getattr(type(instance), prop)
     if not isinstance(p, CallbackProperty):
         raise TypeError("%s is not a CallbackProperty" % prop)
-    p.add_callback(instance, callback, echo_old=echo_old, priority=priority)
+    p.add_callback(instance, callback, echo_old=echo_old, priority=priority, validator=validator)
 
 
 def remove_callback(instance, prop, callback):
