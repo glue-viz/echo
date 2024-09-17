@@ -52,7 +52,7 @@ class ContainerMixin:
         """
 
         if validator:
-            self._item_validator.append(func, priority=priority)
+            self._item_validators.append(func, priority=priority)
         else:
             self._callbacks.append(func, priority=priority)
 

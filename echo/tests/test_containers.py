@@ -582,3 +582,20 @@ def test_dict_additional_callbacks():
     stub.prop1['e'] = 5
     assert test1.call_count == 3
     assert test2.call_count == 1
+
+
+def test_item_validator():
+
+    stub_list = StubList()
+    stub_dict = StubDict()
+
+    def add_one(value):
+        return value + 1
+
+    stub_list.prop1.add_callback(add_one, validator=True)
+    stub_list.prop1.append(1)
+    assert stub_list.prop1 == [2]
+
+    stub_dict.prop1.add_callback(add_one, validator=True)
+    stub_dict.prop1['a'] = 2
+    assert stub_dict.prop1 == {'a': 3}
