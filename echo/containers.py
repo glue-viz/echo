@@ -7,7 +7,13 @@ __all__ = ['CallbackList', 'CallbackDict',
 
 class ContainerMixin:
 
+    def _setup_container(self):
+        self._callbacks = CallbackContainer()
+        self._item_validators = CallbackContainer()
+
     def _prepare_add(self, value):
+        for validator in self._item_validators:
+            value = validator(value)
         if isinstance(value, list):
             value = CallbackList(self.notify_all, value)
         elif isinstance(value, dict):
@@ -22,7 +28,45 @@ class ContainerMixin:
         if isinstance(value, HasCallbackProperties):
             value.remove_global_callback(self.notify_all)
         elif isinstance(value, (CallbackList, CallbackDict)):
-            value.callbacks.remove(self.notify_all)
+            value.remove_callback(self.notify_all)
+
+    def add_callback(self, func, priority=0, validator=False):
+        """
+        Add a callback to the container.
+
+        Note that validators are applied on a per item basis, whereas regular
+        callbacks are called with the whole list after modification.
+
+        Parameters
+        ----------
+        func : func
+            The callback function to add
+        priority : int, optional
+            This can optionally be used to force a certain order of execution of
+            callbacks (larger values indicate a higher priority).
+        validator : bool, optional
+            Whether the callback is a validator, which is a special kind of
+            callback that gets called with the item being added to the
+            container *before* the container is modified. The validator can
+            return the value as-is, modify it, or emit warnings or an exception.
+        """
+
+        if validator:
+            self._item_validator.append(func, priority=priority)
+        else:
+            self._callbacks.append(func, priority=priority)
+
+    def remove_callback(self, func):
+        """
+        Remove a callback from the container.
+        """
+        for cb in (self._callbacks, self._item_validators):
+            if func in cb:
+                cb.remove(func)
+
+    def notify_all(self, *args, **kwargs):
+        for callback in self._callbacks:
+            callback(*args, **kwargs)
 
 
 class CallbackList(list, ContainerMixin):
@@ -35,14 +79,10 @@ class CallbackList(list, ContainerMixin):
 
     def __init__(self, callback, *args, **kwargs):
         super(CallbackList, self).__init__(*args, **kwargs)
-        self.callbacks = CallbackContainer()
-        self.callbacks.append(callback)
+        self._setup_container()
+        self.add_callback(callback)
         for index, value in enumerate(self):
             super().__setitem__(index, self._prepare_add(value))
-
-    def notify_all(self, *args, **kwargs):
-        for callback in self.callbacks:
-            callback(*args, **kwargs)
 
     def __repr__(self):
         return "<CallbackList with {0} elements>".format(len(self))
@@ -113,14 +153,10 @@ class CallbackDict(dict, ContainerMixin):
 
     def __init__(self, callback, *args, **kwargs):
         super(CallbackDict, self).__init__(*args, **kwargs)
-        self.callbacks = CallbackContainer()
-        self.callbacks.append(callback)
+        self._setup_container()
+        self.add_callback(callback)
         for key, value in self.items():
             super().__setitem__(key, self._prepare_add(value))
-
-    def notify_all(self, *args, **kwargs):
-        for callback in self.callbacks:
-            callback(*args, **kwargs)
 
     def clear(self):
         for value in self.values():

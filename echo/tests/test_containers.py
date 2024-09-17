@@ -538,7 +538,7 @@ def test_list_additional_callbacks():
     assert test1.call_count == 1
     assert test2.call_count == 0
 
-    stub.prop1.callbacks.append(test2)
+    stub.prop1.add_callback(test2)
 
     stub.prop2.append(5)
     assert test1.call_count == 1
@@ -548,7 +548,7 @@ def test_list_additional_callbacks():
     assert test1.call_count == 2
     assert test2.call_count == 1
 
-    stub.prop1.callbacks.remove(test2)
+    stub.prop1.remove_callback(test2)
     stub.prop1.append(4)
     assert test1.call_count == 3
     assert test2.call_count == 1
@@ -568,7 +568,7 @@ def test_dict_additional_callbacks():
     assert test1.call_count == 1
     assert test2.call_count == 0
 
-    stub.prop1.callbacks.append(test2)
+    stub.prop1.add_callback(test2)
 
     stub.prop2['c'] = 3
     assert test1.call_count == 1
@@ -578,7 +578,7 @@ def test_dict_additional_callbacks():
     assert test1.call_count == 2
     assert test2.call_count == 1
 
-    stub.prop1.callbacks.remove(test2)
+    stub.prop1.remove_callback(test2)
     stub.prop1['e'] = 5
     assert test1.call_count == 3
     assert test2.call_count == 1
