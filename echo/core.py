@@ -4,20 +4,10 @@ from contextlib import contextmanager
 
 from .callback_container import CallbackContainer
 
-__all__ = ['ValidationException',
-           'SilentValidationException',
-           'CallbackProperty', 'callback_property',
+__all__ = ['CallbackProperty', 'callback_property',
            'add_callback', 'remove_callback',
            'delay_callback', 'ignore_callback',
            'HasCallbackProperties', 'keep_in_sync']
-
-
-class ValidationException(Exception):
-    pass
-
-
-class SilentValidationException(Exception):
-    pass
 
 
 class CallbackProperty(object):
@@ -84,10 +74,7 @@ class CallbackProperty(object):
         except AttributeError:  # pragma: no cover
             old = None
 
-        try:
-            value = self._validate(instance, old, value)
-        except SilentValidationException:
-            return
+        value = self._validate(instance, old, value)
 
         self._setter(instance, value)
 
@@ -209,9 +196,7 @@ class CallbackProperty(object):
             callback that gets called *before* the property is set. The
             validator can return a modified value (for example it can be used
             to change the types of values or change properties in-place) or it
-            can also raise an `echo.ValidationException` or
-            `echo.SilentValidationException`, the latter of which means the
-            updating of the property will be silently abandonned.
+            can also raise an exception.
         """
 
         if validator:
@@ -349,10 +334,7 @@ class HasCallbackProperties(object):
             callback that gets called *before* the property is set. The
             validator can return a modified value (for example it can be used
             to change the types of values or change properties in-place) or it
-            can also raise an `echo.ValidationException` or
-            `echo.SilentValidationException`, the latter of which means the
-            updating of the property will be silently abandonned.
-        """
+            can also raise an exception.        """
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
             prop.add_callback(self, callback, echo_old=echo_old, priority=priority, validator=validator)
@@ -454,13 +436,11 @@ def add_callback(instance, prop, callback, echo_old=False, priority=0, validator
         This can optionally be used to force a certain order of execution of
         callbacks (larger values indicate a higher priority).
     validator : bool, optional
-        Whether the callback is a validator, which is a special kind of
-        callback that gets called *before* the property is set. The
-        validator can return a modified value (for example it can be used
-        to change the types of values or change properties in-place) or it
-        can also raise an `echo.ValidationException` or
-        `echo.SilentValidationException`, the latter of which means the
-        updating of the property will be silently abandonned.
+            Whether the callback is a validator, which is a special kind of
+            callback that gets called *before* the property is set. The
+            validator can return a modified value (for example it can be used
+            to change the types of values or change properties in-place) or it
+            can also raise an exception.
 
     Examples
     --------
