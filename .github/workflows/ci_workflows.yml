@@ -29,32 +29,32 @@ jobs:
         apt:
           - '^libxcb.*-dev'
           - libxkbcommon-x11-dev
-          - libegl1-mesa
+          - libegl1
 
       envs: |
         # Standard tests
         # Linux builds - test on all supported PyQt5, PyQt6, PySide2 and PySide6 versions and without qtpy
         - linux: py39-test-pyqt515
-        - linux: py310-test-pyqt63
+        - linux: py312-test-pyqt63
         - linux: py311-test-pyqt514
-        - linux: py312-test-pyqt67
+        - linux: py313-test-pyqt68
 
         - linux: py38-test-pyside514
         - linux: py310-test-pyside515
         - linux: py310-test-pyside63
-        - linux: py312-test-pyside67
+        - linux: py312-test-pyside68
 
         - linux: py312-test
 
         # Test a few configurations on macOS (arm64 is default on macos-14)
         - macos: py38-test-pyqt514
         - macos: py311-test-pyqt515
-        - macos: py312-test-pyqt66
+        - macos: py313-test-pyqt67
         - macos: py310-test-pyqt63
           runs-on: macos-13
 
         - macos: py39-test-pyside515
-        - macos: py310-test-pyside66
+        - macos: py310-test-pyside67
 
         - macos: py39-test
 
@@ -62,6 +62,7 @@ jobs:
         - windows: py38-test-pyqt514
         - windows: py39-test-pyqt515
         - windows: py312-test-pyqt65
+        - windows: py313-test-pyqt68
 
         - windows: py38-test-pyside515
         - windows: py310-test-pyside65
@@ -84,7 +85,7 @@ jobs:
     needs: tests
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
     with:
-      libraries: '^libxcb.*-dev libxkbcommon-x11-dev libgl1-mesa-glx xvfb'
+      libraries: '^libxcb.*-dev libxkbcommon-x11-dev libgl1 xvfb'
       test_extras: 'test,qt'
       test_command: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 & sleep 3; DISPLAY=:99.0 pytest --pyargs echo
     secrets:
