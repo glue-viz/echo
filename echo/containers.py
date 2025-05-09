@@ -1,3 +1,5 @@
+import weakref
+
 from . import CallbackProperty, HasCallbackProperties
 from .callback_container import CallbackContainer
 
@@ -220,9 +222,11 @@ class ListCallbackProperty(CallbackProperty):
         dcb = dynamic_callback()
 
         wrapped_list = CallbackList(dcb, value)
+        _instance = weakref.ref(instance)
 
         def callback(*args, **kwargs):
-            self.notify(instance, wrapped_list, wrapped_list)
+            if _instance() is not None:
+                self.notify(_instance(), wrapped_list, wrapped_list)
 
         dcb.function = callback
 
@@ -246,9 +250,11 @@ class DictCallbackProperty(CallbackProperty):
         dcb = dynamic_callback()
 
         wrapped_dict = CallbackDict(dcb, value)
+        _instance = weakref.ref(instance)
 
         def callback(*args, **kwargs):
-            self.notify(instance, wrapped_dict, wrapped_dict)
+            if _instance() is not None:
+                self.notify(_instance(), wrapped_dict, wrapped_dict)
 
         dcb.function = callback
 
