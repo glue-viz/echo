@@ -1,5 +1,21 @@
 # Full changelog
 
+## v0.10.0 - 2025-05-09
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### New Features
+
+* Implement a new type of callback called validators, which get called before a value changes by @astrofrog in https://github.com/glue-viz/echo/pull/42
+
+#### Other Changes
+
+* Add Python 3.12 envs and newer PyQt6 + PySide6 configurations to CI by @dhomeier in https://github.com/glue-viz/echo/pull/41
+* Fix libegl1 apt installation in Ubuntu CI; add py313 and PyQt6/PySide6 6.8  by @dhomeier in https://github.com/glue-viz/echo/pull/44
+
+**Full Changelog**: https://github.com/glue-viz/echo/compare/v0.9.0...v0.10.0
+
 ## v0.9.0 - 2024-07-19
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
