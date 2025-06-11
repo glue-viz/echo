@@ -18,7 +18,7 @@ class CallbackContainer(object):
         self.callbacks = []
 
     def clear(self):
-        self.callbacks[:] = []
+        self.callbacks.clear()
 
     def _wrap(self, value, priority=0):
         """
@@ -53,16 +53,22 @@ class CallbackContainer(object):
                 self.callbacks.remove(value)
 
     def __contains__(self, value):
+        return self._contains(value)
+
+    def _contains(self, value, priority=None):
+        # Check if an entry matches the value and the priority, if not None
         if self.is_bound_method(value):
             for callback in self.callbacks[:]:
                 if len(callback) == 3 and value.__func__ is callback[0]() and value.__self__ is callback[1]():
-                    return True
+                    if priority is None or priority == callback[2]:
+                        return True
             else:
                 return False
         else:
             for callback in self.callbacks[:]:
                 if len(callback) == 2 and value is callback[0]:
-                    return True
+                    if priority is None or priority == callback[1]:
+                        return True
             else:
                 return False
 
@@ -88,7 +94,9 @@ class CallbackContainer(object):
         return hasattr(func, '__func__') and getattr(func, '__self__', None) is not None
 
     def append(self, value, priority=0):
-        self.callbacks.append(self._wrap(value, priority=priority))
+        # If we already have the same callback with the same priority, we can ignore
+        if not self._contains(value, priority=priority):
+            self.callbacks.append(self._wrap(value, priority=priority))
 
     def remove(self, value):
         if self.is_bound_method(value):
