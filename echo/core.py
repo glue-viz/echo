@@ -307,8 +307,11 @@ class HasCallbackProperties(object):
                 callback(**kwargs)
 
     def __setattr__(self, attribute, value):
+        is_callback = self.is_callback_property(attribute)
+        if is_callback:
+            previous_value = getattr(self, attribute)
         super(HasCallbackProperties, self).__setattr__(attribute, value)
-        if self.is_callback_property(attribute):
+        if is_callback and value != previous_value:
             self._notify_global(**{attribute: value})
 
     def add_callback(self, name, callback, echo_old=False, priority=0, validator=False):
