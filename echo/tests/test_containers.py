@@ -599,3 +599,29 @@ def test_item_validator():
     stub_dict.prop1.add_callback(add_one, validator=True)
     stub_dict.prop1['a'] = 2
     assert stub_dict.prop1 == {'a': 3}
+
+
+def test_list_multiple():
+
+    # Regression test for a bug that caused callbacks to happen for a container
+    # class property if one of the properties of a nested state was set to the
+    # same value it was already set to.
+
+    stub_list = StubList()
+
+    stub = Simple()
+
+    stub_list.prop1.append(stub)
+
+    test1 = MagicMock()
+    stub_list.add_callback('prop1', test1)
+
+    test2 = MagicMock()
+    stub.add_callback('a', test2)
+
+    stub.a = False
+    stub.a = True
+    stub.a = True
+
+    assert test1.call_count == 2
+    assert test2.call_count == 2

@@ -662,3 +662,27 @@ def test_validator():
 
     with pytest.raises(TypeError, match='types should not change'):
         state.b = 2
+
+
+def test_global_callback_avoid_multiple():
+
+    # Regression test for a bug that caused global callbacks to be
+    # called even if the value did not change
+
+    state = State()
+
+    test = MagicMock()
+    state.add_global_callback(test)
+
+    state.a = False
+    state.a = True
+    state.a = True
+
+    assert test.call_count == 2
+
+    with delay_callback(state, 'a'):
+        state.a = False
+        state.a = False
+        assert test.call_count == 2
+
+    assert test.call_count == 3
