@@ -36,10 +36,9 @@ jobs:
         # Linux builds - test on all supported PyQt5, PyQt6, PySide2 and PySide6 versions and without qtpy
         - linux: py310-test-pyqt515
         - linux: py312-test-pyqt63
-        - linux: py311-test-pyqt514
+        - linux: py311-test-pyqt515
         - linux: py313-test-pyqt68
 
-        - linux: py310-test-pyside514
         - linux: py310-test-pyside515
         - linux: py310-test-pyside63
         - linux: py312-test-pyside68
@@ -59,7 +58,6 @@ jobs:
         - macos: py310-test
 
         # Test some configurations on Windows
-        - windows: py310-test-pyqt514
         - windows: py310-test-pyqt515
         - windows: py312-test-pyqt65
         - windows: py313-test-pyqt68
@@ -76,7 +74,7 @@ jobs:
           coverage: false
         - macos: py310-docs-pyqt515
           coverage: false
-        - windows: py310-docs-pyqt514
+        - windows: py310-docs-pyqt515
           coverage: false
 
   publish:
