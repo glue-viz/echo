@@ -34,12 +34,11 @@ jobs:
       envs: |
         # Standard tests
         # Linux builds - test on all supported PyQt5, PyQt6, PySide2 and PySide6 versions and without qtpy
-        - linux: py39-test-pyqt515
+        - linux: py310-test-pyqt515
         - linux: py312-test-pyqt63
-        - linux: py311-test-pyqt514
+        - linux: py311-test-pyqt515
         - linux: py313-test-pyqt68
 
-        - linux: py38-test-pyside514
         - linux: py310-test-pyside515
         - linux: py310-test-pyside63
         - linux: py312-test-pyside68
@@ -47,38 +46,35 @@ jobs:
         - linux: py312-test
 
         # Test a few configurations on macOS (arm64 is default on macos-14)
-        - macos: py38-test-pyqt514
+        - macos: py310-test-pyqt515
         - macos: py311-test-pyqt515
         - macos: py313-test-pyqt67
         - macos: py310-test-pyqt63
           runs-on: macos-13
 
-        - macos: py39-test-pyside515
-        - macos: py310-test-pyside67
+        - macos: py310-test-pyside63
+        - macos: py311-test-pyside67
 
-        - macos: py39-test
+        - macos: py310-test
 
         # Test some configurations on Windows
-        - windows: py38-test-pyqt514
-        - windows: py39-test-pyqt515
+        - windows: py310-test-pyqt515
         - windows: py312-test-pyqt65
         - windows: py313-test-pyqt68
 
-        - windows: py38-test-pyside515
+        - windows: py310-test-pyside515
         - windows: py310-test-pyside65
 
         - windows: py311-test
 
         # Try out documentation build on Linux, macOS and Windows
-        - linux: py39-docs-pyqt514
+        - linux: py310-docs-pyqt514
           coverage: false
         - linux: py312-docs-pyqt67
           coverage: false
-
-        - macos: py39-docs-pyqt515
+        - macos: py310-docs-pyqt515
           coverage: false
-
-        - windows: py38-docs-pyqt514
+        - windows: py310-docs-pyqt515
           coverage: false
 
   publish:
