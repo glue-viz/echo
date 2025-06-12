@@ -14,7 +14,7 @@ changelog:
         - Documentation
     - title: Performance
       labels:
-        - Performance
+        - performance
     - title: Other Changes
       labels:
         - "*"
