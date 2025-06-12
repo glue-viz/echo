@@ -309,10 +309,7 @@ class HasCallbackProperties(object):
     def __setattr__(self, attribute, value):
         is_callback = self.is_callback_property(attribute)
         if is_callback:
-            try:
-                previous_value = getattr(self, attribute)
-            except AttributeError:
-                previous_value = None
+            previous_value = getattr(self, attribute, None)
         super(HasCallbackProperties, self).__setattr__(attribute, value)
         if is_callback and value != previous_value:
             self._notify_global(**{attribute: value})

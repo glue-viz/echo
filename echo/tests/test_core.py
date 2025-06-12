@@ -686,3 +686,27 @@ def test_global_callback_avoid_multiple():
         assert test.call_count == 2
 
     assert test.call_count == 3
+
+
+def test_undefined_attribute_decorator():
+
+    # Regression test for a bug that caused an error when using the
+    # @callback_property decorator and global callbacks
+
+    class Foo(HasCallbackProperties):
+
+        @callback_property
+        def x(self):
+            return self._x
+
+        @x.setter
+        def x(self, value):
+            self._x = value
+
+    test = MagicMock()
+
+    foo = Foo()
+    foo.add_global_callback(test)
+    foo.x = 1
+
+    assert test.call_count == 1
