@@ -1,5 +1,31 @@
 # Full changelog
 
+## v0.11.0 - 2025-06-12
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Bug Fixes
+
+* fix: prevent dangling references in dict and listCallbackProperties by @iisakkirotko in https://github.com/glue-viz/echo/pull/43
+* Fixed bug that occurred if a callback attribute used a property which didn't exist yet by @astrofrog in https://github.com/glue-viz/echo/pull/50
+
+#### Performance
+
+* Fixed a bug that caused unnecessary global callbacks even if value did not change by @astrofrog in https://github.com/glue-viz/echo/pull/46
+* Avoid storing duplicate functions/methods in CallbackContainer by @astrofrog in https://github.com/glue-viz/echo/pull/48
+
+#### Other Changes
+
+* Updated package infrastructure to use pyproject.toml by @astrofrog in https://github.com/glue-viz/echo/pull/47
+* Fix license in pyproject.toml by @astrofrog in https://github.com/glue-viz/echo/pull/49
+
+### New Contributors
+
+* @iisakkirotko made their first contribution in https://github.com/glue-viz/echo/pull/43
+
+**Full Changelog**: https://github.com/glue-viz/echo/compare/v0.10.0...v0.11.0
+
 ## v0.10.0 - 2025-05-09
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
