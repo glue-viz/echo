@@ -1,6 +1,7 @@
 import weakref
 from weakref import WeakKeyDictionary
 from contextlib import contextmanager
+from itertools import chain
 
 from .callback_container import CallbackContainer
 
@@ -128,10 +129,17 @@ class CallbackProperty(object):
         """
         if not self.enabled(instance):
             return
-        for cback in self._callbacks.get(instance, []):
-            cback(new)
-        for cback in self._2arg_callbacks.get(instance, []):
-            cback(old, new)
+        iterators = []
+        if (container := self._callbacks.get(instance, None)):
+            iterators.append((cb, priority, 1) for cb, priority in container.iterate(with_priority=True, use_priority=False))
+        if (container := self._2arg_callbacks.get(instance, None)):
+            iterators.append((cb, priority, 2) for cb, priority in container.iterate(with_priority=True, use_priority=False))
+
+        for callback, _priority, args in sorted(chain(*iterators), key=lambda x: x[1], reverse=True):
+            if args == 1:
+                callback(new)
+            else:
+                callback(old, new)
 
     def _validate(self, instance, old, new):
         """

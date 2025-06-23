@@ -72,8 +72,13 @@ class CallbackContainer(object):
             else:
                 return False
 
-    def __iter__(self):
-        for callback in sorted(self.callbacks, key=lambda x: x[-1], reverse=True):
+    def iterate(self, use_priority=True, with_priority=False):
+        if use_priority:
+            iterator = sorted(self.callbacks, key=lambda x: x[-1], reverse=True)
+        else:
+            iterator = self.callbacks
+
+        for callback in iterator:
             if len(callback) == 3:
                 func = callback[0]()
                 inst = callback[1]()
@@ -82,9 +87,17 @@ class CallbackContainer(object):
                 # just check here that the weakrefs were resolved
                 if func is None or inst is None:
                     continue
-                yield partial(func, inst)
+                result = partial(func, inst)
             else:
-                yield callback[0]
+                result = callback[0]
+            if with_priority:
+                yield result, callback[-1]
+            else:
+                yield result
+
+    def __iter__(self):
+        for callback in self.iterate():
+            yield callback
 
     def __len__(self):
         return len(self.callbacks)
