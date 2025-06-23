@@ -72,8 +72,8 @@ class CallbackContainer(object):
             else:
                 return False
 
-    def iterate(self, use_priority=True, with_priority=False):
-        if use_priority:
+    def iterator(self, sort=True, priority=False):
+        if sort:
             iterator = sorted(self.callbacks, key=lambda x: x[-1], reverse=True)
         else:
             iterator = self.callbacks
@@ -90,13 +90,13 @@ class CallbackContainer(object):
                 result = partial(func, inst)
             else:
                 result = callback[0]
-            if with_priority:
+            if priority:
                 yield result, callback[-1]
             else:
                 yield result
 
     def __iter__(self):
-        for callback in self.iterate():
+        for callback in self.iterator():
             yield callback
 
     def __len__(self):

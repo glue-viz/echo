@@ -131,9 +131,9 @@ class CallbackProperty(object):
             return
         iterators = []
         if (container := self._callbacks.get(instance, None)):
-            iterators.append((cb, priority, 1) for cb, priority in container.iterate(with_priority=True, use_priority=False))
+            iterators.append((cb, priority, 1) for cb, priority in container.iterator(priority=True, sort=False))
         if (container := self._2arg_callbacks.get(instance, None)):
-            iterators.append((cb, priority, 2) for cb, priority in container.iterate(with_priority=True, use_priority=False))
+            iterators.append((cb, priority, 2) for cb, priority in container.iterator(priority=True, sort=False))
 
         for callback, _priority, args in sorted(chain(*iterators), key=lambda x: x[1], reverse=True):
             if args == 1:
