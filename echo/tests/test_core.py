@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 from echo import (CallbackProperty, add_callback,
                   remove_callback, delay_callback,
@@ -710,3 +710,32 @@ def test_undefined_attribute_decorator():
     foo.x = 1
 
     assert test.call_count == 1
+
+
+def test_priority_order_twoargs():
+
+    mock = MagicMock()
+
+    def one_arg(value):
+        mock(value)
+
+    def two_arg(old, new):
+        mock(old, new)
+
+    state = State()
+    state.add_callback('a', one_arg, priority=10)
+    state.add_callback('a', two_arg, echo_old=True, priority=1000)
+
+    state.a = 2
+    calls = [call(None, 2), call(2)]
+    mock.assert_has_calls(calls, any_order=False)
+
+    mock.reset_mock()
+
+    state2 = State()
+    state2.add_callback('a', one_arg, priority=1000)
+    state2.add_callback('a', two_arg, echo_old=True, priority=10)
+
+    state2.a = 7
+    calls = [call(7), call(None, 7)]
+    mock.assert_has_calls(calls, any_order=False)
