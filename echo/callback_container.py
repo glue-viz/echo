@@ -73,6 +73,20 @@ class CallbackContainer(object):
                 return False
 
     def iterator(self, sort=True, priority=False):
+        """
+        Returns an iterator over the callback functions inside the container, skipping
+        and removing callbacks where the underlying instance has already been garbage
+        collected.
+
+        Parameters
+        ---------
+        sort: bool, optional
+            Whether the yielded callbacks will be sorted (by priority).
+            Defaults to `False`.
+        priority: bool, optional
+            If `True`, each iteration will yield a tuple (callback, priority).
+            If `False` (the default), only the callback is yielded.
+        """
         if sort:
             iterator = sorted(self.callbacks, key=lambda x: x[-1], reverse=True)
         else:
