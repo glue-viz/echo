@@ -1,5 +1,16 @@
 # Full changelog
 
+## v0.11.1 - 2025-11-22
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Bug Fixes
+
+* Respect priority between one- and two-argument callbacks by @Carifio24 in https://github.com/glue-viz/echo/pull/52
+
+**Full Changelog**: https://github.com/glue-viz/echo/compare/v0.11.0...v0.11.1
+
 ## v0.11.0 - 2025-06-12
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
