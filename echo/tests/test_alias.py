@@ -39,7 +39,7 @@ class HasCallbackPropertiesClass(HasCallbackProperties):
     size = CallbackProperty(10)
 
 
-# ============== Basic get/set tests ==============
+# Basic get/set tests
 
 def test_alias_get():
     """Test that getting via alias returns the target property value."""
@@ -62,7 +62,7 @@ def test_alias_get_set_roundtrip():
     assert obj.color == 'green'
 
 
-# ============== Deprecation warning tests ==============
+# Deprecation warning tests
 
 def test_alias_no_deprecation_warning_by_default():
     """Test that no warning is emitted by default (deprecated=False)."""
@@ -95,7 +95,7 @@ def test_alias_custom_warning_message():
         _ = obj.colour
 
 
-# ============== Callback tests ==============
+# Callback tests
 
 def test_add_callback_via_alias():
     """Test that callbacks added via alias are attached to target property."""
@@ -173,7 +173,7 @@ def test_ignore_callback_via_alias():
     assert callback.call_count == 0
 
 
-# ============== SelectionCallbackProperty tests ==============
+# SelectionCallbackProperty tests
 
 def test_selection_alias_get_set():
     """Test that alias works with SelectionCallbackProperty."""
@@ -216,7 +216,7 @@ def test_selection_alias_default_choices():
     assert SelectionClass.colour.default_choices == ['red', 'green', 'blue']
 
 
-# ============== HasCallbackProperties tests ==============
+# HasCallbackProperties tests
 
 def test_has_callback_properties_is_callback_property():
     """Test that is_callback_property returns True for properties and aliases."""
@@ -299,7 +299,7 @@ def test_has_callback_properties_global_callback_via_property():
     callback.assert_called_once_with(color='blue', colour='blue')
 
 
-# ============== Class attribute access tests ==============
+# Class attribute access tests
 
 def test_class_attribute_access_returns_alias():
     """Test that accessing alias on class returns the alias object."""
@@ -321,7 +321,7 @@ def test_alias_getattr_proxy():
     assert choices == ['red', 'green', 'blue']
 
 
-# ============== Edge case tests ==============
+# Edge case tests
 
 def test_multiple_instances_independent():
     """Test that alias works correctly with multiple instances."""
@@ -357,3 +357,17 @@ def test_alias_with_validator():
 
     obj.color = 'blue'
     assert obj.color == 'BLUE'
+
+
+def test_alias_private_attribute_access_raises():
+    """Test that accessing private attributes via alias raises AttributeError."""
+    with pytest.raises(AttributeError):
+        _ = SimpleClass.colour._private_attr
+
+
+def test_alias_before_class_defined():
+    """Test that accessing attributes on alias before class is defined raises."""
+    alias = CallbackPropertyAlias('target')
+    # _owner is None before __set_name__ is called
+    with pytest.raises(AttributeError, match="Cannot access .* before class is fully defined"):
+        _ = alias.some_attribute
