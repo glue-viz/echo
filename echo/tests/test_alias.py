@@ -219,19 +219,19 @@ def test_selection_alias_default_choices():
 # ============== HasCallbackProperties tests ==============
 
 def test_has_callback_properties_is_callback_property():
-    """Test that is_callback_property returns True only for actual properties."""
+    """Test that is_callback_property returns True for properties and aliases."""
     obj = HasCallbackPropertiesClass()
     assert obj.is_callback_property('color')
-    assert not obj.is_callback_property('colour')  # Alias returns False
+    assert obj.is_callback_property('colour')  # Alias also returns True
     assert obj.is_callback_property('size')
 
 
-def test_has_callback_properties_is_callback_property_alias():
-    """Test that is_callback_property_alias returns True only for aliases."""
+def test_has_callback_properties_is_alias():
+    """Test that is_alias returns True only for aliases."""
     obj = HasCallbackPropertiesClass()
-    assert not obj.is_callback_property_alias('color')
-    assert obj.is_callback_property_alias('colour')
-    assert not obj.is_callback_property_alias('size')
+    assert not obj.is_alias('color')
+    assert obj.is_alias('colour')
+    assert not obj.is_alias('size')
 
 
 def test_has_callback_properties_iter_excludes_aliases():

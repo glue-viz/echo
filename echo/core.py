@@ -401,7 +401,9 @@ class HasCallbackProperties(object):
                 callback(**kwargs)
 
     def __setattr__(self, attribute, value):
-        is_callback = self.is_callback_property(attribute)
+        # Trigger global callbacks for callback properties, but not aliases
+        # (aliases will trigger via the target property they redirect to)
+        is_callback = self.is_callback_property(attribute) and not self.is_alias(attribute)
         if is_callback:
             previous_value = getattr(self, attribute, None)
         super(HasCallbackProperties, self).__setattr__(attribute, value)
@@ -434,11 +436,10 @@ class HasCallbackProperties(object):
             can also raise an exception.        """
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
+            if self.is_alias(name):
+                prop._warn()
+                prop = prop._target_property
             prop.add_callback(self, callback, echo_old=echo_old, priority=priority, validator=validator)
-        elif self.is_callback_property_alias(name):
-            prop = getattr(type(self), name)
-            prop._warn()
-            prop._target_property.add_callback(self, callback, echo_old=echo_old, priority=priority, validator=validator)
         else:
             raise TypeError("attribute '{0}' is not a callback property".format(name))
 
@@ -456,15 +457,11 @@ class HasCallbackProperties(object):
 
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
+            if self.is_alias(name):
+                prop._warn()
+                prop = prop._target_property
             try:
                 prop.remove_callback(self, callback)
-            except ValueError:  # pragma: nocover
-                pass  # Be forgiving if callback was already removed before
-        elif self.is_callback_property_alias(name):
-            prop = getattr(type(self), name)
-            prop._warn()
-            try:
-                prop._target_property.remove_callback(self, callback)
             except ValueError:  # pragma: nocover
                 pass  # Be forgiving if callback was already removed before
         else:
@@ -497,15 +494,17 @@ class HasCallbackProperties(object):
         """
         Whether a property (identified by name) is a callback property.
 
+        Returns True for both CallbackProperty and CallbackPropertyAlias.
+
         Parameters
         ----------
         name : str
             The name of the property to check
         """
         prop = getattr(type(self), name, None)
-        return isinstance(prop, CallbackProperty)
+        return isinstance(prop, (CallbackProperty, CallbackPropertyAlias))
 
-    def is_callback_property_alias(self, name):
+    def is_alias(self, name):
         """
         Whether a property (identified by name) is a callback property alias.
 
