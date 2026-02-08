@@ -51,10 +51,7 @@ class CallbackPropertyAlias(object):
     def _warn(self):
         if self._deprecated:
             import warnings
-            if self._warning:
-                message = self._warning
-            else:
-                message = (f"'{self._name}' is deprecated, use '{self._target}' instead")
+            message = self._warning or f"'{self._name}' is deprecated, use '{self._target}' instead"
             warnings.warn(message, DeprecationWarning, stacklevel=3)
 
     def __get__(self, instance, owner=None):
