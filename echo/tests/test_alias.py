@@ -276,14 +276,27 @@ def test_has_callback_properties_remove_callback_via_alias():
 
 
 def test_has_callback_properties_global_callback_via_alias():
-    """Test that global callbacks work when setting via alias."""
+    """Test that global callbacks receive both property and alias names."""
     obj = HasCallbackPropertiesClass()
     callback = MagicMock()
 
     obj.add_global_callback(callback)
     obj.colour = 'blue'
 
-    callback.assert_called_once_with(color='blue')
+    # Should receive both the target property name and the alias name
+    callback.assert_called_once_with(color='blue', colour='blue')
+
+
+def test_has_callback_properties_global_callback_via_property():
+    """Test that global callbacks receive alias names when setting via property."""
+    obj = HasCallbackPropertiesClass()
+    callback = MagicMock()
+
+    obj.add_global_callback(callback)
+    obj.color = 'blue'
+
+    # Should receive both the target property name and the alias name
+    callback.assert_called_once_with(color='blue', colour='blue')
 
 
 # ============== Class attribute access tests ==============

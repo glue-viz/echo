@@ -392,7 +392,25 @@ class HasCallbackProperties(object):
                     break
         self._notify_global(**properties)
 
+    def _get_aliases_for(self, name):
+        """
+        Return a list of alias names that point to the given property name.
+        """
+        aliases = []
+        for attr_name in dir(type(self)):
+            prop = getattr(type(self), attr_name, None)
+            if isinstance(prop, CallbackPropertyAlias) and prop._target == name:
+                aliases.append(attr_name)
+        return aliases
+
     def _notify_global(self, **kwargs):
+        # Add aliases for any properties being notified (for backward compatibility)
+        alias_kwargs = {}
+        for prop_name, value in kwargs.items():
+            for alias_name in self._get_aliases_for(prop_name):
+                alias_kwargs[alias_name] = value
+        kwargs.update(alias_kwargs)
+
         for prop in set(self._delayed_properties) | set(self._ignored_properties):
             if prop in kwargs:
                 kwargs.pop(prop)
