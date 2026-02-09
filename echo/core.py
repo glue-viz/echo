@@ -5,6 +5,8 @@ from itertools import chain
 
 from .callback_container import CallbackContainer
 
+from .alias import CallbackPropertyAlias
+
 __all__ = ['CallbackProperty', 'callback_property',
            'add_callback', 'remove_callback',
            'delay_callback', 'ignore_callback',
@@ -306,7 +308,20 @@ class HasCallbackProperties(object):
                     break
         self._notify_global(**properties)
 
+    def _get_aliases_for(self, name):
+        """
+        Return a list of alias names that point to the given property name.
+        """
+        return [attr_name for attr_name in dir(type(self))
+                if self.is_alias(attr_name)
+                and getattr(type(self), attr_name)._target == name]
+
     def _notify_global(self, **kwargs):
+        # Add aliases for any properties being notified (for backward compatibility)
+        kwargs.update({alias: value
+                       for prop_name, value in kwargs.items()
+                       for alias in self._get_aliases_for(prop_name)})
+
         for prop in set(self._delayed_properties) | set(self._ignored_properties):
             if prop in kwargs:
                 kwargs.pop(prop)
@@ -315,7 +330,9 @@ class HasCallbackProperties(object):
                 callback(**kwargs)
 
     def __setattr__(self, attribute, value):
-        is_callback = self.is_callback_property(attribute)
+        # Trigger global callbacks for callback properties, but not aliases
+        # (aliases will trigger via the target property they redirect to)
+        is_callback = self.is_callback_property(attribute) and not self.is_alias(attribute)
         if is_callback:
             previous_value = getattr(self, attribute, None)
         super(HasCallbackProperties, self).__setattr__(attribute, value)
@@ -348,6 +365,9 @@ class HasCallbackProperties(object):
             can also raise an exception.        """
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
+            if self.is_alias(name):
+                prop._warn()
+                prop = prop._target_property
             prop.add_callback(self, callback, echo_old=echo_old, priority=priority, validator=validator)
         else:
             raise TypeError("attribute '{0}' is not a callback property".format(name))
@@ -366,6 +386,9 @@ class HasCallbackProperties(object):
 
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
+            if self.is_alias(name):
+                prop._warn()
+                prop = prop._target_property
             try:
                 prop.remove_callback(self, callback)
             except ValueError:  # pragma: nocover
@@ -400,23 +423,48 @@ class HasCallbackProperties(object):
         """
         Whether a property (identified by name) is a callback property.
 
+        Returns True for both CallbackProperty and CallbackPropertyAlias.
+
         Parameters
         ----------
         name : str
             The name of the property to check
         """
-        return isinstance(getattr(type(self), name, None), CallbackProperty)
+        prop = getattr(type(self), name, None)
+        return isinstance(prop, (CallbackProperty, CallbackPropertyAlias))
+
+    def is_alias(self, name):
+        """
+        Whether a property (identified by name) is a callback property alias.
+
+        Parameters
+        ----------
+        name : str
+            The name of the property to check
+        """
+        prop = getattr(type(self), name, None)
+        return isinstance(prop, CallbackPropertyAlias)
 
     def iter_callback_properties(self):
         """
         Iterator to loop over all callback properties.
+
+        Note: This does not include CallbackPropertyAlias instances, only
+        actual CallbackProperty instances.
         """
         for name in dir(self):
-            if self.is_callback_property(name):
-                yield name, getattr(type(self), name)
+            prop = getattr(type(self), name, None)
+            if isinstance(prop, CallbackProperty):
+                yield name, prop
 
     def callback_properties(self):
-        return [name for name in dir(self) if self.is_callback_property(name)]
+        """
+        Return a list of all callback property names.
+
+        Note: This does not include CallbackPropertyAlias instances, only
+        actual CallbackProperty instances.
+        """
+        return [name for name, _ in self.iter_callback_properties()]
 
     def clear_callbacks(self):
         """
@@ -425,6 +473,26 @@ class HasCallbackProperties(object):
         self._global_callbacks.clear()
         for name, prop in self.iter_callback_properties():
             prop.clear_callbacks(self)
+
+
+def _resolve_callback_property(instance, prop):
+    """
+    Resolve a property name to its CallbackProperty, handling aliases.
+
+    If the property is a CallbackPropertyAlias, follows it to the target
+    property and emits a deprecation warning if applicable.
+
+    Returns
+    -------
+    tuple
+        (resolved_name, callback_property) - the resolved property name and
+        the actual CallbackProperty object
+    """
+    p = getattr(type(instance), prop)
+    if isinstance(p, CallbackPropertyAlias):
+        p._warn()
+        return p._target, p._target_property
+    return prop, p
 
 
 def add_callback(instance, prop, callback, echo_old=False, priority=0, validator=False):
@@ -468,7 +536,7 @@ def add_callback(instance, prop, callback, echo_old=False, priority=0, validator
         add_callback(f, 'bar', callback)
 
     """
-    p = getattr(type(instance), prop)
+    prop, p = _resolve_callback_property(instance, prop)
     if not isinstance(p, CallbackProperty):
         raise TypeError("%s is not a CallbackProperty" % prop)
     p.add_callback(instance, callback, echo_old=echo_old, priority=priority, validator=validator)
@@ -487,7 +555,7 @@ def remove_callback(instance, prop, callback):
     callback : func
         The callback function to remove
     """
-    p = getattr(type(instance), prop)
+    prop, p = _resolve_callback_property(instance, prop)
     if not isinstance(p, CallbackProperty):
         raise TypeError("%s is not a CallbackProperty" % prop)
     p.remove_callback(instance, callback)
@@ -555,7 +623,8 @@ class delay_callback(object):
 
     def __init__(self, instance, *props):
         self.instance = instance
-        self.props = props
+        # Resolve any aliases to their target property names
+        self.props = tuple(_resolve_callback_property(instance, p)[0] for p in props)
 
     def __enter__(self):
 
@@ -637,6 +706,9 @@ def ignore_callback(instance, *props):
         print('done')  # no callbacks called
 
     """
+    # Resolve any aliases to their target property names
+    props = tuple(_resolve_callback_property(instance, p)[0] for p in props)
+
     for prop in props:
         p = getattr(type(instance), prop)
         if not isinstance(p, CallbackProperty):

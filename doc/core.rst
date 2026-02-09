@@ -73,3 +73,32 @@ incremental changes to a callback property. The difference between
 callbacks will be invoked at the end of the context block. Callbacks are
 never triggered inside :func:`ignore_callback`, where as they are triggered
 a single time inside :func:`delay_callback` if the final state has changed.
+
+Property aliases
+----------------
+
+When renaming a callback property, you can use :class:`CallbackPropertyAlias`
+to maintain backward compatibility by creating an alias that redirects to the
+new property name::
+
+    class Foo(object):
+        line_color = CallbackProperty('red')  # new name
+        linecolor = CallbackPropertyAlias('line_color')  # old name
+
+The alias is transparent -- getting or setting via the alias accesses the
+target property. Callbacks attached via either name are registered on the
+target property::
+
+    f = Foo()
+    add_callback(f, 'linecolor', callback)  # attaches to line_color
+    f.line_color = 'blue'  # triggers callback
+
+By default, aliases are silent. To emit deprecation warnings when the alias is
+used, set ``deprecated=True`` or provide a custom warning message::
+
+    linecolor = CallbackPropertyAlias('line_color', deprecated=True)
+    lc = CallbackPropertyAlias('line_color', warning='Use line_color instead')
+
+For :class:`~echo.selection.SelectionCallbackProperty` and other subclasses,
+the alias proxies attribute access to the target, so methods like
+``get_choices`` and ``set_choices`` work through the alias.
