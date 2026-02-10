@@ -415,7 +415,12 @@ class connect_combo_selection(BaseConnection):
 
     def __init__(self, instance, prop, widget):
 
-        if not isinstance(getattr(type(instance), prop), SelectionCallbackProperty):
+        prop_obj = getattr(type(instance), prop)
+        # Handle aliases - resolve to target property for type checking
+        if hasattr(prop_obj, '_target_property') and prop_obj._target_property is not None:
+            prop_obj = prop_obj._target_property
+
+        if not isinstance(prop_obj, SelectionCallbackProperty):
             raise TypeError('connect_combo_selection requires a SelectionCallbackProperty')
 
         super(connect_combo_selection, self).__init__(instance, prop, widget)
@@ -500,7 +505,12 @@ class connect_list_selection(BaseConnection):
         single-item selection.
         """
 
-        if not isinstance(getattr(type(instance), prop), SelectionCallbackProperty):
+        prop_obj = getattr(type(instance), prop)
+        # Handle aliases - resolve to target property for type checking
+        if hasattr(prop_obj, '_target_property') and prop_obj._target_property is not None:
+            prop_obj = prop_obj._target_property
+
+        if not isinstance(prop_obj, SelectionCallbackProperty):
             raise TypeError('connect_list_selection requires a SelectionCallbackProperty')
 
         super(connect_list_selection, self).__init__(instance, prop, widget)
