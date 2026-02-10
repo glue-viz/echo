@@ -1,5 +1,16 @@
 # Full changelog
 
+## v0.12.0 - 2026-02-10
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### New Features
+
+* Add ability to define callback property aliases by @astrofrog in https://github.com/glue-viz/echo/pull/53
+
+**Full Changelog**: https://github.com/glue-viz/echo/compare/v0.11.1...v0.12.0
+
 ## v0.11.1 - 2025-11-22
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
