@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from echo.core import CallbackProperty
+from echo.alias import CallbackPropertyAlias
 from echo.selection import SelectionCallbackProperty, ChoiceSeparator
 from echo.qt.tests.helpers import SKIP_QT_TEST
 if SKIP_QT_TEST:
@@ -14,6 +15,7 @@ from echo.qt.connect import connect_list_selection
 
 class Example(object):
     a = SelectionCallbackProperty(default_index=1)
+    a_alias = CallbackPropertyAlias('a')
     b = CallbackProperty()
 
 
@@ -136,3 +138,43 @@ def test_connect_list_widget_selection_invalid():
     with pytest.raises(TypeError) as exc:
         connect_list_selection(t, 'b', list_widget)
     assert exc.value.args[0] == 'connect_list_selection requires a SelectionCallbackProperty'
+
+
+def test_connect_list_selection_via_alias():
+    """Test that connecting via a CallbackPropertyAlias works correctly."""
+
+    t = Example()
+
+    a_prop = getattr(type(t), 'a')
+    a_prop.set_choices(t, [4, 3.5])
+    a_prop.set_display_func(t, lambda x: 'value: {0}'.format(x))
+
+    list_widget = QtWidgets.QListWidget()
+
+    # Connect via the alias - this should work because the alias
+    # points to a SelectionCallbackProperty
+    c1 = connect_list_selection(t, 'a_alias', list_widget)  # noqa
+
+    assert list_widget.item(0).text() == 'value: 4'
+    assert list_widget.item(1).text() == 'value: 3.5'
+    assert list_widget.item(0).data(Qt.UserRole).data == 4
+    assert list_widget.item(1).data(Qt.UserRole).data == 3.5
+
+    # Changing list should update the underlying property via alias
+    list_widget.setCurrentItem(list_widget.item(1))
+    assert t.a == 3.5
+    assert t.a_alias == 3.5
+
+    list_widget.setCurrentItem(list_widget.item(0))
+    assert t.a == 4
+    assert t.a_alias == 4
+
+    # Changing the underlying property should update list
+    t.a = 3.5
+    assert len(list_widget.selectedItems()) == 1
+    assert list_widget.selectedItems()[0] is list_widget.item(1)
+
+    # Changing via alias should also update list
+    t.a_alias = 4
+    assert len(list_widget.selectedItems()) == 1
+    assert list_widget.selectedItems()[0] is list_widget.item(0)

@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from echo.core import CallbackProperty
+from echo.alias import CallbackPropertyAlias
 from echo.selection import SelectionCallbackProperty, ChoiceSeparator
 from echo.qt.tests.helpers import SKIP_QT_TEST
 if SKIP_QT_TEST:
@@ -13,6 +14,7 @@ from echo.qt.connect import connect_combo_selection
 
 class Example(object):
     a = SelectionCallbackProperty(default_index=1)
+    a_alias = CallbackPropertyAlias('a')
     b = CallbackProperty()
 
 
@@ -129,3 +131,41 @@ def test_connect_combo_selection_invalid():
     with pytest.raises(TypeError) as exc:
         connect_combo_selection(t, 'b', combo)
     assert exc.value.args[0] == 'connect_combo_selection requires a SelectionCallbackProperty'
+
+
+def test_connect_combo_selection_via_alias():
+    """Test that connecting via a CallbackPropertyAlias works correctly."""
+
+    t = Example()
+
+    a_prop = getattr(type(t), 'a')
+    a_prop.set_choices(t, [4, 3.5])
+    a_prop.set_display_func(t, lambda x: 'value: {0}'.format(x))
+
+    combo = QtWidgets.QComboBox()
+
+    # Connect via the alias - this should work because the alias
+    # points to a SelectionCallbackProperty
+    c1 = connect_combo_selection(t, 'a_alias', combo)  # noqa
+
+    assert combo.itemText(0) == 'value: 4'
+    assert combo.itemText(1) == 'value: 3.5'
+    assert combo.itemData(0).data == 4
+    assert combo.itemData(1).data == 3.5
+
+    # Changing combo should update the underlying property via alias
+    combo.setCurrentIndex(1)
+    assert t.a == 3.5
+    assert t.a_alias == 3.5
+
+    combo.setCurrentIndex(0)
+    assert t.a == 4
+    assert t.a_alias == 4
+
+    # Changing the underlying property should update combo
+    t.a = 3.5
+    assert combo.currentIndex() == 1
+
+    # Changing via alias should also update combo
+    t.a_alias = 4
+    assert combo.currentIndex() == 0
