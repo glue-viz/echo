@@ -45,12 +45,11 @@ jobs:
 
         - linux: py312-test
 
-        # Test a few configurations on macOS (arm64 is default on macos-14)
+        # Test a few configurations on macOS
         - macos: py310-test-pyqt515
         - macos: py311-test-pyqt515
         - macos: py313-test-pyqt67
         - macos: py310-test-pyqt63
-          runs-on: macos-13
 
         - macos: py310-test-pyside63
         - macos: py311-test-pyside67
