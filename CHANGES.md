@@ -1,5 +1,16 @@
 # Full changelog
 
+## v0.12.1 - 2026-02-11
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Bug Fixes
+
+* Fixed bug with connect_combo_selection and connect_list_selection with aliases by @astrofrog in https://github.com/glue-viz/echo/pull/55
+
+**Full Changelog**: https://github.com/glue-viz/echo/compare/v0.12.0...v0.12.1
+
 ## v0.12.0 - 2026-02-10
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
