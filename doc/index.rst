@@ -35,8 +35,8 @@ The main features of Echo are:
 
 * Context managers to delay or ignore callback events
 
-* Helper functions to connect callback properties to GUI elements (at the moment
-  only Qt is supported)
+* Helper functions to connect callback properties to GUI elements (Qt and
+  ipywidgets/ipyvuetify are supported)
 
 User guide
 ----------
@@ -47,4 +47,5 @@ User guide
    installation
    core
    gui
+   vue
    api
