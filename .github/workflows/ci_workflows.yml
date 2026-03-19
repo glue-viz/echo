@@ -45,6 +45,10 @@ jobs:
 
         - linux: py312-test
 
+        # Vue/ipywidgets tests (no Qt required)
+        - linux: py310-test-vue
+        - linux: py313-test-vue
+
         # Test a few configurations on macOS
         - macos: py310-test-pyqt515
         - macos: py311-test-pyqt515
@@ -55,6 +59,7 @@ jobs:
         - macos: py311-test-pyside67
 
         - macos: py310-test
+        - macos: py312-test-vue
 
         # Test some configurations on Windows
         - windows: py310-test-pyqt515
@@ -65,6 +70,7 @@ jobs:
         - windows: py310-test-pyside65
 
         - windows: py311-test
+        - windows: py312-test-vue
 
         # Try out documentation build on Linux, macOS and Windows
         - linux: py310-docs-pyqt514
