@@ -3,7 +3,7 @@ import pytest
 traitlets = pytest.importorskip("traitlets")
 
 from echo import CallbackProperty, SelectionCallbackProperty, HasCallbackProperties  # noqa: E402
-from echo.vue.autoconnect import autoconnect_callbacks_to_vue, _parse_template, _resolve_template  # noqa: E402
+from echo.vue._autoconnect import autoconnect_callbacks_to_vue, _parse_template, _resolve_template  # noqa: E402
 
 
 # Template uses tag-based type inference: the tag determines the handler type

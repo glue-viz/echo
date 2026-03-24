@@ -3,8 +3,8 @@ import pytest
 traitlets = pytest.importorskip("traitlets")
 
 from echo import CallbackProperty, SelectionCallbackProperty, HasCallbackProperties  # noqa: E402
-from echo.vue.connect import (connect_bool, connect_value,  # noqa: E402
-                              connect_text, connect_choice)
+from echo.vue._connect import (connect_bool, connect_value,  # noqa: E402
+                               connect_text, connect_choice)
 
 
 class SimpleState(HasCallbackProperties):

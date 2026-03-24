@@ -2,10 +2,10 @@ import os
 import warnings
 from html.parser import HTMLParser
 
-from .connect import (connect_bool,
-                      connect_value,
-                      connect_text,
-                      connect_choice)
+from ._connect import (connect_bool,
+                       connect_value,
+                       connect_text,
+                       connect_choice)
 
 __all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS', 'TAG_TYPE_MAP']
 
