@@ -78,14 +78,14 @@ class connect_bool(BaseConnection):
         The name of the callback property.
     widget : HasTraits
         The widget. If ``widget_prop`` is not given, a traitlet named
-        ``bool_{prop}`` is created dynamically.
+        ``{prop}`` is created dynamically.
     widget_prop : str, optional
         The name of the Bool traitlet on the widget.
     """
 
     def __init__(self, instance, prop, widget, widget_prop=None):
         if widget_prop is None:
-            widget_prop = f'bool_{prop}'
+            widget_prop = prop
         if not widget.has_trait(widget_prop):
             widget.add_traits(**{widget_prop: traitlets.Bool(False).tag(sync=True)})
         super().__init__(instance, prop, widget, widget_prop)
@@ -110,14 +110,14 @@ class connect_value(BaseConnection):
         The name of the callback property.
     widget : HasTraits
         The widget. If ``widget_prop`` is not given, a traitlet named
-        ``value_{prop}`` is created dynamically.
+        ``{prop}`` is created dynamically.
     widget_prop : str, optional
         The name of the Float traitlet on the widget.
     """
 
     def __init__(self, instance, prop, widget, widget_prop=None):
         if widget_prop is None:
-            widget_prop = f'value_{prop}'
+            widget_prop = prop
         if not widget.has_trait(widget_prop):
             widget.add_traits(**{widget_prop: traitlets.Float(allow_none=True).tag(sync=True)})
         super().__init__(instance, prop, widget, widget_prop)
@@ -142,14 +142,14 @@ class connect_valuetext(BaseConnection):
         The name of the callback property.
     widget : HasTraits
         The widget. If ``widget_prop`` is not given, a traitlet named
-        ``valuetext_{prop}`` is created dynamically.
+        ``{prop}`` is created dynamically.
     widget_prop : str, optional
         The name of the Unicode traitlet on the widget.
     """
 
     def __init__(self, instance, prop, widget, widget_prop=None):
         if widget_prop is None:
-            widget_prop = f'valuetext_{prop}'
+            widget_prop = prop
         if not widget.has_trait(widget_prop):
             widget.add_traits(**{widget_prop: traitlets.Unicode('').tag(sync=True)})
         super().__init__(instance, prop, widget, widget_prop)
@@ -177,14 +177,14 @@ class connect_text(BaseConnection):
         The name of the callback property.
     widget : HasTraits
         The widget. If ``widget_prop`` is not given, a traitlet named
-        ``text_{prop}`` is created dynamically.
+        ``{prop}`` is created dynamically.
     widget_prop : str, optional
         The name of the Unicode traitlet on the widget.
     """
 
     def __init__(self, instance, prop, widget, widget_prop=None):
         if widget_prop is None:
-            widget_prop = f'text_{prop}'
+            widget_prop = prop
         if not widget.has_trait(widget_prop):
             widget.add_traits(**{widget_prop: traitlets.Unicode('').tag(sync=True)})
         super().__init__(instance, prop, widget, widget_prop)
@@ -200,7 +200,7 @@ class connect_text(BaseConnection):
 class connect_choice(BaseConnection):
     """
     Connect a SelectionCallbackProperty to a pair of traitlets:
-    ``combosel_{prop}_items`` (List) and ``combosel_{prop}_selected`` (Int).
+    ``{prop}_items`` (List) and ``{prop}_selected`` (Int).
 
     Parameters
     ----------
@@ -210,8 +210,7 @@ class connect_choice(BaseConnection):
         The name of the SelectionCallbackProperty.
     widget : HasTraits
         The widget. If ``widget_prop`` is not given, traitlets named
-        ``combosel_{prop}_items`` and ``combosel_{prop}_selected`` are
-        created dynamically.
+        ``{prop}_items`` and ``{prop}_selected`` are created dynamically.
     widget_prop : str, optional
         The name of the Int (selected) traitlet. The items traitlet is
         derived by replacing ``_selected`` with ``_items``.
@@ -219,7 +218,7 @@ class connect_choice(BaseConnection):
 
     def __init__(self, instance, prop, widget, widget_prop=None):
         if widget_prop is None:
-            widget_prop = f'combosel_{prop}_selected'
+            widget_prop = f'{prop}_selected'
         items_prop = widget_prop.replace('_selected', '_items')
         traits = {}
         if not widget.has_trait(widget_prop):

@@ -31,36 +31,36 @@ class TestConnectBool:
     def setup_method(self):
         self.state = SimpleState()
         self.widget = SimpleWidget()
-        self.widget.add_traits(bool_flag=traitlets.Bool(False).tag(sync=True))
-        self.conn = connect_bool(self.state, 'flag', self.widget, 'bool_flag')
+        self.widget.add_traits(flag=traitlets.Bool(False).tag(sync=True))
+        self.conn = connect_bool(self.state, 'flag', self.widget, 'flag')
 
     def test_state_to_widget(self):
         self.state.flag = True
-        assert self.widget.bool_flag is True
+        assert self.widget.flag is True
         self.state.flag = False
-        assert self.widget.bool_flag is False
+        assert self.widget.flag is False
 
     def test_widget_to_state(self):
-        self.widget.bool_flag = True
+        self.widget.flag = True
         assert self.state.flag is True
-        self.widget.bool_flag = False
+        self.widget.flag = False
         assert self.state.flag is False
 
     def test_initial_sync(self):
-        assert self.widget.bool_flag == self.state.flag
+        assert self.widget.flag == self.state.flag
 
     def test_disconnect(self):
         self.conn.disconnect()
         self.state.flag = True
-        assert self.widget.bool_flag is False
+        assert self.widget.flag is False
 
     def test_auto_create_trait(self):
         state = SimpleState()
         widget = SimpleWidget()
         conn = connect_bool(state, 'flag', widget)
-        assert hasattr(widget, 'bool_flag')
+        assert hasattr(widget, 'flag')
         state.flag = True
-        assert widget.bool_flag is True
+        assert widget.flag is True
         conn.disconnect()
 
 
@@ -69,31 +69,31 @@ class TestConnectValue:
     def setup_method(self):
         self.state = SimpleState()
         self.widget = SimpleWidget()
-        self.widget.add_traits(value_height=traitlets.Float(allow_none=True).tag(sync=True))
-        self.conn = connect_value(self.state, 'height', self.widget, 'value_height')
+        self.widget.add_traits(height=traitlets.Float(allow_none=True).tag(sync=True))
+        self.conn = connect_value(self.state, 'height', self.widget, 'height')
 
     def test_state_to_widget(self):
         self.state.height = 2.5
-        assert self.widget.value_height == 2.5
+        assert self.widget.height == 2.5
 
     def test_widget_to_state(self):
-        self.widget.value_height = 3.0
+        self.widget.height = 3.0
         assert self.state.height == 3.0
 
     def test_initial_sync(self):
-        assert self.widget.value_height == 1.5
+        assert self.widget.height == 1.5
 
     def test_none_handling(self):
         self.state.height = None
-        assert self.widget.value_height is None
+        assert self.widget.height is None
 
     def test_auto_create_trait(self):
         state = SimpleState()
         widget = SimpleWidget()
         conn = connect_value(state, 'count', widget)
-        assert hasattr(widget, 'value_count')
+        assert hasattr(widget, 'count')
         state.count = 42
-        assert widget.value_count == 42.0
+        assert widget.count == 42.0
         conn.disconnect()
 
 
@@ -102,20 +102,20 @@ class TestConnectValueText:
     def setup_method(self):
         self.state = SimpleState()
         self.widget = SimpleWidget()
-        self.widget.add_traits(valuetext_age=traitlets.Unicode('').tag(sync=True))
-        self.conn = connect_valuetext(self.state, 'age', self.widget, 'valuetext_age')
+        self.widget.add_traits(age=traitlets.Unicode('').tag(sync=True))
+        self.conn = connect_valuetext(self.state, 'age', self.widget, 'age')
 
     def test_state_to_widget(self):
         self.state.age = 30
-        assert self.widget.valuetext_age == '30'
+        assert self.widget.age == '30'
 
     def test_widget_to_state(self):
-        self.widget.valuetext_age = '42'
+        self.widget.age = '42'
         assert self.state.age == 42.0
 
     def test_invalid_input(self):
         self.state.age = 25
-        self.widget.valuetext_age = 'not a number'
+        self.widget.age = 'not a number'
         assert self.state.age == 25  # unchanged
 
 
@@ -124,23 +124,23 @@ class TestConnectText:
     def setup_method(self):
         self.state = SimpleState()
         self.widget = SimpleWidget()
-        self.widget.add_traits(text_name=traitlets.Unicode('').tag(sync=True))
-        self.conn = connect_text(self.state, 'name', self.widget, 'text_name')
+        self.widget.add_traits(name=traitlets.Unicode('').tag(sync=True))
+        self.conn = connect_text(self.state, 'name', self.widget, 'name')
 
     def test_state_to_widget(self):
         self.state.name = 'hello'
-        assert self.widget.text_name == 'hello'
+        assert self.widget.name == 'hello'
 
     def test_widget_to_state(self):
-        self.widget.text_name = 'world'
+        self.widget.name = 'world'
         assert self.state.name == 'world'
 
     def test_initial_sync(self):
-        assert self.widget.text_name == 'default'
+        assert self.widget.name == 'default'
 
     def test_none_handling(self):
         self.state.name = None
-        assert self.widget.text_name == ''
+        assert self.widget.name == ''
 
 
 class TestConnectChoice:
@@ -149,15 +149,15 @@ class TestConnectChoice:
         self.state = SimpleState()
         self.widget = SimpleWidget()
         self.widget.add_traits(
-            combosel_color_items=traitlets.List().tag(sync=True),
-            combosel_color_selected=traitlets.Int(allow_none=True).tag(sync=True),
+            color_items=traitlets.List().tag(sync=True),
+            color_selected=traitlets.Int(allow_none=True).tag(sync=True),
         )
         self.conn = connect_choice(
-            self.state, 'color', self.widget, 'combosel_color_selected',
+            self.state, 'color', self.widget, 'color_selected',
         )
 
     def test_items_populated(self):
-        items = self.widget.combosel_color_items
+        items = self.widget.color_items
         assert len(items) == 3
         assert items[0]['text'] == 'RED'
         assert items[1]['text'] == 'GREEN'
@@ -165,21 +165,21 @@ class TestConnectChoice:
 
     def test_state_to_widget(self):
         self.state.color = 'blue'
-        assert self.widget.combosel_color_selected == 2
+        assert self.widget.color_selected == 2
 
     def test_widget_to_state(self):
-        self.widget.combosel_color_selected = 1
+        self.widget.color_selected = 1
         assert self.state.color == 'green'
 
     def test_initial_sync(self):
-        assert self.widget.combosel_color_selected == 0
+        assert self.widget.color_selected == 0
         assert self.state.color == 'red'
 
     def test_auto_create_traits(self):
         state = SimpleState()
         widget = SimpleWidget()
         conn = connect_choice(state, 'color', widget)
-        assert hasattr(widget, 'combosel_color_items')
-        assert hasattr(widget, 'combosel_color_selected')
-        assert len(widget.combosel_color_items) == 3
+        assert hasattr(widget, 'color_items')
+        assert hasattr(widget, 'color_selected')
+        assert len(widget.color_items) == 3
         conn.disconnect()

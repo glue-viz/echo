@@ -6,17 +6,18 @@ from echo import CallbackProperty, SelectionCallbackProperty, HasCallbackPropert
 from echo.vue.autoconnect import autoconnect_callbacks_to_vue, _parse_template  # noqa: E402
 
 
-# Template uses {type}_{name} convention to declare handler types.
+# Template uses tag-based type inference: the tag determines the handler type
+# and the v-model value is the property name directly.
 TEMPLATE = """
 <template>
     <div>
-        <v-switch v-model="bool_x_log" />
-        <v-switch v-model="bool_y_log" />
-        <v-switch v-model="bool_show_axes" />
-        <glue-float-field :value.sync="value_x_min" />
-        <glue-float-field :value.sync="value_x_max" />
-        <v-text-field v-model="text_title" />
-        <v-select :items="combosel_x_att_items" v-model="combosel_x_att_selected" />
+        <v-switch v-model="x_log" />
+        <v-switch v-model="y_log" />
+        <v-switch v-model="show_axes" />
+        <v-slider :value.sync="x_min" />
+        <v-slider :value.sync="x_max" />
+        <v-text-field v-model="title" />
+        <v-select :items="x_att_items" v-model="x_att_selected" />
     </div>
 </template>
 """
@@ -64,12 +65,12 @@ def test_template_creates_only_referenced_traits():
     assert 'title' in handlers
     assert 'x_att' in handlers
 
-    # Traitlets use {type}_{name} naming
-    assert hasattr(widget, 'bool_x_log')
-    assert hasattr(widget, 'value_x_min')
-    assert hasattr(widget, 'text_title')
-    assert hasattr(widget, 'combosel_x_att_items')
-    assert hasattr(widget, 'combosel_x_att_selected')
+    # Traitlets use property names directly (no type prefix)
+    assert hasattr(widget, 'x_log')
+    assert hasattr(widget, 'x_min')
+    assert hasattr(widget, 'title')
+    assert hasattr(widget, 'x_att_items')
+    assert hasattr(widget, 'x_att_selected')
 
     # Property NOT in template should NOT be connected
     assert 'dpi' not in handlers
@@ -80,13 +81,13 @@ def test_template_bool_bidirectional():
     widget = SimpleWidget()
     autoconnect_callbacks_to_vue(state, widget, template=TEMPLATE)
 
-    assert widget.bool_x_log is False
-    assert widget.bool_show_axes is True
+    assert widget.x_log is False
+    assert widget.show_axes is True
 
     state.x_log = True
-    assert widget.bool_x_log is True
+    assert widget.x_log is True
 
-    widget.bool_x_log = False
+    widget.x_log = False
     assert state.x_log is False
 
 
@@ -95,10 +96,10 @@ def test_template_value_bidirectional():
     widget = SimpleWidget()
     autoconnect_callbacks_to_vue(state, widget, template=TEMPLATE)
 
-    assert widget.value_x_min == -10.0
+    assert widget.x_min == -10.0
     state.x_min = 5.0
-    assert widget.value_x_min == 5.0
-    widget.value_x_max = 100.0
+    assert widget.x_min == 5.0
+    widget.x_max = 100.0
     assert state.x_max == 100.0
 
 
@@ -107,10 +108,10 @@ def test_template_text_bidirectional():
     widget = SimpleWidget()
     autoconnect_callbacks_to_vue(state, widget, template=TEMPLATE)
 
-    assert widget.text_title == 'My Plot'
+    assert widget.title == 'My Plot'
     state.title = 'New Title'
-    assert widget.text_title == 'New Title'
-    widget.text_title = 'From Widget'
+    assert widget.title == 'New Title'
+    widget.title = 'From Widget'
     assert state.title == 'From Widget'
 
 
@@ -119,13 +120,13 @@ def test_template_choice_bidirectional():
     widget = SimpleWidget()
     autoconnect_callbacks_to_vue(state, widget, template=TEMPLATE)
 
-    items = widget.combosel_x_att_items
+    items = widget.x_att_items
     assert len(items) == 3
     assert items[0]['text'] == 'x'
 
     state.x_att = 'z'
-    assert widget.combosel_x_att_selected == 2
-    widget.combosel_x_att_selected = 1
+    assert widget.x_att_selected == 2
+    widget.x_att_selected = 1
     assert state.x_att == 'y'
 
 
@@ -146,14 +147,14 @@ def test_template_atomic_no_stale_overwrite():
     state.__class__.__setattr__ = tracking_setattr
     try:
         set_props.clear()
-        widget.bool_x_log = True
+        widget.x_log = True
         assert set_props == ['x_log']
     finally:
         state.__class__.__setattr__ = original_setattr
 
 
 def test_template_warns_on_unmatched_ref():
-    template = '<template><v-switch v-model="bool_nonexistent" /></template>'
+    template = '<template><v-switch v-model="nonexistent" /></template>'
     state = ViewerState()
     widget = SimpleWidget()
     with pytest.warns(UserWarning, match="'nonexistent' is not a callback property"):
@@ -172,3 +173,51 @@ def test_no_template_raises():
     widget = SimpleWidget()
     with pytest.raises(ValueError, match="No Vue template found"):
         autoconnect_callbacks_to_vue(state, widget)
+
+
+def test_echo_type_override():
+    """echo-type attribute overrides tag-based inference."""
+    template = """
+    <template>
+        <v-text-field v-model="x_min" echo-type="value" />
+    </template>
+    """
+    refs = _parse_template(template)
+    assert 'value' in refs
+    assert 'x_min' in refs['value']
+    assert 'text' not in refs
+
+
+def test_text_field_number_type():
+    """v-text-field with type='number' infers valuetext."""
+    template = """
+    <template>
+        <v-text-field type="number" v-model="age" />
+    </template>
+    """
+    refs = _parse_template(template)
+    assert 'valuetext' in refs
+    assert 'age' in refs['valuetext']
+    assert 'text' not in refs
+
+
+def test_unknown_tag_warns():
+    """Unknown tag without echo-type warns and skips."""
+    template = '<template><glue-float-field :value.sync="x_min" /></template>'
+    state = ViewerState()
+    widget = SimpleWidget()
+    with pytest.warns(UserWarning, match="unknown tag.*no echo-type"):
+        handlers = autoconnect_callbacks_to_vue(state, widget, template=template)
+    assert len(handlers) == 0
+
+
+def test_unknown_tag_with_echo_type():
+    """Unknown tag with echo-type works correctly."""
+    template = '<template><glue-float-field :value.sync="x_min" echo-type="value" /></template>'
+    state = ViewerState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(state, widget, template=template)
+    assert 'x_min' in handlers
+    assert widget.x_min == -10.0
+    state.x_min = 42.0
+    assert widget.x_min == 42.0

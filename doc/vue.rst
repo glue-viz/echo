@@ -9,20 +9,23 @@ Each connection is atomic per-property: changing a traitlet on the widget
 only syncs that single property to the state, avoiding stale-overwrite
 issues that arise from syncing an entire state dict at once.
 
-Traitlets use the naming convention ``{type}_{name}`` where ``type``
-determines the connection handler and ``name`` matches a callback property.
-The supported types mirror the :ref:`Qt helpers <qtapi>`:
+The connection type is inferred from the Vue tag in the template:
 
-* ``bool``: boolean property ↔ ``Bool`` traitlet
-* ``value``: numeric property ↔ ``Float`` traitlet
-* ``valuetext``: numeric property ↔ ``Unicode`` traitlet (displayed as text)
-* ``text``: string property ↔ ``Unicode`` traitlet
-* ``combosel``: ``SelectionCallbackProperty`` ↔ ``combosel_{name}_items`` (List) + ``combosel_{name}_selected`` (Int) traitlets
+* ``v-switch``, ``v-checkbox`` -- ``bool``: boolean property, ``Bool`` traitlet
+* ``v-text-field`` -- ``text``: string property, ``Unicode`` traitlet (or ``valuetext`` when ``type="number"``)
+* ``v-slider``, ``v-range-slider`` -- ``value``: numeric property, ``Float`` traitlet
+* ``v-select``, ``v-combobox``, ``v-autocomplete`` -- ``combosel``: ``SelectionCallbackProperty``, ``{name}_items`` (List) + ``{name}_selected`` (Int) traitlets
+
+For custom components not in the default mapping, use the ``echo-type``
+attribute to specify the connection type::
+
+    <glue-float-field :value.sync="x_min" echo-type="value" />
 
 Manual connections
 ^^^^^^^^^^^^^^^^^^
 
-You can connect individual properties manually::
+You can connect individual properties manually. If you omit the traitlet
+name, the traitlet is created dynamically using the property name::
 
     import traitlets
     from echo import CallbackProperty
@@ -31,29 +34,30 @@ You can connect individual properties manually::
     class MyState:
         active = CallbackProperty(False)
 
-    class MyWidget(traitlets.HasTraits):
-        bool_active = traitlets.Bool(False).tag(sync=True)
-
     state = MyState()
-    widget = MyWidget()
-    connection = connect_bool(state, 'active', widget, 'bool_active')
-
-If you omit the traitlet name, the traitlet is created dynamically::
-
     widget = traitlets.HasTraits()
     connection = connect_bool(state, 'active', widget)
-    # widget now has a 'bool_active' traitlet
+    # widget now has an 'active' Bool traitlet
+
+If the widget already has a traitlet with a different name, pass it
+explicitly::
+
+    class MyWidget(traitlets.HasTraits):
+        is_enabled = traitlets.Bool(False).tag(sync=True)
+
+    widget = MyWidget()
+    connection = connect_bool(state, 'active', widget, 'is_enabled')
 
 Automatic connections
 ^^^^^^^^^^^^^^^^^^^^^
 
 :func:`autoconnect_callbacks_to_vue` parses the Vue template to determine
-which properties to connect and what handler type to use. The template uses
-the ``{type}_{name}`` naming convention in its bindings::
+which properties to connect. The tag determines the handler type and the
+``v-model`` value is the property name directly::
 
-    <v-switch v-model="bool_active" />
-    <glue-float-field :value.sync="value_x_min" />
-    <v-select :items="combosel_x_att_items" v-model="combosel_x_att_selected" />
+    <v-switch v-model="active" />
+    <v-slider :value.sync="x_min" />
+    <v-select :items="x_att_items" v-model="x_att_selected" />
 
 Only properties referenced in the template are connected. A warning is
 issued if the template references a name that doesn't match any callback

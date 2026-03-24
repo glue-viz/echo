@@ -8,7 +8,7 @@ from .connect import (connect_bool,
                       connect_text,
                       connect_choice)
 
-__all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS']
+__all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS', 'TAG_TYPE_MAP']
 
 HANDLERS = {
     'bool': connect_bool,
@@ -16,6 +16,17 @@ HANDLERS = {
     'valuetext': connect_valuetext,
     'text': connect_text,
     'combosel': connect_choice,
+}
+
+TAG_TYPE_MAP = {
+    'v-switch': 'bool',
+    'v-checkbox': 'bool',
+    'v-text-field': 'text',
+    'v-slider': 'value',
+    'v-range-slider': 'value',
+    'v-select': 'combosel',
+    'v-combobox': 'combosel',
+    'v-autocomplete': 'combosel',
 }
 
 # Attribute names that bind a Vue template expression to a traitlet.
@@ -30,20 +41,49 @@ class _TemplateParser(HTMLParser):
         self.refs = {}
 
     def handle_starttag(self, tag, attrs):
-        for attr_name, attr_value in attrs:
-            if attr_name not in _BINDING_ATTRS or attr_value is None:
-                continue
-            if '_' not in attr_value:
-                continue
-            wtype, wname = attr_value.split('_', 1)
-            if wtype not in HANDLERS:
-                continue
+        attrs_dict = dict(attrs)
+
+        # Check for binding attributes on this tag
+        bindings = {k: v for k, v in attrs if k in _BINDING_ATTRS and v is not None}
+        if not bindings:
+            return
+
+        # Determine connection type: echo-type attribute overrides tag inference
+        echo_type = attrs_dict.get('echo-type')
+        if echo_type is None:
+            inferred = TAG_TYPE_MAP.get(tag)
+            if inferred is not None:
+                # For v-text-field with type="number", use valuetext
+                if inferred == 'text' and attrs_dict.get('type') == 'number':
+                    echo_type = 'valuetext'
+                else:
+                    echo_type = inferred
+            else:
+                for attr_value in bindings.values():
+                    warnings.warn(
+                        f"Vue template has binding '{attr_value}' on unknown "
+                        f"tag <{tag}> with no echo-type attribute — skipping. "
+                        f"Add echo-type=\"...\" to specify the connection type.",
+                        stacklevel=2,
+                    )
+                return
+
+        if echo_type not in HANDLERS:
+            warnings.warn(
+                f"Unknown echo-type '{echo_type}' on <{tag}> — skipping. "
+                f"Supported types: {', '.join(sorted(HANDLERS))}",
+                stacklevel=2,
+            )
+            return
+
+        for attr_value in bindings.values():
+            prop_name = attr_value
             # Normalize selection suffixes to base property name
             for suffix in ('_items', '_selected'):
-                if wname.endswith(suffix):
-                    wname = wname[:-len(suffix)]
+                if prop_name.endswith(suffix):
+                    prop_name = prop_name[:-len(suffix)]
                     break
-            self.refs.setdefault(wtype, set()).add(wname)
+            self.refs.setdefault(echo_type, set()).add(prop_name)
 
 
 def _parse_template(template):
@@ -51,9 +91,9 @@ def _parse_template(template):
     Parse a Vue template string and return a dict mapping handler type
     codes to sets of property names referenced in the template.
 
-    Template references use the convention ``{type}_{name}`` (e.g.
-    ``bool_x_log``, ``combosel_x_att_selected``). Both ``_items`` and
-    ``_selected`` suffixes are normalized to the base property name.
+    The connection type is inferred from the Vue tag (e.g. ``v-switch``
+    maps to ``bool``). A custom ``echo-type`` attribute on the tag
+    overrides the inferred type.
     """
     parser = _TemplateParser()
     parser.feed(template)
@@ -90,22 +130,17 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None):
     Connect callback properties on ``instance`` to traitlets on
     ``widget`` bidirectionally, based on the Vue template.
 
-    The Vue template is parsed for binding references using the naming
-    convention ``{type}_{name}`` (e.g. ``bool_x_log``,
-    ``combosel_x_att_selected``). The type prefix determines the handler
-    and the traitlet type to create. Traitlets are created dynamically on
-    the widget. Only properties referenced in the template are connected,
-    and a warning is issued if a reference doesn't match any callback
-    property on ``instance``.
+    The connection type is inferred from the Vue tag name:
 
-    The supported type prefixes mirror
-    :func:`~echo.qt.autoconnect.autoconnect_callbacks_to_qt`:
+    * ``v-switch``, ``v-checkbox`` -- ``bool``
+    * ``v-text-field`` -- ``text`` (or ``valuetext`` when ``type="number"``)
+    * ``v-slider``, ``v-range-slider`` -- ``value``
+    * ``v-select``, ``v-combobox``, ``v-autocomplete`` -- ``combosel``
 
-    * ``bool``: boolean property ↔ ``Bool`` traitlet
-    * ``value``: numeric property ↔ ``Float`` traitlet
-    * ``valuetext``: numeric property ↔ ``Unicode`` traitlet
-    * ``text``: string property ↔ ``Unicode`` traitlet
-    * ``combosel``: selection property ↔ ``_items`` (List) + ``_selected`` (Int)
+    For tags not in the default mapping (e.g. custom components), add an
+    ``echo-type`` attribute to specify the connection type::
+
+        <glue-float-field :value.sync="x_min" echo-type="value" />
 
     Parameters
     ----------
@@ -139,7 +174,7 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None):
         for prop_name in prop_names:
             if not instance.is_callback_property(prop_name):
                 warnings.warn(
-                    f"Vue template references '{wtype}_{prop_name}' but "
+                    f"Vue template references '{prop_name}' (type={wtype}) but "
                     f"'{prop_name}' is not a callback property on "
                     f"{type(instance).__name__}",
                     stacklevel=2,
