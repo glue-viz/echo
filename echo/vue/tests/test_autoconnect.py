@@ -270,3 +270,65 @@ def test_resolve_template_returns_none():
     """_resolve_template returns None when no template is found."""
     widget = SimpleWidget()
     assert _resolve_template(widget) is None
+
+
+def test_extras_connect():
+    """extras dict connects properties not in the template."""
+    template = '<template><v-switch v-model="x_log" /></template>'
+    state = ViewerState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(
+        state, widget, template=template,
+        extras={'show_axes': 'bool', 'x_min': 'value', 'title': 'text'},
+    )
+    assert 'x_log' in handlers
+    assert 'show_axes' in handlers
+    assert 'x_min' in handlers
+    assert 'title' in handlers
+
+    # Verify bidirectional sync works for extras
+    state.show_axes = False
+    assert widget.show_axes is False
+    widget.x_min = 99.0
+    assert state.x_min == 99.0
+
+
+def test_extras_invalid_type_warns():
+    """extras with an invalid type warns and skips."""
+    template = '<template></template>'
+    state = ViewerState()
+    widget = SimpleWidget()
+    with pytest.warns(UserWarning, match="Unknown type 'bogus'"):
+        handlers = autoconnect_callbacks_to_vue(
+            state, widget, template=template,
+            extras={'x_log': 'bogus'},
+        )
+    assert len(handlers) == 0
+
+
+def test_extras_missing_property_warns():
+    """extras referencing a non-existent property warns and skips."""
+    template = '<template></template>'
+    state = ViewerState()
+    widget = SimpleWidget()
+    with pytest.warns(UserWarning, match="not a callback property"):
+        handlers = autoconnect_callbacks_to_vue(
+            state, widget, template=template,
+            extras={'nonexistent': 'bool'},
+        )
+    assert len(handlers) == 0
+
+
+def test_extras_choice():
+    """extras can connect SelectionCallbackProperty via combosel."""
+    template = '<template></template>'
+    state = ViewerState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(
+        state, widget, template=template,
+        extras={'x_att': 'combosel'},
+    )
+    assert 'x_att' in handlers
+    assert hasattr(widget, 'x_att_items')
+    assert hasattr(widget, 'x_att_selected')
+    assert len(widget.x_att_items) == 3

@@ -123,7 +123,7 @@ def _resolve_template(widget):
     return None
 
 
-def autoconnect_callbacks_to_vue(instance, widget, template=None):
+def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None):
     """
     Connect callback properties on ``instance`` to traitlets on
     ``widget`` bidirectionally, based on the Vue template.
@@ -150,6 +150,11 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None):
         The Vue template string. If not provided, the template is
         resolved from the widget's ``template_file`` class attribute or
         ``template`` traitlet.
+    extras : dict, optional
+        Additional properties to connect that are not discovered from the
+        template (e.g. properties only referenced in ``v-if`` or
+        JavaScript). Maps property names to type strings
+        (``'bool'``, ``'value'``, ``'text'``, ``'combosel'``).
 
     Returns
     -------
@@ -165,6 +170,19 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None):
         )
 
     refs = _parse_template(template)
+
+    if extras:
+        for prop_name, wtype in extras.items():
+            if wtype not in HANDLERS:
+                warnings.warn(
+                    f"Unknown type '{wtype}' for extra property '{prop_name}' "
+                    f"— skipping. Supported types: "
+                    f"{', '.join(sorted(HANDLERS))}",
+                    stacklevel=2,
+                )
+                continue
+            refs.setdefault(wtype, set()).add(prop_name)
+
     handlers = {}
 
     for wtype, prop_names in refs.items():
