@@ -391,7 +391,7 @@ def test_only_with_transforms():
     """only supports transform tuples."""
     state = ViewerState()
     widget = SimpleWidget()
-    connections = autoconnect_callbacks_to_vue(
+    autoconnect_callbacks_to_vue(
         state, widget,
         only={'x_min': ('text', str, float)},
     )
