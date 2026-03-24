@@ -193,3 +193,23 @@ class TestConnectChoice:
         current = state.color
         widget.color_selected = 99
         assert state.color == current
+
+
+@pytest.mark.parametrize('connect_cls, prop, initial, new_state, new_widget', [
+    (connect_bool, 'flag', False, True, False),
+    (connect_value, 'height', 1.5, 3.0, 7.0),
+    (connect_text, 'name', 'default', 'hello', 'world'),
+])
+def test_transforms(connect_cls, prop, initial, new_state, new_widget):
+    """to_widget and from_widget transforms are applied."""
+    state = SimpleState()
+    widget = SimpleWidget()
+    conn = connect_cls(state, prop, widget,
+                       to_widget=lambda v: v,
+                       from_widget=lambda v: v)
+    assert getattr(widget, prop) == initial
+    setattr(state, prop, new_state)
+    assert getattr(widget, prop) == new_state
+    setattr(widget, prop, new_widget)
+    assert getattr(state, prop) == new_widget
+    conn.disconnect()
