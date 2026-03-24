@@ -48,7 +48,7 @@ class SimpleWidget(traitlets.HasTraits):
 def test_parse_template():
     refs = _parse_template(TEMPLATE)
     assert refs['bool'] == {'x_log', 'y_log', 'show_axes'}
-    assert refs['number'] == {'x_min', 'x_max'}
+    assert refs['float'] == {'x_min', 'x_max'}
     assert refs['text'] == {'title'}
     assert refs['selection'] == {'x_att'}
 
@@ -179,25 +179,25 @@ def test_echo_type_override():
     """echo-type attribute overrides tag-based inference."""
     template = """
     <template>
-        <v-text-field v-model="x_min" echo-type="number" />
+        <v-text-field v-model="x_min" echo-type="float" />
     </template>
     """
     refs = _parse_template(template)
-    assert 'number' in refs
-    assert 'x_min' in refs['number']
+    assert 'float' in refs
+    assert 'x_min' in refs['float']
     assert 'text' not in refs
 
 
 def test_text_field_number_type():
-    """v-text-field with type='number' infers value."""
+    """v-text-field with type='number' infers int."""
     template = """
     <template>
         <v-text-field type="number" v-model="age" />
     </template>
     """
     refs = _parse_template(template)
-    assert 'number' in refs
-    assert 'age' in refs['number']
+    assert 'int' in refs
+    assert 'age' in refs['int']
     assert 'text' not in refs
 
 
@@ -213,7 +213,7 @@ def test_unknown_tag_warns():
 
 def test_unknown_tag_with_echo_type():
     """Unknown tag with echo-type works correctly."""
-    template = '<template><glue-float-field :value.sync="x_min" echo-type="number" /></template>'
+    template = '<template><glue-float-field :value.sync="x_min" echo-type="float" /></template>'
     state = ViewerState()
     widget = SimpleWidget()
     handlers = autoconnect_callbacks_to_vue(state, widget, template=template)
@@ -279,7 +279,7 @@ def test_extras_connect():
     widget = SimpleWidget()
     handlers = autoconnect_callbacks_to_vue(
         state, widget, template=template,
-        extras={'show_axes': 'bool', 'x_min': 'number', 'title': 'text'},
+        extras={'show_axes': 'bool', 'x_min': 'float', 'title': 'text'},
     )
     assert 'x_log' in handlers
     assert 'show_axes' in handlers
@@ -356,7 +356,7 @@ def test_extras_with_transforms():
 
 def test_extras_override_template_type():
     """extras override the template-inferred type for the same property."""
-    # Template infers x_min as 'number' from v-slider, but extras override to 'text'
+    # Template infers x_min as 'float' from v-slider, but extras override to 'text'
     template = '<template><v-slider :value.sync="x_min" /></template>'
     state = ViewerState()
     widget = SimpleWidget()
@@ -369,13 +369,27 @@ def test_extras_override_template_type():
     assert widget.x_min == '-10.0'
 
 
+def test_skip():
+    """skip prevents listed properties from being connected or warned about."""
+    state = ViewerState()
+    widget = SimpleWidget()
+    connections = autoconnect_callbacks_to_vue(
+        state, widget, template=TEMPLATE, skip={'x_min', 'title'},
+    )
+    assert 'x_min' not in connections
+    assert 'title' not in connections
+    assert 'x_log' in connections
+    assert not hasattr(widget, 'x_min')
+    assert not hasattr(widget, 'title')
+
+
 def test_only_skips_template():
     """only connects listed properties without parsing a template."""
     state = ViewerState()
     widget = SimpleWidget()
     connections = autoconnect_callbacks_to_vue(
         state, widget,
-        only={'x_log': 'bool', 'x_min': 'number'},
+        only={'x_log': 'bool', 'x_min': 'float'},
     )
     assert set(connections) == {'x_log', 'x_min'}
     # Not in only → not connected

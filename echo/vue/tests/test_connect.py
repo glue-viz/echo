@@ -3,7 +3,7 @@ import pytest
 traitlets = pytest.importorskip("traitlets")
 
 from echo import CallbackProperty, SelectionCallbackProperty, HasCallbackProperties  # noqa: E402
-from echo.vue._connect import (connect_bool, connect_value,  # noqa: E402
+from echo.vue._connect import (connect_bool, connect_float,  # noqa: E402
                                connect_text, connect_choice)
 
 
@@ -69,7 +69,7 @@ class TestConnectValue:
         self.state = SimpleState()
         self.widget = SimpleWidget()
         self.widget.add_traits(height=traitlets.Float(allow_none=True).tag(sync=True))
-        self.conn = connect_value(self.state, 'height', self.widget, 'height')
+        self.conn = connect_float(self.state, 'height', self.widget, 'height')
 
     def test_state_to_widget(self):
         self.state.height = 2.5
@@ -89,7 +89,7 @@ class TestConnectValue:
     def test_auto_create_trait(self):
         state = SimpleState()
         widget = SimpleWidget()
-        conn = connect_value(state, 'count', widget)
+        conn = connect_float(state, 'count', widget)
         assert hasattr(widget, 'count')
         state.count = 42
         assert widget.count == 42.0
@@ -197,7 +197,7 @@ class TestConnectChoice:
 
 @pytest.mark.parametrize('connect_cls, prop, initial, new_state, new_widget', [
     (connect_bool, 'flag', False, True, False),
-    (connect_value, 'height', 1.5, 3.0, 7.0),
+    (connect_float, 'height', 1.5, 3.0, 7.0),
     (connect_text, 'name', 'default', 'hello', 'world'),
 ])
 def test_transforms(connect_cls, prop, initial, new_state, new_widget):

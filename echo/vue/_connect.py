@@ -9,7 +9,7 @@ import traitlets
 from ..core import add_callback, remove_callback
 from ..selection import ChoiceSeparator
 
-__all__ = ['connect_bool', 'connect_value',
+__all__ = ['connect_bool', 'connect_int', 'connect_float',
            'connect_text', 'connect_choice', 'BaseConnection']
 
 
@@ -104,7 +104,21 @@ class connect_bool(BaseConnection):
         setattr(self._widget, self._widget_prop, value)
 
 
-class connect_value(BaseConnection):
+class connect_int(BaseConnection):
+    """Connect an integer callback property to an Int traitlet."""
+
+    _default_trait = staticmethod(
+        lambda: traitlets.CInt(0).tag(sync=True))
+
+    def update_widget(self, value):
+        if self._to_widget_transform is not None:
+            value = self._to_widget_transform(value)
+        else:
+            value = int(value) if value is not None else 0
+        setattr(self._widget, self._widget_prop, value)
+
+
+class connect_float(BaseConnection):
     """Connect a numeric callback property to a Float traitlet."""
 
     _default_trait = staticmethod(
