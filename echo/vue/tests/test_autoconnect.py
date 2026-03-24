@@ -354,6 +354,21 @@ def test_extras_with_transforms():
     assert state.x_min == 42.0
 
 
+def test_extras_override_template_type():
+    """extras override the template-inferred type for the same property."""
+    # Template infers x_min as 'value' from v-slider, but extras override to 'text'
+    template = '<template><v-slider :value.sync="x_min" /></template>'
+    state = ViewerState()
+    widget = SimpleWidget()
+    connections = autoconnect_callbacks_to_vue(
+        state, widget, template=template,
+        extras={'x_min': ('text', str, float)},
+    )
+    assert 'x_min' in connections
+    # Should be a text traitlet (from extras), not a float (from template)
+    assert widget.x_min == '-10.0'
+
+
 def test_only_skips_template():
     """only connects listed properties without parsing a template."""
     state = ViewerState()

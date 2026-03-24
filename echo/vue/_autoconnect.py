@@ -51,7 +51,7 @@ class _TemplateParser(HTMLParser):
         if echo_type is None:
             inferred = TAG_TYPE_MAP.get(tag)
             if inferred is not None:
-                # For v-text-field with type="number", use valuetext
+                # For v-text-field with type="number", use value
                 if inferred == 'text' and attrs_dict.get('type') == 'number':
                     echo_type = 'value'
                 else:
@@ -213,6 +213,12 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
 
         if extras:
             extra_refs, transforms = _parse_extras(extras)
+            # Extras override any template-discovered type for the same
+            # property (e.g. a v-select bound to a non-selection property
+            # that is handled via a text transform instead).
+            extra_props = {p for names in extra_refs.values() for p in names}
+            for wtype in refs:
+                refs[wtype] -= extra_props
             for wtype, prop_names in extra_refs.items():
                 refs.setdefault(wtype, set()).update(prop_names)
 
