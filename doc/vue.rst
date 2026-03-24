@@ -57,15 +57,15 @@ propagated back to the callback properties.
 The connection type is inferred from the Vue component tag:
 
 * ``v-switch``, ``v-checkbox`` -- boolean property
-* ``v-text-field`` -- string property (or numeric when ``type="number"`` is set)
-* ``v-slider``, ``v-range-slider`` -- numeric property
+* ``v-text-field`` -- string property (or integer when ``type="number"`` is set)
+* ``v-slider``, ``v-range-slider`` -- float property
 * ``v-select``, ``v-combobox``, ``v-autocomplete`` -- selection property
 
 For custom components not in the default mapping, use the ``echo-type``
 attribute to specify the connection type. The supported ``echo-type``
-values are ``bool``, ``text``, ``number``, and ``selection``::
+values are ``bool``, ``int``, ``float``, ``text``, and ``selection``::
 
-    <glue-float-field :value.sync="x_min" echo-type="number" />
+    <glue-float-field :value.sync="x_min" echo-type="float" />
 
 Only properties referenced in the template that match callback properties
 on the state object are connected. A warning is issued if the template

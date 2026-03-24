@@ -3,7 +3,8 @@ import warnings
 from html.parser import HTMLParser
 
 from ._connect import (connect_bool,
-                       connect_value,
+                       connect_int,
+                       connect_float,
                        connect_text,
                        connect_choice)
 
@@ -11,7 +12,8 @@ __all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS', 'TAG_TYPE_MAP']
 
 HANDLERS = {
     'bool': connect_bool,
-    'number': connect_value,
+    'int': connect_int,
+    'float': connect_float,
     'text': connect_text,
     'selection': connect_choice,
 }
@@ -20,8 +22,8 @@ TAG_TYPE_MAP = {
     'v-switch': 'bool',
     'v-checkbox': 'bool',
     'v-text-field': 'text',
-    'v-slider': 'number',
-    'v-range-slider': 'number',
+    'v-slider': 'float',
+    'v-range-slider': 'float',
     'v-select': 'selection',
     'v-combobox': 'selection',
     'v-autocomplete': 'selection',
@@ -51,9 +53,9 @@ class _TemplateParser(HTMLParser):
         if echo_type is None:
             inferred = TAG_TYPE_MAP.get(tag)
             if inferred is not None:
-                # For v-text-field with type="number", use value
+                # For v-text-field with type="number", use int
                 if inferred == 'text' and attrs_dict.get('type') == 'number':
-                    echo_type = 'number'
+                    echo_type = 'int'
                 else:
                     echo_type = inferred
             else:
@@ -154,8 +156,8 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
     The connection type is inferred from the Vue tag name:
 
     * ``v-switch``, ``v-checkbox`` -- ``bool``
-    * ``v-text-field`` -- ``text`` (or ``value`` when ``type="number"``)
-    * ``v-slider``, ``v-range-slider`` -- ``value``
+    * ``v-text-field`` -- ``text`` (or ``int`` when ``type="number"``)
+    * ``v-slider``, ``v-range-slider`` -- ``float``
     * ``v-select``, ``v-combobox``, ``v-autocomplete`` -- ``selection``
 
     For tags not in the default mapping (e.g. custom components), add an
@@ -178,7 +180,7 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
         the template (e.g. properties only referenced in ``v-if`` or
         JavaScript). Values can be:
 
-        * A type string: ``'bool'``, ``'number'``, ``'text'``, or
+        * A type string: ``'bool'``, ``'int'``, ``'float'``, ``'text'``, or
           ``'selection'``.
         * A tuple of ``(type, to_widget, from_widget)`` to supply
           custom transforms. ``to_widget`` converts the state value
