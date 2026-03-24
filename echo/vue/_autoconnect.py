@@ -123,7 +123,30 @@ def _resolve_template(widget):
     return None
 
 
-def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None):
+def _parse_extras(extras):
+    """Parse an extras/only dict into refs and transforms."""
+    refs = {}
+    transforms = {}
+    for prop_name, spec in extras.items():
+        if isinstance(spec, tuple):
+            wtype, to_widget, from_widget = spec
+            transforms[prop_name] = (to_widget, from_widget)
+        else:
+            wtype = spec
+        if wtype not in HANDLERS:
+            warnings.warn(
+                f"Unknown type '{wtype}' for extra property "
+                f"'{prop_name}' — skipping. Supported types: "
+                f"{', '.join(sorted(HANDLERS))}",
+                stacklevel=2,
+            )
+            continue
+        refs.setdefault(wtype, set()).add(prop_name)
+    return refs, transforms
+
+
+def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
+                                 only=None):
     """
     Connect callback properties on ``instance`` to traitlets on
     ``widget`` bidirectionally, based on the Vue template.
@@ -151,52 +174,64 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None):
         resolved from the widget's ``template_file`` class attribute or
         ``template`` traitlet.
     extras : dict, optional
-        Additional properties to connect that are not discovered from the
-        template (e.g. properties only referenced in ``v-if`` or
-        JavaScript). Maps property names to type strings
-        (``'bool'``, ``'value'``, ``'text'``, ``'combosel'``).
+        Additional properties to connect that are not discovered from
+        the template (e.g. properties only referenced in ``v-if`` or
+        JavaScript). Values can be:
+
+        * A type string: ``'bool'``, ``'value'``, ``'text'``, or
+          ``'combosel'``.
+        * A tuple of ``(type, to_widget, from_widget)`` to supply
+          custom transforms. ``to_widget`` converts the state value
+          before setting the traitlet; ``from_widget`` converts the
+          traitlet value before setting the state property.
+
+    only : dict, optional
+        When provided, skip template parsing and connect *only* the
+        listed properties. Same value format as ``extras``. Useful
+        for connecting properties from a secondary state object
+        without re-parsing the template.
 
     Returns
     -------
     dict
         Mapping of property names to connection handler objects.
     """
-    if template is None:
-        template = _resolve_template(widget)
-    if template is None:
-        raise ValueError(
-            "No Vue template found. Pass template= explicitly or ensure "
-            "the widget has a template_file class attribute or template traitlet."
-        )
+    if only is not None:
+        refs, transforms = _parse_extras(only)
+    else:
+        if template is None:
+            template = _resolve_template(widget)
+        if template is None:
+            raise ValueError(
+                "No Vue template found. Pass template= explicitly or "
+                "ensure the widget has a template_file class attribute "
+                "or template traitlet."
+            )
 
-    refs = _parse_template(template)
+        refs = _parse_template(template)
+        transforms = {}
 
-    if extras:
-        for prop_name, wtype in extras.items():
-            if wtype not in HANDLERS:
-                warnings.warn(
-                    f"Unknown type '{wtype}' for extra property '{prop_name}' "
-                    f"— skipping. Supported types: "
-                    f"{', '.join(sorted(HANDLERS))}",
-                    stacklevel=2,
-                )
-                continue
-            refs.setdefault(wtype, set()).add(prop_name)
+        if extras:
+            extra_refs, transforms = _parse_extras(extras)
+            for wtype, prop_names in extra_refs.items():
+                refs.setdefault(wtype, set()).update(prop_names)
 
-    handlers = {}
+    connections = {}
 
     for wtype, prop_names in refs.items():
         handler_cls = HANDLERS[wtype]
         for prop_name in prop_names:
             if not instance.is_callback_property(prop_name):
                 warnings.warn(
-                    f"Vue template references '{prop_name}' (type={wtype}) but "
-                    f"'{prop_name}' is not a callback property on "
+                    f"Vue template references '{prop_name}' (type={wtype}) "
+                    f"but '{prop_name}' is not a callback property on "
                     f"{type(instance).__name__}",
                     stacklevel=2,
                 )
                 continue
-            handler = handler_cls(instance, prop_name, widget)
-            handlers[prop_name] = handler
+            to_w, from_w = transforms.get(prop_name, (None, None))
+            handler = handler_cls(instance, prop_name, widget,
+                                  to_widget=to_w, from_widget=from_w)
+            connections[prop_name] = handler
 
-    return handlers
+    return connections

@@ -28,13 +28,24 @@ class BaseConnection:
         The ipywidgets/ipyvuetify widget.
     widget_prop : str
         The name of the traitlet on the widget.
+    to_widget : callable, optional
+        Transform applied when syncing state → widget. Receives the raw
+        property value and returns the value to set on the traitlet.
+        Overrides the subclass default conversion.
+    from_widget : callable, optional
+        Transform applied when syncing widget → state. Receives the
+        traitlet value and returns the value to set on the property.
+        Overrides the subclass default conversion.
     """
 
-    def __init__(self, instance, prop, widget, widget_prop):
+    def __init__(self, instance, prop, widget, widget_prop,
+                 to_widget=None, from_widget=None):
         self._instance = instance
         self._prop = prop
         self._widget = widget
         self._widget_prop = widget_prop
+        self._to_widget_transform = to_widget
+        self._from_widget_transform = from_widget
         self._updating = False
 
     def _from_state(self, *args):
@@ -81,20 +92,32 @@ class connect_bool(BaseConnection):
         ``{prop}`` is created dynamically.
     widget_prop : str, optional
         The name of the Bool traitlet on the widget.
+    to_widget : callable, optional
+        Custom state → widget transform.
+    from_widget : callable, optional
+        Custom widget → state transform.
     """
 
-    def __init__(self, instance, prop, widget, widget_prop=None):
+    def __init__(self, instance, prop, widget, widget_prop=None,
+                 to_widget=None, from_widget=None):
         if widget_prop is None:
             widget_prop = prop
         if not widget.has_trait(widget_prop):
             widget.add_traits(**{widget_prop: traitlets.Bool(False).tag(sync=True)})
-        super().__init__(instance, prop, widget, widget_prop)
+        super().__init__(instance, prop, widget, widget_prop,
+                         to_widget=to_widget, from_widget=from_widget)
         self.connect()
 
     def update_widget(self, value):
-        setattr(self._widget, self._widget_prop, bool(value) if value is not None else False)
+        if self._to_widget_transform is not None:
+            value = self._to_widget_transform(value)
+        else:
+            value = bool(value) if value is not None else False
+        setattr(self._widget, self._widget_prop, value)
 
     def update_prop(self, value):
+        if self._from_widget_transform is not None:
+            value = self._from_widget_transform(value)
         setattr(self._instance, self._prop, value)
 
 
@@ -113,20 +136,32 @@ class connect_value(BaseConnection):
         ``{prop}`` is created dynamically.
     widget_prop : str, optional
         The name of the Float traitlet on the widget.
+    to_widget : callable, optional
+        Custom state → widget transform.
+    from_widget : callable, optional
+        Custom widget → state transform.
     """
 
-    def __init__(self, instance, prop, widget, widget_prop=None):
+    def __init__(self, instance, prop, widget, widget_prop=None,
+                 to_widget=None, from_widget=None):
         if widget_prop is None:
             widget_prop = prop
         if not widget.has_trait(widget_prop):
             widget.add_traits(**{widget_prop: traitlets.Float(allow_none=True).tag(sync=True)})
-        super().__init__(instance, prop, widget, widget_prop)
+        super().__init__(instance, prop, widget, widget_prop,
+                         to_widget=to_widget, from_widget=from_widget)
         self.connect()
 
     def update_widget(self, value):
-        setattr(self._widget, self._widget_prop, float(value) if value is not None else None)
+        if self._to_widget_transform is not None:
+            value = self._to_widget_transform(value)
+        else:
+            value = float(value) if value is not None else None
+        setattr(self._widget, self._widget_prop, value)
 
     def update_prop(self, value):
+        if self._from_widget_transform is not None:
+            value = self._from_widget_transform(value)
         setattr(self._instance, self._prop, value)
 
 
@@ -145,20 +180,32 @@ class connect_text(BaseConnection):
         ``{prop}`` is created dynamically.
     widget_prop : str, optional
         The name of the Unicode traitlet on the widget.
+    to_widget : callable, optional
+        Custom state → widget transform.
+    from_widget : callable, optional
+        Custom widget → state transform.
     """
 
-    def __init__(self, instance, prop, widget, widget_prop=None):
+    def __init__(self, instance, prop, widget, widget_prop=None,
+                 to_widget=None, from_widget=None):
         if widget_prop is None:
             widget_prop = prop
         if not widget.has_trait(widget_prop):
             widget.add_traits(**{widget_prop: traitlets.Unicode('').tag(sync=True)})
-        super().__init__(instance, prop, widget, widget_prop)
+        super().__init__(instance, prop, widget, widget_prop,
+                         to_widget=to_widget, from_widget=from_widget)
         self.connect()
 
     def update_widget(self, value):
-        setattr(self._widget, self._widget_prop, str(value) if value is not None else '')
+        if self._to_widget_transform is not None:
+            value = self._to_widget_transform(value)
+        else:
+            value = str(value) if value is not None else ''
+        setattr(self._widget, self._widget_prop, value)
 
     def update_prop(self, value):
+        if self._from_widget_transform is not None:
+            value = self._from_widget_transform(value)
         setattr(self._instance, self._prop, value)
 
 
@@ -181,7 +228,8 @@ class connect_choice(BaseConnection):
         derived by replacing ``_selected`` with ``_items``.
     """
 
-    def __init__(self, instance, prop, widget, widget_prop=None):
+    def __init__(self, instance, prop, widget, widget_prop=None,
+                 to_widget=None, from_widget=None):
         if widget_prop is None:
             widget_prop = f'{prop}_selected'
         items_prop = widget_prop.replace('_selected', '_items')
@@ -193,7 +241,8 @@ class connect_choice(BaseConnection):
         if traits:
             widget.add_traits(**traits)
         self._items_prop = items_prop
-        super().__init__(instance, prop, widget, widget_prop)
+        super().__init__(instance, prop, widget, widget_prop,
+                         to_widget=to_widget, from_widget=from_widget)
         self.connect()
 
     def _get_choices(self):

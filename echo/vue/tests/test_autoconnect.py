@@ -332,3 +332,54 @@ def test_extras_choice():
     assert hasattr(widget, 'x_att_items')
     assert hasattr(widget, 'x_att_selected')
     assert len(widget.x_att_items) == 3
+
+
+def test_extras_with_transforms():
+    """extras tuple form applies custom transforms."""
+    template = '<template></template>'
+    state = ViewerState()
+    widget = SimpleWidget()
+    connections = autoconnect_callbacks_to_vue(
+        state, widget, template=template,
+        extras={'x_min': ('text', lambda v: f'val={v}', lambda s: float(s.split('=')[1]))},
+    )
+    assert 'x_min' in connections
+    # to_widget transform applied
+    assert widget.x_min == 'val=-10.0'
+    # State change goes through to_widget
+    state.x_min = 5.0
+    assert widget.x_min == 'val=5.0'
+    # Widget change goes through from_widget
+    widget.x_min = 'val=42.0'
+    assert state.x_min == 42.0
+
+
+def test_only_skips_template():
+    """only connects listed properties without parsing a template."""
+    state = ViewerState()
+    widget = SimpleWidget()
+    connections = autoconnect_callbacks_to_vue(
+        state, widget,
+        only={'x_log': 'bool', 'x_min': 'value'},
+    )
+    assert set(connections) == {'x_log', 'x_min'}
+    # Not in only → not connected
+    assert not hasattr(widget, 'title')
+
+    state.x_log = True
+    assert widget.x_log is True
+    widget.x_min = 99.0
+    assert state.x_min == 99.0
+
+
+def test_only_with_transforms():
+    """only supports transform tuples."""
+    state = ViewerState()
+    widget = SimpleWidget()
+    connections = autoconnect_callbacks_to_vue(
+        state, widget,
+        only={'x_min': ('text', str, float)},
+    )
+    assert widget.x_min == '-10.0'
+    widget.x_min = '7.5'
+    assert state.x_min == 7.5
