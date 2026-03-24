@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 traitlets = pytest.importorskip("traitlets")
