@@ -11,20 +11,20 @@ __all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS', 'TAG_TYPE_MAP']
 
 HANDLERS = {
     'bool': connect_bool,
-    'value': connect_value,
+    'number': connect_value,
     'text': connect_text,
-    'combosel': connect_choice,
+    'selection': connect_choice,
 }
 
 TAG_TYPE_MAP = {
     'v-switch': 'bool',
     'v-checkbox': 'bool',
     'v-text-field': 'text',
-    'v-slider': 'value',
-    'v-range-slider': 'value',
-    'v-select': 'combosel',
-    'v-combobox': 'combosel',
-    'v-autocomplete': 'combosel',
+    'v-slider': 'number',
+    'v-range-slider': 'number',
+    'v-select': 'selection',
+    'v-combobox': 'selection',
+    'v-autocomplete': 'selection',
 }
 
 # Attribute names that bind a Vue template expression to a traitlet.
@@ -53,7 +53,7 @@ class _TemplateParser(HTMLParser):
             if inferred is not None:
                 # For v-text-field with type="number", use value
                 if inferred == 'text' and attrs_dict.get('type') == 'number':
-                    echo_type = 'value'
+                    echo_type = 'number'
                 else:
                     echo_type = inferred
             else:
@@ -156,7 +156,7 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
     * ``v-switch``, ``v-checkbox`` -- ``bool``
     * ``v-text-field`` -- ``text`` (or ``value`` when ``type="number"``)
     * ``v-slider``, ``v-range-slider`` -- ``value``
-    * ``v-select``, ``v-combobox``, ``v-autocomplete`` -- ``combosel``
+    * ``v-select``, ``v-combobox``, ``v-autocomplete`` -- ``selection``
 
     For tags not in the default mapping (e.g. custom components), add an
     ``echo-type`` attribute to specify the connection type::
@@ -178,8 +178,8 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
         the template (e.g. properties only referenced in ``v-if`` or
         JavaScript). Values can be:
 
-        * A type string: ``'bool'``, ``'value'``, ``'text'``, or
-          ``'combosel'``.
+        * A type string: ``'bool'``, ``'number'``, ``'text'``, or
+          ``'selection'``.
         * A tuple of ``(type, to_widget, from_widget)`` to supply
           custom transforms. ``to_widget`` converts the state value
           before setting the traitlet; ``from_widget`` converts the
