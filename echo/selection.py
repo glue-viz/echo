@@ -8,8 +8,17 @@ from .core import CallbackProperty
 __all__ = ['ChoiceSeparator', 'SelectionCallbackProperty']
 
 
-class ChoiceSeparator(str):
-    pass
+class ChoiceSeparator:
+    """A label used to indicate a separator/header in a list of choices."""
+
+    def __init__(self, label):
+        self._label = label
+
+    def __str__(self):
+        return self._label
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self._label!r})'
 
 
 class SelectionCallbackProperty(CallbackProperty):

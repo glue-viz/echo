@@ -277,6 +277,7 @@ nitpick_ignore = [
     ('py:class', 'a set-like object providing a view on D\'s keys'),
     ('py:class', 'v, remove specified key and return the corresponding value.'),
     ('py:class', 'None.  Update D from dict/iterable E and F.'),
+    ('py:class', 'None.  Update D from mapping/iterable E and F.'),
     ('py:class', 'an object providing a view on D\'s values'),
 ]
 
