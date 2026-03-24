@@ -369,6 +369,20 @@ def test_extras_override_template_type():
     assert widget.x_min == '-10.0'
 
 
+def test_skip():
+    """skip prevents listed properties from being connected or warned about."""
+    state = ViewerState()
+    widget = SimpleWidget()
+    connections = autoconnect_callbacks_to_vue(
+        state, widget, template=TEMPLATE, skip={'x_min', 'title'},
+    )
+    assert 'x_min' not in connections
+    assert 'title' not in connections
+    assert 'x_log' in connections
+    assert not hasattr(widget, 'x_min')
+    assert not hasattr(widget, 'title')
+
+
 def test_only_skips_template():
     """only connects listed properties without parsing a template."""
     state = ViewerState()

@@ -146,7 +146,7 @@ def _parse_extras(extras):
 
 
 def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
-                                 only=None):
+                                 only=None, skip=None):
     """
     Connect callback properties on ``instance`` to traitlets on
     ``widget`` bidirectionally, based on the Vue template.
@@ -190,6 +190,11 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
         listed properties. Same value format as ``extras``. Useful
         for connecting properties from a secondary state object
         without re-parsing the template.
+    skip : set, optional
+        Property names to ignore during template parsing (no warning,
+        no connection). Useful when a property found in the template
+        is handled by a separate ``autoconnect_callbacks_to_vue`` call
+        on a different state object.
 
     Returns
     -------
@@ -221,6 +226,10 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
                 refs[wtype] -= extra_props
             for wtype, prop_names in extra_refs.items():
                 refs.setdefault(wtype, set()).update(prop_names)
+
+    if skip:
+        for wtype in refs:
+            refs[wtype] -= skip
 
     connections = {}
 
