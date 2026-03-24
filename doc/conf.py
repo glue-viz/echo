@@ -269,12 +269,23 @@ texinfo_documents = [
 # Enable nitpicky mode - which ensures that all references in the docs
 nitpicky = True
 
+nitpick_ignore = [
+    ('py:class', 'echo.containers.ContainerMixin'),
+    ('py:class', 'None.  Remove all items from D.'),
+    ('py:class', 'a shallow copy of D'),
+    ('py:class', 'a set-like object providing a view on D\'s items'),
+    ('py:class', 'a set-like object providing a view on D\'s keys'),
+    ('py:class', 'v, remove specified key and return the corresponding value.'),
+    ('py:class', 'None.  Update D from dict/iterable E and F.'),
+    ('py:class', 'an object providing a view on D\'s values'),
+]
+
 # This is needed to avoid sphinx-automodapi warnings
 numpydoc_class_members_toctree = False
 
 # Intersphinx options
 intersphinx_cache_limit = 10  # days to keep the cached inventories
 intersphinx_mapping = {
-    'sphinx': ('http://www.sphinx-doc.org/en/latest/', None),
+    'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
     'python': ('https://docs.python.org/3.6', None),
 }
