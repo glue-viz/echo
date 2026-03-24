@@ -118,6 +118,15 @@ class TestConnectValueText:
         self.widget.age = 'not a number'
         assert self.state.age == 25  # unchanged
 
+    def test_auto_create_trait(self):
+        state = SimpleState()
+        widget = SimpleWidget()
+        conn = connect_valuetext(state, 'age', widget)
+        assert hasattr(widget, 'age')
+        state.age = 99
+        assert widget.age == '99'
+        conn.disconnect()
+
 
 class TestConnectText:
 
@@ -183,3 +192,36 @@ class TestConnectChoice:
         assert hasattr(widget, 'color_selected')
         assert len(widget.color_items) == 3
         conn.disconnect()
+
+    def test_current_not_in_choices(self):
+        """When the current value isn't in choices, selected is set to None."""
+        state = SimpleState()
+        widget = SimpleWidget()
+        conn = connect_choice(state, 'color', widget)
+        assert widget.color_selected == 0
+        # Temporarily override _get_choices to return choices that don't
+        # include the current value, then trigger a sync.
+        orig = conn._get_choices
+        conn._get_choices = lambda: (['cyan', 'magenta'], ['cyan', 'magenta'])
+        conn._updating = False
+        conn._from_state()
+        assert widget.color_selected is None
+        conn._get_choices = orig
+
+    def test_widget_set_none(self):
+        """Setting selected to None does not change the state."""
+        state = SimpleState()
+        widget = SimpleWidget()
+        connect_choice(state, 'color', widget)
+        current = state.color
+        widget.color_selected = None
+        assert state.color == current
+
+    def test_widget_set_out_of_range(self):
+        """Setting selected to an out-of-range index does not change the state."""
+        state = SimpleState()
+        widget = SimpleWidget()
+        connect_choice(state, 'color', widget)
+        current = state.color
+        widget.color_selected = 99
+        assert state.color == current

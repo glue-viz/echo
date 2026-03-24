@@ -1,9 +1,11 @@
+import os
+
 import pytest
 
 traitlets = pytest.importorskip("traitlets")
 
 from echo import CallbackProperty, SelectionCallbackProperty, HasCallbackProperties  # noqa: E402
-from echo.vue.autoconnect import autoconnect_callbacks_to_vue, _parse_template  # noqa: E402
+from echo.vue.autoconnect import autoconnect_callbacks_to_vue, _parse_template, _resolve_template  # noqa: E402
 
 
 # Template uses tag-based type inference: the tag determines the handler type
@@ -221,3 +223,52 @@ def test_unknown_tag_with_echo_type():
     assert widget.x_min == -10.0
     state.x_min = 42.0
     assert widget.x_min == 42.0
+
+
+def test_invalid_echo_type_warns():
+    """Invalid echo-type value warns and skips."""
+    template = '<template><v-switch v-model="x_log" echo-type="bogus" /></template>'
+    refs = _parse_template(template)
+    assert len(refs) == 0
+
+
+def test_resolve_template_from_template_file(tmp_path):
+    """_resolve_template reads a .vue file via template_file class attribute."""
+    vue_file = tmp_path / 'test.vue'
+    vue_file.write_text('<template><v-switch v-model="x_log" /></template>')
+
+    class WidgetWithTemplateFile(traitlets.HasTraits):
+        template_file = (str(vue_file), 'test.vue')
+
+    widget = WidgetWithTemplateFile()
+    result = _resolve_template(widget)
+    assert result == '<template><v-switch v-model="x_log" /></template>'
+
+
+def test_resolve_template_from_template_traitlet():
+    """_resolve_template falls back to widget.template.template."""
+    class TemplateHolder:
+        template = '<template><v-switch v-model="flag" /></template>'
+
+    class WidgetWithTemplate(traitlets.HasTraits):
+        pass
+
+    widget = WidgetWithTemplate()
+    widget.template = TemplateHolder()
+    result = _resolve_template(widget)
+    assert result == '<template><v-switch v-model="flag" /></template>'
+
+
+def test_resolve_template_invalid_template_file():
+    """_resolve_template skips template_file that isn't a valid tuple."""
+    class WidgetWithBadTemplateFile(traitlets.HasTraits):
+        template_file = 'not-a-tuple'
+
+    widget = WidgetWithBadTemplateFile()
+    assert _resolve_template(widget) is None
+
+
+def test_resolve_template_returns_none():
+    """_resolve_template returns None when no template is found."""
+    widget = SimpleWidget()
+    assert _resolve_template(widget) is None

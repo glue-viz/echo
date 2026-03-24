@@ -258,7 +258,7 @@ class connect_choice(BaseConnection):
         finally:
             self._updating = False
 
-    def update_widget(self, value):
+    def update_widget(self, value):  # pragma: no cover
         pass  # Handled by _from_state
 
     def update_prop(self, index):
