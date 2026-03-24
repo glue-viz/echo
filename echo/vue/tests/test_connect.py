@@ -4,8 +4,7 @@ traitlets = pytest.importorskip("traitlets")
 
 from echo import CallbackProperty, SelectionCallbackProperty, HasCallbackProperties  # noqa: E402
 from echo.vue.connect import (connect_bool, connect_value,  # noqa: E402
-                              connect_valuetext, connect_text,
-                              connect_choice)
+                              connect_text, connect_choice)
 
 
 class SimpleState(HasCallbackProperties):
@@ -94,37 +93,6 @@ class TestConnectValue:
         assert hasattr(widget, 'count')
         state.count = 42
         assert widget.count == 42.0
-        conn.disconnect()
-
-
-class TestConnectValueText:
-
-    def setup_method(self):
-        self.state = SimpleState()
-        self.widget = SimpleWidget()
-        self.widget.add_traits(age=traitlets.Unicode('').tag(sync=True))
-        self.conn = connect_valuetext(self.state, 'age', self.widget, 'age')
-
-    def test_state_to_widget(self):
-        self.state.age = 30
-        assert self.widget.age == '30'
-
-    def test_widget_to_state(self):
-        self.widget.age = '42'
-        assert self.state.age == 42.0
-
-    def test_invalid_input(self):
-        self.state.age = 25
-        self.widget.age = 'not a number'
-        assert self.state.age == 25  # unchanged
-
-    def test_auto_create_trait(self):
-        state = SimpleState()
-        widget = SimpleWidget()
-        conn = connect_valuetext(state, 'age', widget)
-        assert hasattr(widget, 'age')
-        state.age = 99
-        assert widget.age == '99'
         conn.disconnect()
 
 

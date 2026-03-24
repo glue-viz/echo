@@ -4,7 +4,6 @@ from html.parser import HTMLParser
 
 from .connect import (connect_bool,
                       connect_value,
-                      connect_valuetext,
                       connect_text,
                       connect_choice)
 
@@ -13,7 +12,6 @@ __all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS', 'TAG_TYPE_MAP']
 HANDLERS = {
     'bool': connect_bool,
     'value': connect_value,
-    'valuetext': connect_valuetext,
     'text': connect_text,
     'combosel': connect_choice,
 }
@@ -55,7 +53,7 @@ class _TemplateParser(HTMLParser):
             if inferred is not None:
                 # For v-text-field with type="number", use valuetext
                 if inferred == 'text' and attrs_dict.get('type') == 'number':
-                    echo_type = 'valuetext'
+                    echo_type = 'value'
                 else:
                     echo_type = inferred
             else:
@@ -133,7 +131,7 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None):
     The connection type is inferred from the Vue tag name:
 
     * ``v-switch``, ``v-checkbox`` -- ``bool``
-    * ``v-text-field`` -- ``text`` (or ``valuetext`` when ``type="number"``)
+    * ``v-text-field`` -- ``text`` (or ``value`` when ``type="number"``)
     * ``v-slider``, ``v-range-slider`` -- ``value``
     * ``v-select``, ``v-combobox``, ``v-autocomplete`` -- ``combosel``
 

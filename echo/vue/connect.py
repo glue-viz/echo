@@ -9,7 +9,7 @@ import traitlets
 from ..core import add_callback, remove_callback
 from ..selection import ChoiceSeparator
 
-__all__ = ['connect_bool', 'connect_value', 'connect_valuetext',
+__all__ = ['connect_bool', 'connect_value',
            'connect_text', 'connect_choice', 'BaseConnection']
 
 
@@ -128,41 +128,6 @@ class connect_value(BaseConnection):
 
     def update_prop(self, value):
         setattr(self._instance, self._prop, value)
-
-
-class connect_valuetext(BaseConnection):
-    """
-    Connect a numeric callback property to a Unicode traitlet (displayed as text).
-
-    Parameters
-    ----------
-    instance : object
-        The class instance that the callback property is attached to.
-    prop : str
-        The name of the callback property.
-    widget : HasTraits
-        The widget. If ``widget_prop`` is not given, a traitlet named
-        ``{prop}`` is created dynamically.
-    widget_prop : str, optional
-        The name of the Unicode traitlet on the widget.
-    """
-
-    def __init__(self, instance, prop, widget, widget_prop=None):
-        if widget_prop is None:
-            widget_prop = prop
-        if not widget.has_trait(widget_prop):
-            widget.add_traits(**{widget_prop: traitlets.Unicode('').tag(sync=True)})
-        super().__init__(instance, prop, widget, widget_prop)
-        self.connect()
-
-    def update_widget(self, value):
-        setattr(self._widget, self._widget_prop, str(value) if value is not None else '')
-
-    def update_prop(self, value):
-        try:
-            setattr(self._instance, self._prop, float(value))
-        except (ValueError, TypeError):
-            pass
 
 
 class connect_text(BaseConnection):

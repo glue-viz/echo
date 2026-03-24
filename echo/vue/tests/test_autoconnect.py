@@ -189,15 +189,15 @@ def test_echo_type_override():
 
 
 def test_text_field_number_type():
-    """v-text-field with type='number' infers valuetext."""
+    """v-text-field with type='number' infers value."""
     template = """
     <template>
         <v-text-field type="number" v-model="age" />
     </template>
     """
     refs = _parse_template(template)
-    assert 'valuetext' in refs
-    assert 'age' in refs['valuetext']
+    assert 'value' in refs
+    assert 'age' in refs['value']
     assert 'text' not in refs
 
 
