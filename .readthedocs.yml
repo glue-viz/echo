@@ -17,5 +17,6 @@ python:
       extra_requirements:
         - docs
         - qt
+        - vue
 
 formats: []
