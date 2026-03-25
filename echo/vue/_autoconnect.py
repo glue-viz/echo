@@ -7,7 +7,7 @@ from ._connect import (connect_bool,
                        connect_float,
                        connect_text,
                        connect_choice)
-from .._log import enable_comm_logging
+from ._log import _patch_widget
 
 __all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS', 'TAG_TYPE_MAP']
 
@@ -234,7 +234,7 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
         for wtype in refs:
             refs[wtype] -= skip
 
-    enable_comm_logging(widget)
+    _patch_widget(widget)
 
     connections = {}
 
