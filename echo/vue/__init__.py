@@ -3,4 +3,7 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
-__all__ = ['autoconnect_callbacks_to_vue']
+from ._log import enable_comm_logging, disable_comm_logging  # noqa
+
+__all__ = ['autoconnect_callbacks_to_vue',
+           'enable_comm_logging', 'disable_comm_logging']

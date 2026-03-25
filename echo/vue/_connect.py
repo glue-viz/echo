@@ -43,11 +43,16 @@ class BaseConnection:
     _default_trait = None
 
     def __init__(self, instance, prop, widget, widget_prop=None,
-                 to_widget=None, from_widget=None):
+                 to_widget=None, from_widget=None, initial_sync=True):
         if widget_prop is None:
             widget_prop = prop
         if self._default_trait and not widget.has_trait(widget_prop):
-            widget.add_traits(**{widget_prop: self._default_trait()})
+            trait = self._default_trait()
+            if not initial_sync:
+                # Omit sync tag so add_traits doesn't send state;
+                # enable_widget_sync() must be called later.
+                trait.metadata.pop('sync', None)
+            widget.add_traits(**{widget_prop: trait})
         self._instance = instance
         self._prop = prop
         self._widget = widget
@@ -55,7 +60,7 @@ class BaseConnection:
         self._to_widget_transform = to_widget
         self._from_widget_transform = from_widget
         self._updating = False
-        self.connect()
+        self.connect(initial_sync=initial_sync)
 
     def _from_state(self, *args):
         if self._updating:
@@ -81,10 +86,23 @@ class BaseConnection:
             value = self._from_widget_transform(value)
         setattr(self._instance, self._prop, value)
 
-    def connect(self):
+    def connect(self, initial_sync=True):
         add_callback(self._instance, self._prop, self._from_state)
         self._widget.observe(self._from_widget, names=[self._widget_prop])
-        self._from_state()
+        if initial_sync:
+            self._from_state()
+
+    def enable_widget_sync(self):
+        """Tag the widget trait(s) as sync=True and register in widget.keys."""
+        for name in self._sync_trait_names():
+            trait = self._widget.traits()[name]
+            if 'sync' not in trait.metadata:
+                trait.tag(sync=True)
+                if hasattr(self._widget, 'keys'):
+                    self._widget.keys.append(name)
+
+    def _sync_trait_names(self):
+        return [self._widget_prop]
 
     def disconnect(self):
         remove_callback(self._instance, self._prop, self._from_state)
@@ -152,19 +170,27 @@ class connect_choice(BaseConnection):
     ``{prop}_items`` (List) and ``{prop}_selected`` (Int).
     """
 
-    def __init__(self, instance, prop, widget, widget_prop=None, **kwargs):
+    def __init__(self, instance, prop, widget, widget_prop=None,
+                 initial_sync=True, **kwargs):
         if widget_prop is None:
             widget_prop = f'{prop}_selected'
         items_prop = widget_prop.replace('_selected', '_items')
         traits = {}
         if not widget.has_trait(widget_prop):
-            traits[widget_prop] = traitlets.Int(allow_none=True).tag(sync=True)
+            trait = traitlets.Int(allow_none=True)
+            if initial_sync:
+                trait.tag(sync=True)
+            traits[widget_prop] = trait
         if not widget.has_trait(items_prop):
-            traits[items_prop] = traitlets.List().tag(sync=True)
+            trait = traitlets.List()
+            if initial_sync:
+                trait.tag(sync=True)
+            traits[items_prop] = trait
         if traits:
             widget.add_traits(**traits)
         self._items_prop = items_prop
-        super().__init__(instance, prop, widget, widget_prop)
+        super().__init__(instance, prop, widget, widget_prop,
+                         initial_sync=initial_sync, **kwargs)
 
     def _get_choices(self):
         prop_descriptor = getattr(type(self._instance), self._prop)
@@ -192,6 +218,9 @@ class connect_choice(BaseConnection):
                 setattr(self._widget, self._widget_prop, None)
         finally:
             self._updating = False
+
+    def _sync_trait_names(self):
+        return [self._widget_prop, self._items_prop]
 
     def update_widget(self, value):  # pragma: no cover
         pass  # Handled by _from_state

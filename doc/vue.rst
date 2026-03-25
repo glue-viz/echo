@@ -70,3 +70,46 @@ values are ``bool``, ``int``, ``float``, ``text``, and ``selection``::
 Only properties referenced in the template that match callback properties
 on the state object are connected. A warning is issued if the template
 references a name that does not correspond to a callback property.
+
+Debugging with comm logging
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Call :func:`enable_comm_logging` at the start of a notebook to log every
+comm message exchanged between Python and the browser frontend for all
+widgets connected via :func:`autoconnect_callbacks_to_vue` after that point.
+Messages are emitted at ``DEBUG`` level on the ``echo`` logger.
+
+.. code-block:: python
+
+    from echo.vue import enable_comm_logging, disable_comm_logging
+
+    enable_comm_logging()   # all future widgets will be logged
+    disable_comm_logging()  # stop and unpatch any instrumented widgets
+
+To see the messages, configure the ``echo`` logger. To log to the terminal:
+
+.. code-block:: python
+
+    import logging
+    logging.getLogger('echo').setLevel(logging.DEBUG)
+    logging.getLogger('echo').addHandler(logging.StreamHandler())
+
+To log to a file (useful in glue-jupyter where stdout may be swallowed):
+
+.. code-block:: python
+
+    import logging
+    handler = logging.FileHandler('/tmp/echo.log')
+    handler.setFormatter(logging.Formatter('%(message)s'))
+    logging.getLogger('echo').setLevel(logging.DEBUG)
+    logging.getLogger('echo').addHandler(handler)
+
+Each log line is prefixed with the direction of the message:
+
+* ``[PY->VUE]`` -- state sent from Python to the browser
+* ``[VUE->PY]`` -- state received from the browser into Python
+
+This is useful for diagnosing circular update loops, where a value is set
+in Python, propagated to Vue, modified (e.g. by rounding), sent back, and
+triggers another update. Such loops show up as a rapid sequence of
+alternating ``[PY->VUE]`` / ``[VUE->PY]`` lines with the same keys.
