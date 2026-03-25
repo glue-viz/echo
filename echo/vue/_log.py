@@ -42,7 +42,7 @@ def disable_comm_logging():
         widget.set_state = original_set_state
 
 
-def _patch_widget(widget):
+def _enable_comm_logging_if_requested(widget):
     """Patch a single widget if comm logging is enabled and not already patched."""
     if not _comm_logging_enabled:
         return
