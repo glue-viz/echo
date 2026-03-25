@@ -9,14 +9,6 @@ _comm_logging_enabled = False
 _patched_widgets = {}
 
 
-def _short_repr(obj, limit=120):
-    """Short repr that truncates long strings."""
-    s = repr(obj)
-    if len(s) > limit:
-        return s[:limit] + '...'
-    return s
-
-
 def enable_comm_logging():
     """
     Enable logging of comm messages (state updates) between Python and the
@@ -61,11 +53,11 @@ def _enable_comm_logging_if_requested(widget):
     def _logged_send(msg, buffers=None):
         if msg.get('method') == 'update':
             state = msg.get('state', {})
-            logger.debug('[PY->VUE] %s: %s', label, _short_repr(state))
+            logger.debug('[PY->VUE] %s: %s', label, repr(state))
         return original_send(msg, buffers=buffers)
 
     def _logged_set_state(sync_data):
-        logger.debug('[VUE->PY] %s: %s', label, _short_repr(sync_data))
+        logger.debug('[VUE->PY] %s: %s', label, repr(sync_data))
         return original_set_state(sync_data)
 
     widget._send = _logged_send
