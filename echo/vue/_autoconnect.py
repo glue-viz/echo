@@ -7,6 +7,7 @@ from ._connect import (connect_bool,
                        connect_float,
                        connect_text,
                        connect_choice)
+from .._log import enable_comm_logging
 
 __all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS', 'TAG_TYPE_MAP']
 
@@ -233,8 +234,12 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
         for wtype in refs:
             refs[wtype] -= skip
 
+    enable_comm_logging(widget)
+
     connections = {}
 
+    # Create connections with initial_sync=False so traits are added
+    # without the sync tag, avoiding per-trait comm messages.
     for wtype, prop_names in refs.items():
         handler_cls = HANDLERS[wtype]
         for prop_name in prop_names:
@@ -248,7 +253,19 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
                 continue
             to_w, from_w = transforms.get(prop_name, (None, None))
             handler = handler_cls(instance, prop_name, widget,
-                                  to_widget=to_w, from_widget=from_w)
+                                  to_widget=to_w, from_widget=from_w,
+                                  initial_sync=False)
             connections[prop_name] = handler
+
+    # Set the initial values, enable sync, and send state once.
+    for handler in connections.values():
+        handler._from_state()
+        handler.enable_widget_sync()
+
+    if hasattr(widget, 'send_state') and connections:
+        keys = set()
+        for handler in connections.values():
+            keys.update(handler._sync_trait_names())
+        widget.send_state(key=keys)
 
     return connections
