@@ -1,5 +1,21 @@
 # Full changelog
 
+## v0.13.0 - 2026-03-25
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### New Features
+
+* Add vue/ipywidgets autoconnect module by @astrofrog in https://github.com/glue-viz/echo/pull/56
+* Added skip parameter for vue autoconnect by @astrofrog in https://github.com/glue-viz/echo/pull/58
+
+#### Other Changes
+
+* Updated RTD config to fix build error by @astrofrog in https://github.com/glue-viz/echo/pull/57
+
+**Full Changelog**: https://github.com/glue-viz/echo/compare/v0.12.1...v0.13.0
+
 ## v0.12.1 - 2026-02-11
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
