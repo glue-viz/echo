@@ -257,15 +257,15 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
                                   initial_sync=False)
             connections[prop_name] = handler
 
-    # Set the initial values, enable sync, and send state once.
+    # Set the initial values, enable sync, and send all state in one
+    # comm message rather than one per trait.
+    sync_keys = set()
     for handler in connections.values():
         handler._from_state()
         handler.enable_widget_sync()
+        sync_keys.update(handler._sync_trait_names())
 
-    if hasattr(widget, 'send_state') and connections:
-        keys = set()
-        for handler in connections.values():
-            keys.update(handler._sync_trait_names())
-        widget.send_state(key=keys)
+    if hasattr(widget, 'send_state') and sync_keys:
+        widget.send_state(key=sync_keys)
 
     return connections

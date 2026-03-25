@@ -5,7 +5,7 @@ logger = logging.getLogger('echo')
 # Global flag: when True, new widgets are automatically instrumented
 _comm_logging_enabled = False
 
-# Maps widget id -> (original_send, original_set_state)
+# Maps widget id -> (original_send, original_set_state, widget)
 _patched_widgets = {}
 
 

@@ -49,9 +49,8 @@ class BaseConnection:
         if self._default_trait and not widget.has_trait(widget_prop):
             trait = self._default_trait()
             if not initial_sync:
-                # Create without sync tag so add_traits doesn't send state.
-                # The caller is responsible for enabling sync later via
-                # enable_widget_sync().
+                # Omit sync tag so add_traits doesn't send state;
+                # enable_widget_sync() must be called later.
                 trait.metadata.pop('sync', None)
             widget.add_traits(**{widget_prop: trait})
         self._instance = instance
@@ -171,11 +170,11 @@ class connect_choice(BaseConnection):
     ``{prop}_items`` (List) and ``{prop}_selected`` (Int).
     """
 
-    def __init__(self, instance, prop, widget, widget_prop=None, **kwargs):
+    def __init__(self, instance, prop, widget, widget_prop=None,
+                 initial_sync=True, **kwargs):
         if widget_prop is None:
             widget_prop = f'{prop}_selected'
         items_prop = widget_prop.replace('_selected', '_items')
-        initial_sync = kwargs.get('initial_sync', True)
         traits = {}
         if not widget.has_trait(widget_prop):
             trait = traitlets.Int(allow_none=True)
@@ -190,7 +189,8 @@ class connect_choice(BaseConnection):
         if traits:
             widget.add_traits(**traits)
         self._items_prop = items_prop
-        super().__init__(instance, prop, widget, widget_prop, **kwargs)
+        super().__init__(instance, prop, widget, widget_prop,
+                         initial_sync=initial_sync, **kwargs)
 
     def _get_choices(self):
         prop_descriptor = getattr(type(self._instance), self._prop)
