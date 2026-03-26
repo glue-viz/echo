@@ -123,7 +123,7 @@ object and infers the connection type from the property descriptor:
 * ``DictCallbackProperty`` → ``dict``
 * ``SelectionCallbackProperty`` → ``selection``
 * All other ``CallbackProperty`` → ``any`` (uses ``traitlets.Any``,
-  no type coercion — equivalent to what ``GlueState`` provided)
+  no type coercion)
 
 You can still use ``extras`` to override specific properties with
 custom transforms, and ``skip`` to exclude properties.
