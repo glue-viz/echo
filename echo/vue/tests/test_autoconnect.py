@@ -682,7 +682,7 @@ def test_infer_from_python_with_extras():
 
     state = TransformState()
     widget = SimpleWidget()
-    handlers = autoconnect_callbacks_to_vue(
+    autoconnect_callbacks_to_vue(
         state, widget,
         infer_properties_from='python',
         extras={'value': ('text', str, int)},
