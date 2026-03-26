@@ -6,11 +6,13 @@
 
 import traitlets
 
+from ..containers import CallbackList, CallbackDict
 from ..core import add_callback, remove_callback
 from ..selection import ChoiceSeparator
 
 __all__ = ['connect_bool', 'connect_int', 'connect_float',
-           'connect_text', 'connect_choice', 'BaseConnection']
+           'connect_text', 'connect_choice', 'connect_list',
+           'connect_dict', 'connect_any', 'BaseConnection']
 
 
 class BaseConnection:
@@ -231,3 +233,107 @@ class connect_choice(BaseConnection):
         choices, _ = self._get_choices()
         if 0 <= index < len(choices):
             setattr(self._instance, self._prop, choices[index])
+
+
+def _to_plain(value):
+    """Recursively convert CallbackList/CallbackDict to plain Python types."""
+    if isinstance(value, dict):
+        return {k: _to_plain(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [_to_plain(v) for v in value]
+    return value
+
+
+def _update_list_in_place(callback_list, new_values):
+    """Update a CallbackList in place from a plain list."""
+    for i in range(min(len(callback_list), len(new_values))):
+        old_item = callback_list[i]
+        new_item = new_values[i]
+        if isinstance(old_item, dict) and isinstance(new_item, dict):
+            _update_dict_in_place(old_item, new_item)
+        elif isinstance(old_item, list) and isinstance(new_item, list):
+            _update_list_in_place(old_item, new_item)
+        elif old_item != new_item:
+            callback_list[i] = new_item
+    while len(callback_list) > len(new_values):
+        callback_list.pop()
+    for i in range(len(callback_list), len(new_values)):
+        callback_list.append(new_values[i])
+
+
+def _update_dict_in_place(callback_dict, new_values):
+    """Update a CallbackDict in place from a plain dict."""
+    for key, value in new_values.items():
+        if key in callback_dict:
+            old_value = callback_dict[key]
+            if isinstance(old_value, dict) and isinstance(value, dict):
+                _update_dict_in_place(old_value, value)
+            elif isinstance(old_value, list) and isinstance(value, list):
+                _update_list_in_place(old_value, value)
+            elif old_value != value:
+                callback_dict[key] = value
+        else:
+            callback_dict[key] = value
+    for key in set(callback_dict) - set(new_values):
+        callback_dict.pop(key)
+
+
+class connect_list(BaseConnection):
+    """Connect a ListCallbackProperty or list-valued CallbackProperty to a List traitlet."""
+
+    _default_trait = staticmethod(lambda: traitlets.List().tag(sync=True))
+
+    def update_widget(self, value):
+        if self._to_widget_transform is not None:
+            value = self._to_widget_transform(value)
+        else:
+            value = _to_plain(value) if value is not None else []
+        setattr(self._widget, self._widget_prop, value)
+
+    def update_prop(self, value):
+        if self._from_widget_transform is not None:
+            value = self._from_widget_transform(value)
+            setattr(self._instance, self._prop, value)
+        else:
+            container = getattr(self._instance, self._prop)
+            if isinstance(container, CallbackList):
+                _update_list_in_place(container, value)
+            else:
+                setattr(self._instance, self._prop, list(value))
+
+
+class connect_dict(BaseConnection):
+    """Connect a DictCallbackProperty or dict-valued CallbackProperty to a Dict traitlet."""
+
+    _default_trait = staticmethod(lambda: traitlets.Dict().tag(sync=True))
+
+    def update_widget(self, value):
+        if self._to_widget_transform is not None:
+            value = self._to_widget_transform(value)
+        else:
+            value = _to_plain(value) if value is not None else {}
+        setattr(self._widget, self._widget_prop, value)
+
+    def update_prop(self, value):
+        if self._from_widget_transform is not None:
+            value = self._from_widget_transform(value)
+            setattr(self._instance, self._prop, value)
+        else:
+            container = getattr(self._instance, self._prop)
+            if isinstance(container, CallbackDict):
+                _update_dict_in_place(container, value)
+            else:
+                setattr(self._instance, self._prop, dict(value))
+
+
+class connect_any(BaseConnection):
+    """Connect a CallbackProperty to an Any traitlet (no type coercion)."""
+
+    _default_trait = staticmethod(lambda: traitlets.Any().tag(sync=True))
+
+    def update_widget(self, value):
+        if self._to_widget_transform is not None:
+            value = self._to_widget_transform(value)
+        else:
+            value = _to_plain(value)
+        setattr(self._widget, self._widget_prop, value)

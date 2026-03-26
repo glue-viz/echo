@@ -62,14 +62,90 @@ The connection type is inferred from the Vue component tag:
 * ``v-select``, ``v-combobox``, ``v-autocomplete`` -- selection property
 
 For custom components not in the default mapping, use the ``echo-type``
-attribute to specify the connection type. The supported ``echo-type``
-values are ``bool``, ``int``, ``float``, ``text``, and ``selection``::
+attribute to specify the connection type::
 
     <glue-float-field :value.sync="x_min" echo-type="float" />
+
+The supported ``echo-type`` values are: ``bool``, ``int``, ``float``,
+``text``, ``selection``, ``list``, ``dict``, and ``any``.
 
 Only properties referenced in the template that match callback properties
 on the state object are connected. A warning is issued if the template
 references a name that does not correspond to a callback property.
+
+Connecting list and dict properties
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``ListCallbackProperty`` and ``DictCallbackProperty`` can be connected
+to Vue using the ``list`` and ``dict`` types. These are typically
+specified via the ``extras`` parameter since list/dict bindings are
+not automatically inferred from standard Vuetify tags:
+
+.. code-block:: python
+
+    from echo import ListCallbackProperty, DictCallbackProperty
+
+    class AppState:
+        items = ListCallbackProperty([{'name': 'a'}])
+        settings = DictCallbackProperty({'visible': True})
+
+    state = AppState()
+    widget = MyWidget()
+    autoconnect_callbacks_to_vue(state, widget,
+                                 extras={'items': 'list', 'settings': 'dict'})
+
+Mutations to the containers (e.g. ``state.items.append(...)`` or
+``state.settings['visible'] = False``) are synced to the widget.
+Each mutation triggers a full sync of the container, so use
+``delay_callback`` to batch several mutations into a single sync.
+In the reverse direction (widget → state), the existing
+``CallbackList`` / ``CallbackDict`` objects are updated in place so
+that any attached callbacks are preserved.
+
+Discovering properties from Python
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, ``autoconnect_callbacks_to_vue`` discovers which
+properties to connect by parsing the Vue template. For state objects
+whose properties may not all appear in the template (e.g. an
+application-level state used across many components), you can instead
+discover properties directly from the Python class:
+
+.. code-block:: python
+
+    autoconnect_callbacks_to_vue(state, widget,
+                                 infer_properties_from='python')
+
+This discovers all ``CallbackProperty`` attributes on the state
+object and infers the connection type from the property descriptor:
+
+* ``ListCallbackProperty`` → ``list``
+* ``DictCallbackProperty`` → ``dict``
+* ``SelectionCallbackProperty`` → ``selection``
+* All other ``CallbackProperty`` → ``any`` (uses ``traitlets.Any``,
+  no type coercion)
+
+You can still use ``extras`` to override specific properties with
+custom transforms, and ``skip`` to exclude properties.
+
+Connecting a subset of properties
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``only`` parameter accepts a set of property names (types are
+auto-inferred) or a dict (with explicit type strings or transform
+tuples). When ``only`` is provided, no template parsing or property
+discovery takes place — only the listed properties are connected:
+
+.. code-block:: python
+
+    # Auto-infer types from descriptors:
+    autoconnect_callbacks_to_vue(viewer_state, widget,
+                                 only={'x_min', 'x_max', 'x_log'})
+
+    # Explicit types / transforms:
+    autoconnect_callbacks_to_vue(viewer_state, widget,
+                                 only={'x_min': 'float',
+                                       'cmap': ('text', cmap_to_name, name_to_cmap)})
 
 Debugging with comm logging
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

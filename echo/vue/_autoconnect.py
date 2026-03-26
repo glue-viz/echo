@@ -2,11 +2,17 @@ import os
 import warnings
 from html.parser import HTMLParser
 
+from ..containers import ListCallbackProperty, DictCallbackProperty
+from ..selection import SelectionCallbackProperty
+
 from ._connect import (connect_bool,
                        connect_int,
                        connect_float,
                        connect_text,
-                       connect_choice)
+                       connect_choice,
+                       connect_list,
+                       connect_dict,
+                       connect_any)
 from ._log import _enable_comm_logging_if_requested
 
 __all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS', 'TAG_TYPE_MAP']
@@ -17,6 +23,9 @@ HANDLERS = {
     'float': connect_float,
     'text': connect_text,
     'selection': connect_choice,
+    'list': connect_list,
+    'dict': connect_dict,
+    'any': connect_any,
 }
 
 TAG_TYPE_MAP = {
@@ -126,6 +135,28 @@ def _resolve_template(widget):
     return None
 
 
+def _infer_type(instance, prop_name):
+    """Infer the connection type from the callback property descriptor."""
+    prop = getattr(type(instance), prop_name)
+    if isinstance(prop, SelectionCallbackProperty):
+        return 'selection'
+    if isinstance(prop, ListCallbackProperty):
+        return 'list'
+    if isinstance(prop, DictCallbackProperty):
+        return 'dict'
+    return 'any'
+
+
+def _discover_properties(instance):
+    """Return a refs dict for all callback properties on instance."""
+    refs = {}
+    for name in dir(instance):
+        if not name.startswith('_') and instance.is_callback_property(name):
+            wtype = _infer_type(instance, name)
+            refs.setdefault(wtype, set()).add(name)
+    return refs
+
+
 def _parse_extras(extras):
     """Parse an extras/only dict into refs and transforms."""
     refs = {}
@@ -149,22 +180,11 @@ def _parse_extras(extras):
 
 
 def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
-                                 only=None, skip=None):
+                                 only=None, skip=None,
+                                 infer_properties_from='vue'):
     """
     Connect callback properties on ``instance`` to traitlets on
-    ``widget`` bidirectionally, based on the Vue template.
-
-    The connection type is inferred from the Vue tag name:
-
-    * ``v-switch``, ``v-checkbox`` -- ``bool``
-    * ``v-text-field`` -- ``text`` (or ``int`` when ``type="number"``)
-    * ``v-slider``, ``v-range-slider`` -- ``float``
-    * ``v-select``, ``v-combobox``, ``v-autocomplete`` -- ``selection``
-
-    For tags not in the default mapping (e.g. custom components), add an
-    ``echo-type`` attribute to specify the connection type::
-
-        <glue-float-field :value.sync="x_min" echo-type="value" />
+    ``widget`` bidirectionally.
 
     Parameters
     ----------
@@ -172,32 +192,42 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
         The state object with callback properties.
     widget : HasTraits
         The ipyvuetify widget.
+    infer_properties_from : ``'vue'`` or ``'python'``
+        How to discover which properties to connect:
+
+        * ``'vue'`` (default): parse the Vue template to find
+          ``v-model`` / ``:value.sync`` bindings and infer types from
+          the Vue tags (e.g. ``v-switch`` → bool, ``v-slider`` →
+          float). Use ``extras`` for properties the parser cannot
+          discover.
+        * ``'python'``: discover all callback properties on
+          ``instance`` and infer types from the property descriptors
+          (``ListCallbackProperty`` → list, ``DictCallbackProperty``
+          → dict, ``SelectionCallbackProperty`` → selection,
+          others → any).
+
     template : str, optional
-        The Vue template string. If not provided, the template is
-        resolved from the widget's ``template_file`` class attribute or
-        ``template`` traitlet.
+        The Vue template string. Only used when
+        ``infer_properties_from='vue'``. If not provided, the
+        template is resolved from the widget's ``template_file``
+        class attribute or ``template`` traitlet.
     extras : dict, optional
-        Additional properties to connect that are not discovered from
-        the template (e.g. properties only referenced in ``v-if`` or
-        JavaScript). Values can be:
+        Additional properties to connect that are not discovered
+        automatically. Values can be:
 
-        * A type string: ``'bool'``, ``'int'``, ``'float'``, ``'text'``, or
-          ``'selection'``.
+        * A type string: ``'bool'``, ``'int'``, ``'float'``,
+          ``'text'``, ``'selection'``, ``'list'``, ``'dict'``, or
+          ``'any'``.
         * A tuple of ``(type, to_widget, from_widget)`` to supply
-          custom transforms. ``to_widget`` converts the state value
-          before setting the traitlet; ``from_widget`` converts the
-          traitlet value before setting the state property.
+          custom transforms.
 
-    only : dict, optional
-        When provided, skip template parsing and connect *only* the
-        listed properties. Same value format as ``extras``. Useful
-        for connecting properties from a secondary state object
-        without re-parsing the template.
+    only : set or dict, optional
+        When provided, connect *only* the listed properties (skip
+        automatic discovery). Can be a set of property names (types
+        auto-inferred) or a dict with the same value format as
+        ``extras``.
     skip : set, optional
-        Property names to ignore during template parsing (no warning,
-        no connection). Useful when a property found in the template
-        is handled by a separate ``autoconnect_callbacks_to_vue`` call
-        on a different state object.
+        Property names to skip (no warning, no connection).
 
     Returns
     -------
@@ -205,7 +235,25 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
         Mapping of property names to connection handler objects.
     """
     if only is not None:
-        refs, transforms = _parse_extras(only)
+        if isinstance(only, set):
+            refs = {}
+            transforms = {}
+            for prop_name in only:
+                wtype = _infer_type(instance, prop_name)
+                refs.setdefault(wtype, set()).add(prop_name)
+        else:
+            refs, transforms = _parse_extras(only)
+    elif infer_properties_from == 'python':
+        refs = _discover_properties(instance)
+        transforms = {}
+
+        if extras:
+            extra_refs, transforms = _parse_extras(extras)
+            extra_props = {p for names in extra_refs.values() for p in names}
+            for wtype in refs:
+                refs[wtype] -= extra_props
+            for wtype, prop_names in extra_refs.items():
+                refs.setdefault(wtype, set()).update(prop_names)
     else:
         if template is None:
             template = _resolve_template(widget)
