@@ -3,6 +3,7 @@ import pytest
 traitlets = pytest.importorskip("traitlets")
 
 from echo import CallbackProperty, SelectionCallbackProperty, HasCallbackProperties  # noqa: E402
+from echo import ListCallbackProperty, DictCallbackProperty  # noqa: E402
 from echo.vue._autoconnect import autoconnect_callbacks_to_vue, _parse_template, _resolve_template  # noqa: E402
 
 
@@ -412,3 +413,282 @@ def test_only_with_transforms():
     assert widget.x_min == '-10.0'
     widget.x_min = '7.5'
     assert state.x_min == 7.5
+
+
+# --- List and Dict connection tests ---
+
+class ContainerState(HasCallbackProperties):
+    items = ListCallbackProperty([{'name': 'a'}, {'name': 'b'}])
+    settings = DictCallbackProperty({'visible': True, 'nested': {'x': 1, 'y': 2}})
+    tags = ListCallbackProperty(['red', 'green'])
+
+
+def test_list_state_to_widget():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'items': 'list'})
+    assert widget.items == [{'name': 'a'}, {'name': 'b'}]
+
+
+def test_list_state_mutation_syncs():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'items': 'list'})
+    state.items.append({'name': 'c'})
+    assert len(widget.items) == 3
+    assert widget.items[2] == {'name': 'c'}
+
+
+def test_list_widget_to_state():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'items': 'list'})
+    widget.items = [{'name': 'x'}]
+    assert len(state.items) == 1
+    assert state.items[0] == {'name': 'x'}
+
+
+def test_list_widget_updates_in_place():
+    """Widget changes update the existing CallbackList rather than replacing it."""
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'items': 'list'})
+    original_list = state.items
+    widget.items = [{'name': 'x'}, {'name': 'y'}]
+    assert state.items is original_list
+
+
+def test_list_simple_values():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'tags': 'list'})
+    assert widget.tags == ['red', 'green']
+    state.tags.append('blue')
+    assert widget.tags == ['red', 'green', 'blue']
+    widget.tags = ['one']
+    assert list(state.tags) == ['one']
+
+
+def test_dict_state_to_widget():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'settings': 'dict'})
+    assert widget.settings == {'visible': True, 'nested': {'x': 1, 'y': 2}}
+
+
+def test_dict_state_mutation_syncs():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'settings': 'dict'})
+    state.settings['visible'] = False
+    assert widget.settings['visible'] is False
+
+
+def test_dict_nested_mutation_syncs():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'settings': 'dict'})
+    state.settings['nested']['x'] = 99
+    assert widget.settings['nested']['x'] == 99
+
+
+def test_dict_widget_to_state():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'settings': 'dict'})
+    widget.settings = {'visible': False, 'nested': {'x': 5, 'y': 6}}
+    assert state.settings['visible'] is False
+    assert state.settings['nested']['x'] == 5
+
+
+def test_dict_widget_updates_in_place():
+    """Widget changes update the existing CallbackDict rather than replacing it."""
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'settings': 'dict'})
+    original_dict = state.settings
+    original_nested = state.settings['nested']
+    widget.settings = {'visible': False, 'nested': {'x': 5, 'y': 6}}
+    assert state.settings is original_dict
+    assert state.settings['nested'] is original_nested
+
+
+def test_dict_widget_adds_new_keys():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'settings': 'dict'})
+    widget.settings = {'visible': True, 'nested': {'x': 1, 'y': 2}, 'new_key': 'hello'}
+    assert state.settings['new_key'] == 'hello'
+
+
+def test_dict_widget_removes_keys():
+    state = ContainerState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'settings': 'dict'})
+    widget.settings = {'visible': True}
+    assert 'nested' not in state.settings
+
+
+def test_list_plain_callback_property():
+    """connect_list works with a regular CallbackProperty holding a plain list."""
+
+    class PlainListState(HasCallbackProperties):
+        open_panels = CallbackProperty([])
+
+    state = PlainListState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'open_panels': 'list'})
+
+    assert widget.open_panels == []
+    state.open_panels = [0, 2]
+    assert widget.open_panels == [0, 2]
+    # Widget→state does full replacement (not in-place) for plain lists
+    widget.open_panels = [1, 3]
+    assert state.open_panels == [1, 3]
+
+
+def test_list_and_dict_via_extras():
+    template = '<template><v-switch v-model="flag" /></template>'
+
+    class MixedState(HasCallbackProperties):
+        flag = CallbackProperty(True)
+        items = ListCallbackProperty([1, 2, 3])
+        config = DictCallbackProperty({'a': 1})
+
+    state = MixedState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(
+        state, widget, template=template,
+        extras={'items': 'list', 'config': 'dict'},
+    )
+    assert 'flag' in handlers
+    assert 'items' in handlers
+    assert 'config' in handlers
+    assert widget.items == [1, 2, 3]
+    assert widget.config == {'a': 1}
+
+
+# --- Auto-inferred type tests ---
+
+def test_only_as_set_infers_types():
+    """only as a set auto-infers types from property descriptors."""
+
+    class AutoState(HasCallbackProperties):
+        name = CallbackProperty('hello')
+        visible = CallbackProperty(True)
+        items = ListCallbackProperty([1, 2])
+        config = DictCallbackProperty({'a': 1})
+        choice = SelectionCallbackProperty(default_index=0)
+
+    AutoState.choice.set_choices(AutoState, ['x', 'y'])
+
+    state = AutoState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(
+        state, widget,
+        only={'name', 'visible', 'items', 'config', 'choice'},
+    )
+    assert set(handlers) == {'name', 'visible', 'items', 'config', 'choice'}
+
+    # Scalar properties use Any traitlet — bidirectional sync works
+    assert widget.name == 'hello'
+    state.name = 'world'
+    assert widget.name == 'world'
+    widget.name = 'back'
+    assert state.name == 'back'
+
+    assert widget.visible is True
+    state.visible = False
+    assert widget.visible is False
+
+    # List inferred from ListCallbackProperty
+    assert widget.items == [1, 2]
+    state.items.append(3)
+    assert widget.items == [1, 2, 3]
+
+    # Dict inferred from DictCallbackProperty
+    assert widget.config == {'a': 1}
+    state.config['b'] = 2
+    assert widget.config == {'a': 1, 'b': 2}
+
+    # Selection inferred from SelectionCallbackProperty
+    assert hasattr(widget, 'choice_items')
+    assert hasattr(widget, 'choice_selected')
+
+
+def test_any_handles_plain_list_value():
+    """connect_any works for a CallbackProperty whose value is a plain list."""
+
+    class PlainState(HasCallbackProperties):
+        open_panels = CallbackProperty([])
+
+    state = PlainState()
+    widget = SimpleWidget()
+    autoconnect_callbacks_to_vue(state, widget, only={'open_panels'})
+    assert widget.open_panels == []
+    state.open_panels = [0, 2]
+    assert widget.open_panels == [0, 2]
+    widget.open_panels = [1]
+    assert state.open_panels == [1]
+
+
+def test_infer_from_python_discovers_all():
+    """infer_properties_from='python' discovers all callback properties."""
+
+    class FullState(HasCallbackProperties):
+        name = CallbackProperty('hi')
+        items = ListCallbackProperty([1])
+        config = DictCallbackProperty({'a': 1})
+        _private = CallbackProperty('skip')  # should be skipped (starts with _)
+
+    state = FullState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(state, widget,
+                                            infer_properties_from='python')
+    assert set(handlers) == {'name', 'items', 'config'}
+
+    state.name = 'bye'
+    assert widget.name == 'bye'
+    state.items.append(2)
+    assert widget.items == [1, 2]
+    state.config['b'] = 2
+    assert widget.config == {'a': 1, 'b': 2}
+
+
+def test_infer_from_python_with_skip():
+    """infer_properties_from='python' respects the skip parameter."""
+
+    class SkipState(HasCallbackProperties):
+        a = CallbackProperty(1)
+        b = CallbackProperty(2)
+        c = CallbackProperty(3)
+
+    state = SkipState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(state, widget,
+                                            infer_properties_from='python',
+                                            skip={'b'})
+    assert 'a' in handlers
+    assert 'b' not in handlers
+    assert 'c' in handlers
+
+
+def test_infer_from_python_with_extras():
+    """infer_properties_from='python' + extras for custom transforms."""
+
+    class TransformState(HasCallbackProperties):
+        name = CallbackProperty('hello')
+        value = CallbackProperty(10)
+
+    state = TransformState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(
+        state, widget,
+        infer_properties_from='python',
+        extras={'value': ('text', str, int)},
+    )
+    # name auto-inferred as 'any', value overridden to 'text' with transforms
+    assert widget.name == 'hello'
+    assert widget.value == '10'
+    widget.value = '42'
+    assert state.value == 42
