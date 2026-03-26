@@ -1,5 +1,16 @@
 # Full changelog
 
+## v0.13.1 - 2026-03-26
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other Changes
+
+* Minimize comm updates between Python and vue, and add option to log comm calls by @astrofrog in https://github.com/glue-viz/echo/pull/59
+
+**Full Changelog**: https://github.com/glue-viz/echo/compare/v0.13.0...v0.13.1
+
 ## v0.13.0 - 2026-03-25
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
