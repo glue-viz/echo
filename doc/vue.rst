@@ -95,8 +95,10 @@ not automatically inferred from standard Vuetify tags:
                                  extras={'items': 'list', 'settings': 'dict'})
 
 Mutations to the containers (e.g. ``state.items.append(...)`` or
-``state.settings['visible'] = False``) are automatically synced to
-the widget. In the reverse direction (widget → state), the existing
+``state.settings['visible'] = False``) are synced to the widget.
+Each mutation triggers a full sync of the container, so use
+``delay_callback`` to batch several mutations into a single sync.
+In the reverse direction (widget → state), the existing
 ``CallbackList`` / ``CallbackDict`` objects are updated in place so
 that any attached callbacks are preserved.
 
