@@ -6,13 +6,21 @@
 
 import traitlets
 
-from ..containers import CallbackList, CallbackDict
+from ..containers import CallbackDict, CallbackList
 from ..core import add_callback, remove_callback
 from ..selection import ChoiceSeparator
 
-__all__ = ['connect_bool', 'connect_int', 'connect_float',
-           'connect_text', 'connect_choice', 'connect_list',
-           'connect_dict', 'connect_any', 'BaseConnection']
+__all__ = [
+    "connect_bool",
+    "connect_int",
+    "connect_float",
+    "connect_text",
+    "connect_choice",
+    "connect_list",
+    "connect_dict",
+    "connect_any",
+    "BaseConnection",
+]
 
 
 class BaseConnection:
@@ -44,8 +52,7 @@ class BaseConnection:
     # used when the widget does not already have a matching trait.
     _default_trait = None
 
-    def __init__(self, instance, prop, widget, widget_prop=None,
-                 to_widget=None, from_widget=None, initial_sync=True):
+    def __init__(self, instance, prop, widget, widget_prop=None, to_widget=None, from_widget=None, initial_sync=True):
         if widget_prop is None:
             widget_prop = prop
         if self._default_trait and not widget.has_trait(widget_prop):
@@ -53,7 +60,7 @@ class BaseConnection:
             if not initial_sync:
                 # Omit sync tag so add_traits doesn't send state;
                 # enable_widget_sync() must be called later.
-                trait.metadata.pop('sync', None)
+                trait.metadata.pop("sync", None)
             widget.add_traits(**{widget_prop: trait})
         self._instance = instance
         self._prop = prop
@@ -79,7 +86,7 @@ class BaseConnection:
             return
         self._updating = True
         try:
-            self.update_prop(change['new'])
+            self.update_prop(change["new"])
         finally:
             self._updating = False
 
@@ -98,9 +105,9 @@ class BaseConnection:
         """Tag the widget trait(s) as sync=True and register in widget.keys."""
         for name in self._sync_trait_names():
             trait = self._widget.traits()[name]
-            if 'sync' not in trait.metadata:
+            if "sync" not in trait.metadata:
                 trait.tag(sync=True)
-                if hasattr(self._widget, 'keys'):
+                if hasattr(self._widget, "keys"):
                     self._widget.keys.append(name)
 
     def _sync_trait_names(self):
@@ -127,8 +134,7 @@ class connect_bool(BaseConnection):
 class connect_int(BaseConnection):
     """Connect an integer callback property to an Int traitlet."""
 
-    _default_trait = staticmethod(
-        lambda: traitlets.CInt(0).tag(sync=True))
+    _default_trait = staticmethod(lambda: traitlets.CInt(0).tag(sync=True))
 
     def update_widget(self, value):
         if self._to_widget_transform is not None:
@@ -141,8 +147,7 @@ class connect_int(BaseConnection):
 class connect_float(BaseConnection):
     """Connect a numeric callback property to a Float traitlet."""
 
-    _default_trait = staticmethod(
-        lambda: traitlets.Float(allow_none=True).tag(sync=True))
+    _default_trait = staticmethod(lambda: traitlets.Float(allow_none=True).tag(sync=True))
 
     def update_widget(self, value):
         if self._to_widget_transform is not None:
@@ -155,14 +160,13 @@ class connect_float(BaseConnection):
 class connect_text(BaseConnection):
     """Connect a string callback property to a Unicode traitlet."""
 
-    _default_trait = staticmethod(
-        lambda: traitlets.Unicode('').tag(sync=True))
+    _default_trait = staticmethod(lambda: traitlets.Unicode("").tag(sync=True))
 
     def update_widget(self, value):
         if self._to_widget_transform is not None:
             value = self._to_widget_transform(value)
         else:
-            value = str(value) if value is not None else ''
+            value = str(value) if value is not None else ""
         setattr(self._widget, self._widget_prop, value)
 
 
@@ -172,11 +176,10 @@ class connect_choice(BaseConnection):
     ``{prop}_items`` (List) and ``{prop}_selected`` (Int).
     """
 
-    def __init__(self, instance, prop, widget, widget_prop=None,
-                 initial_sync=True, **kwargs):
+    def __init__(self, instance, prop, widget, widget_prop=None, initial_sync=True, **kwargs):
         if widget_prop is None:
-            widget_prop = f'{prop}_selected'
-        items_prop = widget_prop.replace('_selected', '_items')
+            widget_prop = f"{prop}_selected"
+        items_prop = widget_prop.replace("_selected", "_items")
         traits = {}
         if not widget.has_trait(widget_prop):
             trait = traitlets.Int(allow_none=True)
@@ -191,8 +194,7 @@ class connect_choice(BaseConnection):
         if traits:
             widget.add_traits(**traits)
         self._items_prop = items_prop
-        super().__init__(instance, prop, widget, widget_prop,
-                         initial_sync=initial_sync, **kwargs)
+        super().__init__(instance, prop, widget, widget_prop, initial_sync=initial_sync, **kwargs)
 
     def _get_choices(self):
         prop_descriptor = getattr(type(self._instance), self._prop)
@@ -211,7 +213,7 @@ class connect_choice(BaseConnection):
         self._updating = True
         try:
             choices, labels = self._get_choices()
-            items = [{'text': label, 'value': i} for i, label in enumerate(labels)]
+            items = [{"text": label, "value": i} for i, label in enumerate(labels)]
             setattr(self._widget, self._items_prop, items)
             current = getattr(self._instance, self._prop)
             if current in choices:

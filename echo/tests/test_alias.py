@@ -1,68 +1,82 @@
-import pytest
 import warnings
 from unittest.mock import MagicMock
 
-from echo import (CallbackProperty, CallbackPropertyAlias,
-                  add_callback, remove_callback, delay_callback,
-                  ignore_callback, HasCallbackProperties)
+import pytest
+
+from echo import (
+    CallbackProperty,
+    CallbackPropertyAlias,
+    HasCallbackProperties,
+    add_callback,
+    delay_callback,
+    ignore_callback,
+    remove_callback,
+)
 from echo.selection import SelectionCallbackProperty
 
 
 class SimpleClass:
     """Simple class with a callback property and a silent alias."""
-    color = CallbackProperty('red')
-    colour = CallbackPropertyAlias('color')
+
+    color = CallbackProperty("red")
+    colour = CallbackPropertyAlias("color")
 
 
 class SimpleClassDeprecated:
     """Simple class with a deprecated alias (emits warning)."""
-    color = CallbackProperty('red')
-    colour = CallbackPropertyAlias('color', deprecated=True)
+
+    color = CallbackProperty("red")
+    colour = CallbackPropertyAlias("color", deprecated=True)
 
 
 class SimpleClassCustomWarning:
     """Simple class with a custom deprecation warning."""
-    color = CallbackProperty('red')
-    colour = CallbackPropertyAlias('color', warning='Use color instead of colour!')
+
+    color = CallbackProperty("red")
+    colour = CallbackPropertyAlias("color", warning="Use color instead of colour!")
 
 
 class SelectionClass:
     """Class with a SelectionCallbackProperty and an alias."""
-    color = SelectionCallbackProperty(default='red', choices=['red', 'green', 'blue'])
-    colour = CallbackPropertyAlias('color')
+
+    color = SelectionCallbackProperty(default="red", choices=["red", "green", "blue"])
+    colour = CallbackPropertyAlias("color")
 
 
 class HasCallbackPropertiesClass(HasCallbackProperties):
     """Class using HasCallbackProperties mixin with an alias."""
-    color = CallbackProperty('red')
-    colour = CallbackPropertyAlias('color')
+
+    color = CallbackProperty("red")
+    colour = CallbackPropertyAlias("color")
     size = CallbackProperty(10)
 
 
 # Basic get/set tests
 
+
 def test_alias_get():
     """Test that getting via alias returns the target property value."""
     obj = SimpleClass()
-    assert obj.colour == 'red'
+    assert obj.colour == "red"
 
 
 def test_alias_set():
     """Test that setting via alias sets the target property value."""
     obj = SimpleClass()
-    obj.colour = 'blue'
-    assert obj.color == 'blue'
+    obj.colour = "blue"
+    assert obj.color == "blue"
 
 
 def test_alias_get_set_roundtrip():
     """Test get/set roundtrip through alias."""
     obj = SimpleClass()
-    obj.colour = 'green'
-    assert obj.colour == 'green'
-    assert obj.color == 'green'
+    obj.colour = "green"
+    assert obj.colour == "green"
+    assert obj.color == "green"
 
 
 # Deprecation warning tests
+
 
 def test_alias_no_deprecation_warning_by_default():
     """Test that no warning is emitted by default (deprecated=False)."""
@@ -70,7 +84,7 @@ def test_alias_no_deprecation_warning_by_default():
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         # Should not raise any warnings
-        obj.colour = 'blue'
+        obj.colour = "blue"
         _ = obj.colour
 
 
@@ -85,28 +99,29 @@ def test_alias_emits_deprecation_warning_on_set():
     """Test that deprecation warning is emitted on set when deprecated=True."""
     obj = SimpleClassDeprecated()
     with pytest.warns(DeprecationWarning, match="'colour' is deprecated, use 'color' instead"):
-        obj.colour = 'blue'
+        obj.colour = "blue"
 
 
 def test_alias_custom_warning_message():
     """Test that custom warning message is used."""
     obj = SimpleClassCustomWarning()
-    with pytest.warns(DeprecationWarning, match='Use color instead of colour!'):
+    with pytest.warns(DeprecationWarning, match="Use color instead of colour!"):
         _ = obj.colour
 
 
 # Callback tests
+
 
 def test_add_callback_via_alias():
     """Test that callbacks added via alias are attached to target property."""
     obj = SimpleClass()
     callback = MagicMock()
 
-    add_callback(obj, 'colour', callback)
+    add_callback(obj, "colour", callback)
 
     # Changing via the real property should trigger callback
-    obj.color = 'blue'
-    callback.assert_called_once_with('blue')
+    obj.color = "blue"
+    callback.assert_called_once_with("blue")
 
 
 def test_add_callback_via_deprecated_alias():
@@ -115,10 +130,10 @@ def test_add_callback_via_deprecated_alias():
     callback = MagicMock()
 
     with pytest.warns(DeprecationWarning):
-        add_callback(obj, 'colour', callback)
+        add_callback(obj, "colour", callback)
 
-    obj.color = 'blue'
-    callback.assert_called_once_with('blue')
+    obj.color = "blue"
+    callback.assert_called_once_with("blue")
 
 
 def test_remove_callback_via_alias():
@@ -126,10 +141,10 @@ def test_remove_callback_via_alias():
     obj = SimpleClass()
     callback = MagicMock()
 
-    add_callback(obj, 'color', callback)
-    remove_callback(obj, 'colour', callback)
+    add_callback(obj, "color", callback)
+    remove_callback(obj, "colour", callback)
 
-    obj.color = 'blue'
+    obj.color = "blue"
     assert callback.call_count == 0
 
 
@@ -138,10 +153,10 @@ def test_callback_triggered_when_setting_via_alias():
     obj = SimpleClass()
     callback = MagicMock()
 
-    add_callback(obj, 'color', callback)
-    obj.colour = 'blue'
+    add_callback(obj, "color", callback)
+    obj.colour = "blue"
 
-    callback.assert_called_once_with('blue')
+    callback.assert_called_once_with("blue")
 
 
 def test_delay_callback_via_alias():
@@ -149,14 +164,14 @@ def test_delay_callback_via_alias():
     obj = SimpleClass()
     callback = MagicMock()
 
-    add_callback(obj, 'color', callback)
+    add_callback(obj, "color", callback)
 
-    with delay_callback(obj, 'colour'):
-        obj.color = 'blue'
-        obj.color = 'green'
+    with delay_callback(obj, "colour"):
+        obj.color = "blue"
+        obj.color = "green"
         assert callback.call_count == 0
 
-    callback.assert_called_once_with('green')
+    callback.assert_called_once_with("green")
 
 
 def test_ignore_callback_via_alias():
@@ -164,10 +179,10 @@ def test_ignore_callback_via_alias():
     obj = SimpleClass()
     callback = MagicMock()
 
-    add_callback(obj, 'color', callback)
+    add_callback(obj, "color", callback)
 
-    with ignore_callback(obj, 'colour'):
-        obj.color = 'blue'
+    with ignore_callback(obj, "colour"):
+        obj.color = "blue"
         assert callback.call_count == 0
 
     assert callback.call_count == 0
@@ -175,21 +190,22 @@ def test_ignore_callback_via_alias():
 
 # SelectionCallbackProperty tests
 
+
 def test_selection_alias_get_set():
     """Test that alias works with SelectionCallbackProperty."""
     obj = SelectionClass()
 
-    assert obj.colour == 'red'
-    obj.colour = 'blue'
-    assert obj.color == 'blue'
+    assert obj.colour == "red"
+    obj.colour = "blue"
+    assert obj.color == "blue"
 
 
 def test_selection_alias_validation():
     """Test that validation still works when setting via alias."""
     obj = SelectionClass()
 
-    with pytest.raises(ValueError, match='not in valid choices'):
-        obj.colour = 'yellow'
+    with pytest.raises(ValueError, match="not in valid choices"):
+        obj.colour = "yellow"
 
 
 def test_selection_alias_get_choices():
@@ -197,7 +213,7 @@ def test_selection_alias_get_choices():
     obj = SelectionClass()
 
     # Access choices via class attribute proxy
-    assert SelectionClass.colour.get_choices(obj) == ['red', 'green', 'blue']
+    assert SelectionClass.colour.get_choices(obj) == ["red", "green", "blue"]
 
 
 def test_selection_alias_set_choices():
@@ -205,51 +221,52 @@ def test_selection_alias_set_choices():
     obj = SelectionClass()
 
     # Set choices via class attribute proxy
-    SelectionClass.colour.set_choices(obj, ['cyan', 'magenta', 'yellow'])
+    SelectionClass.colour.set_choices(obj, ["cyan", "magenta", "yellow"])
 
-    assert obj.color == 'cyan'
-    assert SelectionClass.color.get_choices(obj) == ['cyan', 'magenta', 'yellow']
+    assert obj.color == "cyan"
+    assert SelectionClass.color.get_choices(obj) == ["cyan", "magenta", "yellow"]
 
 
 def test_selection_alias_default_choices():
     """Test that default_choices attribute is proxied."""
-    assert SelectionClass.colour.default_choices == ['red', 'green', 'blue']
+    assert SelectionClass.colour.default_choices == ["red", "green", "blue"]
 
 
 # HasCallbackProperties tests
 
+
 def test_has_callback_properties_is_callback_property():
     """Test that is_callback_property returns True for properties and aliases."""
     obj = HasCallbackPropertiesClass()
-    assert obj.is_callback_property('color')
-    assert obj.is_callback_property('colour')  # Alias also returns True
-    assert obj.is_callback_property('size')
+    assert obj.is_callback_property("color")
+    assert obj.is_callback_property("colour")  # Alias also returns True
+    assert obj.is_callback_property("size")
 
 
 def test_has_callback_properties_is_alias():
     """Test that is_alias returns True only for aliases."""
     obj = HasCallbackPropertiesClass()
-    assert not obj.is_alias('color')
-    assert obj.is_alias('colour')
-    assert not obj.is_alias('size')
+    assert not obj.is_alias("color")
+    assert obj.is_alias("colour")
+    assert not obj.is_alias("size")
 
 
 def test_has_callback_properties_iter_excludes_aliases():
     """Test that iter_callback_properties does not include aliases."""
     obj = HasCallbackPropertiesClass()
     prop_names = [name for name, _ in obj.iter_callback_properties()]
-    assert 'color' in prop_names
-    assert 'size' in prop_names
-    assert 'colour' not in prop_names
+    assert "color" in prop_names
+    assert "size" in prop_names
+    assert "colour" not in prop_names
 
 
 def test_has_callback_properties_callback_properties_excludes_aliases():
     """Test that callback_properties() does not include aliases."""
     obj = HasCallbackPropertiesClass()
     prop_names = obj.callback_properties()
-    assert 'color' in prop_names
-    assert 'size' in prop_names
-    assert 'colour' not in prop_names
+    assert "color" in prop_names
+    assert "size" in prop_names
+    assert "colour" not in prop_names
 
 
 def test_has_callback_properties_add_callback_via_alias():
@@ -257,10 +274,10 @@ def test_has_callback_properties_add_callback_via_alias():
     obj = HasCallbackPropertiesClass()
     callback = MagicMock()
 
-    obj.add_callback('colour', callback)
+    obj.add_callback("colour", callback)
 
-    obj.color = 'blue'
-    callback.assert_called_once_with('blue')
+    obj.color = "blue"
+    callback.assert_called_once_with("blue")
 
 
 def test_has_callback_properties_remove_callback_via_alias():
@@ -268,10 +285,10 @@ def test_has_callback_properties_remove_callback_via_alias():
     obj = HasCallbackPropertiesClass()
     callback = MagicMock()
 
-    obj.add_callback('color', callback)
-    obj.remove_callback('colour', callback)
+    obj.add_callback("color", callback)
+    obj.remove_callback("colour", callback)
 
-    obj.color = 'blue'
+    obj.color = "blue"
     assert callback.call_count == 0
 
 
@@ -281,10 +298,10 @@ def test_has_callback_properties_global_callback_via_alias():
     callback = MagicMock()
 
     obj.add_global_callback(callback)
-    obj.colour = 'blue'
+    obj.colour = "blue"
 
     # Should receive both the target property name and the alias name
-    callback.assert_called_once_with(color='blue', colour='blue')
+    callback.assert_called_once_with(color="blue", colour="blue")
 
 
 def test_has_callback_properties_global_callback_via_property():
@@ -293,13 +310,14 @@ def test_has_callback_properties_global_callback_via_property():
     callback = MagicMock()
 
     obj.add_global_callback(callback)
-    obj.color = 'blue'
+    obj.color = "blue"
 
     # Should receive both the target property name and the alias name
-    callback.assert_called_once_with(color='blue', colour='blue')
+    callback.assert_called_once_with(color="blue", colour="blue")
 
 
 # Class attribute access tests
+
 
 def test_class_attribute_access_returns_alias():
     """Test that accessing alias on class returns the alias object."""
@@ -318,20 +336,21 @@ def test_alias_getattr_proxy():
     obj = SelectionClass()
     # Accessing via alias should proxy to the target property's method
     choices = SelectionClass.colour.get_choices(obj)
-    assert choices == ['red', 'green', 'blue']
+    assert choices == ["red", "green", "blue"]
 
 
 # Edge case tests
+
 
 def test_multiple_instances_independent():
     """Test that alias works correctly with multiple instances."""
     obj1 = SimpleClass()
     obj2 = SimpleClass()
 
-    obj1.colour = 'blue'
+    obj1.colour = "blue"
 
-    assert obj1.color == 'blue'
-    assert obj2.color == 'red'
+    assert obj1.color == "blue"
+    assert obj2.color == "red"
 
 
 def test_alias_with_echo_old():
@@ -339,11 +358,11 @@ def test_alias_with_echo_old():
     obj = SimpleClass()
     callback = MagicMock()
 
-    obj.color = 'initial'
-    add_callback(obj, 'colour', callback, echo_old=True)
+    obj.color = "initial"
+    add_callback(obj, "colour", callback, echo_old=True)
 
-    obj.color = 'new'
-    callback.assert_called_once_with('initial', 'new')
+    obj.color = "new"
+    callback.assert_called_once_with("initial", "new")
 
 
 def test_alias_with_validator():
@@ -353,10 +372,10 @@ def test_alias_with_validator():
     def uppercase_validator(value):
         return value.upper()
 
-    add_callback(obj, 'colour', uppercase_validator, validator=True)
+    add_callback(obj, "colour", uppercase_validator, validator=True)
 
-    obj.color = 'blue'
-    assert obj.color == 'BLUE'
+    obj.color = "blue"
+    assert obj.color == "BLUE"
 
 
 def test_alias_private_attribute_access_raises():
@@ -367,7 +386,7 @@ def test_alias_private_attribute_access_raises():
 
 def test_alias_before_class_defined():
     """Test that accessing attributes on alias before class is defined raises."""
-    alias = CallbackPropertyAlias('target')
+    alias = CallbackPropertyAlias("target")
     # _owner is None before __set_name__ is called
     with pytest.raises(AttributeError, match="Cannot access .* before class is fully defined"):
         _ = alias.some_attribute

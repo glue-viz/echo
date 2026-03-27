@@ -5,7 +5,7 @@ import numpy as np
 
 from .core import CallbackProperty
 
-__all__ = ['ChoiceSeparator', 'SelectionCallbackProperty']
+__all__ = ["ChoiceSeparator", "SelectionCallbackProperty"]
 
 
 class ChoiceSeparator:
@@ -18,15 +18,14 @@ class ChoiceSeparator:
         return self._label
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self._label!r})'
+        return f"{self.__class__.__name__}({self._label!r})"
 
 
 class SelectionCallbackProperty(CallbackProperty):
-
     def __init__(self, default_index=0, choices=None, display_func=None, comparison_type=None, **kwargs):
-        if choices is not None and 'default' not in kwargs:
-            kwargs['default'] = choices[default_index]
-        super(SelectionCallbackProperty, self).__init__(**kwargs)
+        if choices is not None and "default" not in kwargs:
+            kwargs["default"] = choices[default_index]
+        super().__init__(**kwargs)
         self.default_index = default_index
         self.default_choices = choices or []
         self.comparison_type = comparison_type
@@ -41,13 +40,13 @@ class SelectionCallbackProperty(CallbackProperty):
             # For built-in scalar types we use ==, and for other types we use
             # is, otherwise e.g. ComponentID returns something that evaluates
             # to true when using ==.
-            if self.comparison_type == 'equality' or (self.comparison_type is None and np.isscalar(value)):
+            if self.comparison_type == "equality" or (self.comparison_type is None and np.isscalar(value)):
                 if not any(value == x for x in choices):
-                    raise ValueError('value {0} is not in valid choices: {1}'.format(value, choices))
-            if self.comparison_type == 'identity' or (self.comparison_type is None and not np.isscalar(value)):
+                    raise ValueError(f"value {value} is not in valid choices: {choices}")
+            if self.comparison_type == "identity" or (self.comparison_type is None and not np.isscalar(value)):
                 if not any(value is x for x in choices):
-                    raise ValueError('value {0} is not in valid choices: {1}'.format(value, choices))
-        super(SelectionCallbackProperty, self).__set__(instance, value)
+                    raise ValueError(f"value {value} is not in valid choices: {choices}")
+        super().__set__(instance, value)
 
     def force_next_sync(self, instance):
         self._force_next_sync[instance] = True
@@ -89,7 +88,6 @@ class SelectionCallbackProperty(CallbackProperty):
         self.notify(instance, selection, selection)
 
     def _choices_updated(self, instance, choices):
-
         if not choices:
             self.__set__(instance, None)
             return
@@ -100,13 +98,12 @@ class SelectionCallbackProperty(CallbackProperty):
         # equality not identity (and we really just care about identity here)
         # However, for simple Python types, we also need to check ==.
         for choice in choices:
-            if selection is choice or (np.isscalar(choice) and
-                                       (np.isreal(choice) or isinstance(choice, str)) and
-                                       selection == choice):
+            if selection is choice or (
+                np.isscalar(choice) and (np.isreal(choice) or isinstance(choice, str)) and selection == choice
+            ):
                 return
 
-        choices_without_separators = [choice for choice in choices
-                                      if not isinstance(choice, ChoiceSeparator)]
+        choices_without_separators = [choice for choice in choices if not isinstance(choice, ChoiceSeparator)]
 
         if choices_without_separators:
             try:

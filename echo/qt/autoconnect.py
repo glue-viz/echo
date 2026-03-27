@@ -1,27 +1,29 @@
-from .connect import (connect_checkable_button,
-                      connect_value,
-                      connect_combo_data,
-                      connect_combo_text,
-                      connect_float_text,
-                      connect_text,
-                      connect_button,
-                      connect_combo_selection,
-                      connect_list_selection,
-                      connect_datetime)
+from .connect import (
+    connect_button,
+    connect_checkable_button,
+    connect_combo_data,
+    connect_combo_selection,
+    connect_combo_text,
+    connect_datetime,
+    connect_float_text,
+    connect_list_selection,
+    connect_text,
+    connect_value,
+)
 
-__all__ = ['autoconnect_callbacks_to_qt']
+__all__ = ["autoconnect_callbacks_to_qt"]
 
 HANDLERS = {}
-HANDLERS['value'] = connect_value
-HANDLERS['valuetext'] = connect_float_text
-HANDLERS['bool'] = connect_checkable_button
-HANDLERS['text'] = connect_text
-HANDLERS['combodata'] = connect_combo_data
-HANDLERS['combotext'] = connect_combo_text
-HANDLERS['button'] = connect_button
-HANDLERS['combosel'] = connect_combo_selection
-HANDLERS['listsel'] = connect_list_selection
-HANDLERS['datetime'] = connect_datetime
+HANDLERS["value"] = connect_value
+HANDLERS["valuetext"] = connect_float_text
+HANDLERS["bool"] = connect_checkable_button
+HANDLERS["text"] = connect_text
+HANDLERS["combodata"] = connect_combo_data
+HANDLERS["combotext"] = connect_combo_text
+HANDLERS["button"] = connect_button
+HANDLERS["combosel"] = connect_combo_selection
+HANDLERS["listsel"] = connect_list_selection
+HANDLERS["datetime"] = connect_datetime
 
 
 def autoconnect_callbacks_to_qt(instance, widget, connect_kwargs={}):
@@ -96,16 +98,16 @@ def autoconnect_callbacks_to_qt(instance, widget, connect_kwargs={}):
     returned_handlers = {}
 
     for original_name in dir(widget):
-        if original_name.startswith('_') or '_' not in original_name:
+        if original_name.startswith("_") or "_" not in original_name:
             continue
         # FIXME: this is a temorary workaround to allow multiple widgets to be
         # connected to a state attribute.
-        if original_name.endswith('_'):
+        if original_name.endswith("_"):
             full_name = original_name[:-1]
         else:
             full_name = original_name
-        if '_' in full_name:
-            wtype, wname = full_name.split('_', 1)
+        if "_" in full_name:
+            wtype, wname = full_name.split("_", 1)
             if full_name in connect_kwargs:
                 kwargs = connect_kwargs[full_name]
             elif wname in connect_kwargs:

@@ -12,7 +12,6 @@ def func_b():
 
 
 class SimpleClass:
-
     def __init__(self, value):
         self._value = value
 
@@ -21,7 +20,6 @@ class SimpleClass:
 
 
 def test_callback_container_func():
-
     container = CallbackContainer()
     container.append(func_a)
 
@@ -48,7 +46,6 @@ def test_callback_container_func():
 
 
 def test_callback_container_meth():
-
     instance1 = SimpleClass(2)
     instance2 = SimpleClass(3)
 
@@ -78,14 +75,12 @@ def test_callback_container_meth():
 
 
 def test_callback_container_invalid():
-
     container = CallbackContainer()
-    with pytest.raises(TypeError, match=r'Only callable values can be stored in CallbackContainer'):
-        container.append('banana')
+    with pytest.raises(TypeError, match=r"Only callable values can be stored in CallbackContainer"):
+        container.append("banana")
 
 
 def test_callback_container_duplicates():
-
     # Don't store duplicates
 
     instance1 = SimpleClass(2)
@@ -108,7 +103,6 @@ def test_callback_container_duplicates():
 
 
 def test_callback_container_remove():
-
     instance = SimpleClass(2)
 
     container = CallbackContainer()

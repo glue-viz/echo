@@ -1,32 +1,37 @@
 # The functions in this module are used to connect callback properties to Qt
 # widgets.
 
-from datetime import datetime
 import math
-
-from qtpy import QtGui, QtWidgets
-from qtpy.QtCore import Qt, QDateTime
+from datetime import datetime
 
 import numpy as np
+from qtpy import QtGui, QtWidgets
+from qtpy.QtCore import QDateTime, Qt
 
 from ..core import add_callback, remove_callback
-from ..selection import SelectionCallbackProperty, ChoiceSeparator
+from ..selection import ChoiceSeparator, SelectionCallbackProperty
 
-__all__ = ['connect_checkable_button', 'connect_text', 'connect_combo_data',
-           'connect_combo_text', 'connect_float_text', 'connect_value',
-           'connect_combo_selection', 'connect_list_selection', 'connect_datetime',
-           'BaseConnection']
+__all__ = [
+    "connect_checkable_button",
+    "connect_text",
+    "connect_combo_data",
+    "connect_combo_text",
+    "connect_float_text",
+    "connect_value",
+    "connect_combo_selection",
+    "connect_list_selection",
+    "connect_datetime",
+    "BaseConnection",
+]
 
 
-class UserDataWrapper(object):
+class UserDataWrapper:
     def __init__(self, data):
         self.data = data
 
 
-class BaseConnection(object):
-
+class BaseConnection:
     def __init__(self, instance, prop, widget):
-
         self._instance = instance
         self._prop = prop
         self._widget = widget
@@ -48,7 +53,7 @@ class connect_checkable_button(BaseConnection):
     """
 
     def __init__(self, instance, prop, widget):
-        super(connect_checkable_button, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
         self.connect()
 
     def update_widget(self, value):
@@ -83,7 +88,7 @@ class connect_text(BaseConnection):
     """
 
     def __init__(self, instance, prop, widget):
-        super(connect_text, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
         self.connect()
 
     def update_prop(self):
@@ -91,7 +96,7 @@ class connect_text(BaseConnection):
         setattr(self._instance, self._prop, value)
 
     def update_widget(self, value):
-        if hasattr(self._widget, 'editingFinished'):
+        if hasattr(self._widget, "editingFinished"):
             self._widget.blockSignals(True)
             self._widget.setText(value)
             self._widget.blockSignals(False)
@@ -134,7 +139,7 @@ class connect_combo_data(BaseConnection):
     """
 
     def __init__(self, instance, prop, widget):
-        super(connect_combo_data, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
         self.connect()
 
     def update_widget(self, value):
@@ -186,7 +191,7 @@ class connect_combo_text(BaseConnection):
     """
 
     def __init__(self, instance, prop, widget):
-        super(connect_combo_text, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
         self.connect()
 
     def update_widget(self, value):
@@ -234,12 +239,12 @@ class connect_float_text(BaseConnection):
     """
 
     def __init__(self, instance, prop, widget, fmt="{:g}"):
-
-        super(connect_float_text, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
 
         if callable(fmt):
             format_func = fmt
         else:
+
             def format_func(x):
                 try:
                     return fmt.format(x)
@@ -263,7 +268,7 @@ class connect_float_text(BaseConnection):
 
     def update_widget(self, value):
         if value is None:
-            value = 0.
+            value = 0.0
         self._widget.setText(self._format_func(value))
 
     def connect(self):
@@ -304,8 +309,7 @@ class connect_value(BaseConnection):
     """
 
     def __init__(self, instance, prop, widget, value_range=None, log=False):
-
-        super(connect_value, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
 
         if log:
             if value_range is None:
@@ -322,10 +326,11 @@ class connect_value(BaseConnection):
         value = self._widget.value()
         if self._value_range is not None:
             imin, imax = self._widget.minimum(), self._widget.maximum()
-            value = ((value - imin) / (imax - imin)
-                     * (self._value_range[1] - self._value_range[0]) + self._value_range[0])
+            value = (value - imin) / (imax - imin) * (self._value_range[1] - self._value_range[0]) + self._value_range[
+                0
+            ]
         if self._log:
-            value = 10 ** value
+            value = 10**value
         setattr(self._instance, self._prop, value)
 
     def update_widget(self, value):
@@ -336,9 +341,10 @@ class connect_value(BaseConnection):
             value = math.log10(value)
         if self._value_range is not None:
             imin, imax = self._widget.minimum(), self._widget.maximum()
-            value = ((value - self._value_range[0])
-                     / (self._value_range[1] - self._value_range[0]) * (imax - imin) + imin)
-        if isinstance(self._widget, (QtWidgets.QSlider, QtWidgets.QSpinBox)):
+            value = (value - self._value_range[0]) / (self._value_range[1] - self._value_range[0]) * (
+                imax - imin
+            ) + imin
+        if isinstance(self._widget, QtWidgets.QSlider | QtWidgets.QSpinBox):
             self._widget.setValue(int(value))
         else:
             self._widget.setValue(value)
@@ -368,7 +374,7 @@ class connect_button(BaseConnection):
     """
 
     def __init__(self, instance, prop, widget):
-        super(connect_button, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
         self.connect()
 
     def connect(self):
@@ -395,7 +401,7 @@ def _find_combo_data(widget, value):
                 if widget.itemData(idx) is value or (widget.itemData(idx) == value) is True:
                     return idx
     else:
-        raise ValueError("%s not found in combo box" % (value,))
+        raise ValueError(f"{value} not found in combo box")
 
 
 def _find_combo_text(widget, value):
@@ -406,28 +412,25 @@ def _find_combo_text(widget, value):
     """
     i = widget.findText(value)
     if i == -1:
-        raise ValueError("%s not found in combo box" % value)
+        raise ValueError(f"{value} not found in combo box")
     else:
         return i
 
 
 class connect_combo_selection(BaseConnection):
-
     def __init__(self, instance, prop, widget):
-
         prop_obj = getattr(type(instance), prop)
         # Handle aliases - resolve to target property for type checking
-        if hasattr(prop_obj, '_target_property') and prop_obj._target_property is not None:
+        if hasattr(prop_obj, "_target_property") and prop_obj._target_property is not None:
             prop_obj = prop_obj._target_property
 
         if not isinstance(prop_obj, SelectionCallbackProperty):
-            raise TypeError('connect_combo_selection requires a SelectionCallbackProperty')
+            raise TypeError("connect_combo_selection requires a SelectionCallbackProperty")
 
-        super(connect_combo_selection, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
         self.connect()
 
     def update_widget(self, value):
-
         # Update choices in the combo box
 
         combo_data = [self._widget.itemData(idx) for idx in range(self._widget.count())]
@@ -439,7 +442,6 @@ class connect_combo_selection(BaseConnection):
         if combo_data == choices and combo_text == choice_labels:
             choices_updated = False
         else:
-
             self._widget.blockSignals(True)
             self._widget.clear()
 
@@ -449,7 +451,6 @@ class connect_combo_selection(BaseConnection):
             combo_model = self._widget.model()
 
             for index, (label, choice) in enumerate(zip(choice_labels, choices)):
-
                 self._widget.addItem(label, userData=UserDataWrapper(choice))
 
                 # We interpret None data as being disabled rows (used for headers)
@@ -498,7 +499,6 @@ class connect_combo_selection(BaseConnection):
 
 
 class connect_list_selection(BaseConnection):
-
     def __init__(self, instance, prop, widget):
         """
         Connect a SelectionCallbackProperty with a QListWidget that supports
@@ -507,17 +507,16 @@ class connect_list_selection(BaseConnection):
 
         prop_obj = getattr(type(instance), prop)
         # Handle aliases - resolve to target property for type checking
-        if hasattr(prop_obj, '_target_property') and prop_obj._target_property is not None:
+        if hasattr(prop_obj, "_target_property") and prop_obj._target_property is not None:
             prop_obj = prop_obj._target_property
 
         if not isinstance(prop_obj, SelectionCallbackProperty):
-            raise TypeError('connect_list_selection requires a SelectionCallbackProperty')
+            raise TypeError("connect_list_selection requires a SelectionCallbackProperty")
 
-        super(connect_list_selection, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
         self.connect()
 
     def update_widget(self, value, force=False):
-
         items = [self._widget.item(idx) for idx in range(self._widget.count())]
         list_text = [item.text() for item in items]
         list_data = [item.data(Qt.UserRole) for item in items]
@@ -537,7 +536,6 @@ class connect_list_selection(BaseConnection):
         choices_match = list_data == choices and list_text == choice_labels
 
         if force or not choices_match:
-
             self._widget.clear()
 
             if len(choices) == 0:
@@ -545,7 +543,6 @@ class connect_list_selection(BaseConnection):
                 return
 
             for index, (label, choice) in enumerate(zip(choice_labels, choices)):
-
                 item = QtWidgets.QListWidgetItem(label)
                 item.setData(Qt.UserRole, UserDataWrapper(choice))
                 self._widget.addItem(item)
@@ -573,7 +570,6 @@ class connect_list_selection(BaseConnection):
         self._widget.itemSelectionChanged.emit()
 
     def update_prop(self):
-
         if len(self._widget.selectedItems()) == 0:
             setattr(self._instance, self._prop, None)
         else:
@@ -601,7 +597,7 @@ class connect_datetime(BaseConnection):
     """
 
     def __init__(self, instance, prop, widget):
-        super(connect_datetime, self).__init__(instance, prop, widget)
+        super().__init__(instance, prop, widget)
         self.connect()
 
     def update_prop(self):
@@ -611,7 +607,7 @@ class connect_datetime(BaseConnection):
 
     def update_widget(self, value):
         if value is None:
-            value = np.datetime64('now')
+            value = np.datetime64("now")
         dt = value.item()
 
         # datetime64::item can return a date

@@ -1,13 +1,17 @@
 __all__ = [
-    "PYQT5_INSTALLED", "PYQT6_INSTALLED",
-    "PYSIDE2_INSTALLED", "PYSIDE6_INSTALLED",
-    "QTPY_INSTALLED", "QT_INSTALLED",
-    "SKIP_QT_TEST"
+    "PYQT5_INSTALLED",
+    "PYQT6_INSTALLED",
+    "PYSIDE2_INSTALLED",
+    "PYSIDE6_INSTALLED",
+    "QTPY_INSTALLED",
+    "QT_INSTALLED",
+    "SKIP_QT_TEST",
 ]
 
 
 def package_installed(package):
     from importlib.util import find_spec
+
     return find_spec(package) is not None
 
 

@@ -2,45 +2,46 @@ import os
 import warnings
 from html.parser import HTMLParser
 
-from ..containers import ListCallbackProperty, DictCallbackProperty
+from ..containers import DictCallbackProperty, ListCallbackProperty
 from ..selection import SelectionCallbackProperty
-
-from ._connect import (connect_bool,
-                       connect_int,
-                       connect_float,
-                       connect_text,
-                       connect_choice,
-                       connect_list,
-                       connect_dict,
-                       connect_any)
+from ._connect import (
+    connect_any,
+    connect_bool,
+    connect_choice,
+    connect_dict,
+    connect_float,
+    connect_int,
+    connect_list,
+    connect_text,
+)
 from ._log import _enable_comm_logging_if_requested
 
-__all__ = ['autoconnect_callbacks_to_vue', 'HANDLERS', 'TAG_TYPE_MAP']
+__all__ = ["autoconnect_callbacks_to_vue", "HANDLERS", "TAG_TYPE_MAP"]
 
 HANDLERS = {
-    'bool': connect_bool,
-    'int': connect_int,
-    'float': connect_float,
-    'text': connect_text,
-    'selection': connect_choice,
-    'list': connect_list,
-    'dict': connect_dict,
-    'any': connect_any,
+    "bool": connect_bool,
+    "int": connect_int,
+    "float": connect_float,
+    "text": connect_text,
+    "selection": connect_choice,
+    "list": connect_list,
+    "dict": connect_dict,
+    "any": connect_any,
 }
 
 TAG_TYPE_MAP = {
-    'v-switch': 'bool',
-    'v-checkbox': 'bool',
-    'v-text-field': 'text',
-    'v-slider': 'float',
-    'v-range-slider': 'float',
-    'v-select': 'selection',
-    'v-combobox': 'selection',
-    'v-autocomplete': 'selection',
+    "v-switch": "bool",
+    "v-checkbox": "bool",
+    "v-text-field": "text",
+    "v-slider": "float",
+    "v-range-slider": "float",
+    "v-select": "selection",
+    "v-combobox": "selection",
+    "v-autocomplete": "selection",
 }
 
 # Attribute names that bind a Vue template expression to a traitlet.
-_BINDING_ATTRS = {'v-model', ':items', ':value.sync', 'v-model.number'}
+_BINDING_ATTRS = {"v-model", ":items", ":value.sync", "v-model.number"}
 
 
 class _TemplateParser(HTMLParser):
@@ -59,13 +60,13 @@ class _TemplateParser(HTMLParser):
             return
 
         # Determine connection type: echo-type attribute overrides tag inference
-        echo_type = attrs_dict.get('echo-type')
+        echo_type = attrs_dict.get("echo-type")
         if echo_type is None:
             inferred = TAG_TYPE_MAP.get(tag)
             if inferred is not None:
                 # For v-text-field with type="number", use int
-                if inferred == 'text' and attrs_dict.get('type') == 'number':
-                    echo_type = 'int'
+                if inferred == "text" and attrs_dict.get("type") == "number":
+                    echo_type = "int"
                 else:
                     echo_type = inferred
             else:
@@ -73,7 +74,7 @@ class _TemplateParser(HTMLParser):
                     warnings.warn(
                         f"Vue template has binding '{attr_value}' on unknown "
                         f"tag <{tag}> with no echo-type attribute — skipping. "
-                        f"Add echo-type=\"...\" to specify the connection type.",
+                        f'Add echo-type="..." to specify the connection type.',
                         stacklevel=2,
                     )
                 return
@@ -89,9 +90,9 @@ class _TemplateParser(HTMLParser):
         for attr_value in bindings.values():
             prop_name = attr_value
             # Normalize selection suffixes to base property name
-            for suffix in ('_items', '_selected'):
+            for suffix in ("_items", "_selected"):
                 if prop_name.endswith(suffix):
-                    prop_name = prop_name[:-len(suffix)]
+                    prop_name = prop_name[: -len(suffix)]
                     break
             self.refs.setdefault(echo_type, set()).add(prop_name)
 
@@ -118,7 +119,7 @@ def _resolve_template(widget):
     Returns None if no template can be found.
     """
     for klass in type(widget).__mro__:
-        tf = klass.__dict__.get('template_file')
+        tf = klass.__dict__.get("template_file")
         if tf is not None:
             if isinstance(tf, tuple) and len(tf) == 2:
                 module_file, vue_filename = tf
@@ -128,8 +129,8 @@ def _resolve_template(widget):
                         return f.read()
             break
 
-    template = getattr(widget, 'template', None)
-    if template is not None and hasattr(template, 'template'):
+    template = getattr(widget, "template", None)
+    if template is not None and hasattr(template, "template"):
         return template.template
 
     return None
@@ -139,19 +140,19 @@ def _infer_type(instance, prop_name):
     """Infer the connection type from the callback property descriptor."""
     prop = getattr(type(instance), prop_name)
     if isinstance(prop, SelectionCallbackProperty):
-        return 'selection'
+        return "selection"
     if isinstance(prop, ListCallbackProperty):
-        return 'list'
+        return "list"
     if isinstance(prop, DictCallbackProperty):
-        return 'dict'
-    return 'any'
+        return "dict"
+    return "any"
 
 
 def _discover_properties(instance):
     """Return a refs dict for all callback properties on instance."""
     refs = {}
     for name in dir(instance):
-        if not name.startswith('_') and instance.is_callback_property(name):
+        if not name.startswith("_") and instance.is_callback_property(name):
             wtype = _infer_type(instance, name)
             refs.setdefault(wtype, set()).add(name)
     return refs
@@ -179,9 +180,9 @@ def _parse_extras(extras):
     return refs, transforms
 
 
-def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
-                                 only=None, skip=None,
-                                 infer_properties_from='vue'):
+def autoconnect_callbacks_to_vue(
+    instance, widget, template=None, extras=None, only=None, skip=None, infer_properties_from="vue"
+):
     """
     Connect callback properties on ``instance`` to traitlets on
     ``widget`` bidirectionally.
@@ -243,7 +244,7 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
                 refs.setdefault(wtype, set()).add(prop_name)
         else:
             refs, transforms = _parse_extras(only)
-    elif infer_properties_from == 'python':
+    elif infer_properties_from == "python":
         refs = _discover_properties(instance)
         transforms = {}
 
@@ -302,9 +303,7 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
                 )
                 continue
             to_w, from_w = transforms.get(prop_name, (None, None))
-            handler = handler_cls(instance, prop_name, widget,
-                                  to_widget=to_w, from_widget=from_w,
-                                  initial_sync=False)
+            handler = handler_cls(instance, prop_name, widget, to_widget=to_w, from_widget=from_w, initial_sync=False)
             connections[prop_name] = handler
 
     # Set the initial values, enable sync, and send all state in one
@@ -315,7 +314,7 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
         handler.enable_widget_sync()
         sync_keys.update(handler._sync_trait_names())
 
-    if hasattr(widget, 'send_state') and sync_keys:
+    if hasattr(widget, "send_state") and sync_keys:
         widget.send_state(key=sync_keys)
 
     return connections

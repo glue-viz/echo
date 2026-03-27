@@ -1,8 +1,8 @@
 from datetime import datetime
+from unittest.mock import MagicMock
 
 import pytest
 from numpy import datetime64
-from unittest.mock import MagicMock
 
 from echo import CallbackProperty
 from echo.qt.tests.helpers import SKIP_QT_TEST
@@ -12,22 +12,29 @@ if SKIP_QT_TEST:
 
 from qtpy import QtWidgets
 from qtpy.QtCore import QDateTime, Qt
-from echo.qt.connect import (connect_checkable_button, connect_datetime, connect_text,
-                             connect_combo_data, connect_combo_text,
-                             connect_float_text, connect_value, connect_button,
-                             UserDataWrapper)
+
+from echo.qt.connect import (
+    UserDataWrapper,
+    connect_button,
+    connect_checkable_button,
+    connect_combo_data,
+    connect_combo_text,
+    connect_datetime,
+    connect_float_text,
+    connect_text,
+    connect_value,
+)
 
 
 def test_connect_checkable_button():
-
-    class Test(object):
+    class Test:
         a = CallbackProperty()
         b = CallbackProperty(True)
 
     t = Test()
 
     box1 = QtWidgets.QCheckBox()
-    c1 = connect_checkable_button(t, 'a', box1)  # noqa
+    c1 = connect_checkable_button(t, "a", box1)  # noqa
 
     box1.setChecked(True)
     assert t.a
@@ -44,72 +51,70 @@ def test_connect_checkable_button():
     # Make sure that the default value of the callback property is recognized
 
     box2 = QtWidgets.QCheckBox()
-    connect_checkable_button(t, 'b', box2)
+    connect_checkable_button(t, "b", box2)
 
     assert box2.isChecked()
 
 
 def test_connect_text():
-
-    class Test(object):
+    class Test:
         a = CallbackProperty()
         b = CallbackProperty()
 
     t = Test()
 
     box = QtWidgets.QLineEdit()
-    c1 = connect_text(t, 'a', box)  # noqa
+    c1 = connect_text(t, "a", box)  # noqa
 
     label = QtWidgets.QLabel()
-    c2 = connect_text(t, 'b', label)  # noqa
+    c2 = connect_text(t, "b", label)  # noqa
 
-    box.setText('test1')
+    box.setText("test1")
     box.editingFinished.emit()
-    assert t.a == 'test1'
+    assert t.a == "test1"
 
-    t.a = 'test3'
-    assert box.text() == 'test3'
+    t.a = "test3"
+    assert box.text() == "test3"
 
-    t.b = 'test4'
-    assert label.text() == 'test4'
+    t.b = "test4"
+    assert label.text() == "test4"
 
 
 def test_connect_combo():
-
-    class Test(object):
+    class Test:
         a = CallbackProperty()
         b = CallbackProperty()
 
     t = Test()
 
     combo = QtWidgets.QComboBox()
-    combo.addItem('label1', UserDataWrapper(4))
-    combo.addItem('label2', UserDataWrapper(3.5))
+    combo.addItem("label1", UserDataWrapper(4))
+    combo.addItem("label2", UserDataWrapper(3.5))
 
-    c1 = connect_combo_text(t, 'a', combo)  # noqa
-    c2 = connect_combo_data(t, 'b', combo)  # noqa
+    c1 = connect_combo_text(t, "a", combo)  # noqa
+    c2 = connect_combo_data(t, "b", combo)  # noqa
 
     combo.setCurrentIndex(1)
-    assert t.a == 'label2'
+    assert t.a == "label2"
     assert t.b == 3.5
 
     combo.setCurrentIndex(0)
-    assert t.a == 'label1'
+    assert t.a == "label1"
     assert t.b == 4
 
     combo.setCurrentIndex(-1)
     assert t.a is None
     assert t.b is None
 
-    t.a = 'label2'
+    t.a = "label2"
     assert combo.currentIndex() == 1
 
-    t.a = 'label1'
+    t.a = "label1"
     assert combo.currentIndex() == 0
 
     with pytest.raises(ValueError) as exc:
-        t.a = 'label3'
-    assert exc.value.args[0] == 'label3 not found in combo box'
+        t.a = "label3"
+    assert exc.value.args[0] == "label3 not found in combo box"
 
     t.a = None
     assert combo.currentIndex() == -1
@@ -122,15 +127,14 @@ def test_connect_combo():
 
     with pytest.raises(ValueError) as exc:
         t.b = 2
-    assert exc.value.args[0] == '2 not found in combo box'
+    assert exc.value.args[0] == "2 not found in combo box"
 
     t.b = None
     assert combo.currentIndex() == -1
 
 
 def test_connect_float_text():
-
-    class Test(object):
+    class Test:
         a = CallbackProperty()
         b = CallbackProperty()
         c = CallbackProperty()
@@ -144,33 +148,31 @@ def test_connect_float_text():
     def fmt_func(x):
         return str(int(round(x)))
 
-    c1 = connect_float_text(t, 'a', line1)  # noqa
-    c2 = connect_float_text(t, 'b', line2, fmt="{:5.2f}")  # noqa
-    c3 = connect_float_text(t, 'c', line3, fmt=fmt_func)  # noqa
+    c1 = connect_float_text(t, "a", line1)  # noqa
+    c2 = connect_float_text(t, "b", line2, fmt="{:5.2f}")  # noqa
+    c3 = connect_float_text(t, "c", line3, fmt=fmt_func)  # noqa
 
     for line in (line1, line2):
-
-        line1.setText('1.0')
+        line1.setText("1.0")
         line1.editingFinished.emit()
         assert t.a == 1.0
 
-        line1.setText('banana')
+        line1.setText("banana")
         line1.editingFinished.emit()
         assert t.a == 0.0
 
-    t.a = 3.
-    assert line1.text() == '3'
+    t.a = 3.0
+    assert line1.text() == "3"
 
     t.b = 5.211
-    assert line2.text() == ' 5.21'
+    assert line2.text() == " 5.21"
 
     t.c = -2.222
-    assert line3.text() == '-2'
+    assert line3.text() == "-2"
 
 
 def test_connect_value():
-
-    class Test(object):
+    class Test:
         a = CallbackProperty()
         b = CallbackProperty()
         c = CallbackProperty()
@@ -181,14 +183,14 @@ def test_connect_value():
     slider.setMinimum(0)
     slider.setMaximum(100)
 
-    c1 = connect_value(t, 'a', slider)  # noqa
-    c2 = connect_value(t, 'b', slider, value_range=(0, 10))  # noqa
+    c1 = connect_value(t, "a", slider)  # noqa
+    c2 = connect_value(t, "b", slider, value_range=(0, 10))  # noqa
 
     with pytest.raises(Exception) as exc:
-        connect_value(t, 'c', slider, log=True)
+        connect_value(t, "c", slider, log=True)
     assert exc.value.args[0] == "log option can only be set if value_range is given"
 
-    c3 = connect_value(t, 'c', slider, value_range=(0.01, 100), log=True)  # noqa
+    c3 = connect_value(t, "c", slider, value_range=(0.01, 100), log=True)  # noqa
 
     slider.setValue(25)
     assert t.a == 25
@@ -206,15 +208,14 @@ def test_connect_value():
 
 
 def test_connect_button():
-
-    class Example(object):
+    class Example:
         a = MagicMock()
 
     e = Example()
 
-    button = QtWidgets.QPushButton('OK')
+    button = QtWidgets.QPushButton("OK")
 
-    connect_button(e, 'a', button)
+    connect_button(e, "a", button)
 
     assert e.a.call_count == 0
     button.clicked.emit()
@@ -222,8 +223,7 @@ def test_connect_button():
 
 
 def test_connect_datetime():
-
-    class Example(object):
+    class Example:
         t = CallbackProperty()
 
     e = Example()
@@ -231,7 +231,7 @@ def test_connect_datetime():
     widget = QtWidgets.QDateTimeEdit()
     widget.setTimeSpec(Qt.TimeSpec.UTC)
 
-    conn = connect_datetime(e, 't', widget)  # noqa
+    conn = connect_datetime(e, "t", widget)  # noqa
 
     dt = datetime(2010, 5, 7, 13, 15, 3)
     qdt = QDateTime(dt.date(), dt.time(), Qt.TimeSpec.UTC)

@@ -1,20 +1,26 @@
-import pytest
 from unittest.mock import MagicMock, call
 
-from echo import (CallbackProperty, add_callback,
-                  remove_callback, delay_callback,
-                  ignore_callback, callback_property,
-                  HasCallbackProperties, keep_in_sync)
+import pytest
+
+from echo import (
+    CallbackProperty,
+    HasCallbackProperties,
+    add_callback,
+    callback_property,
+    delay_callback,
+    ignore_callback,
+    keep_in_sync,
+    remove_callback,
+)
 
 
-class Stub(object):
+class Stub:
     prop1 = CallbackProperty()
     prop2 = CallbackProperty(5)
     prop3 = 5
 
 
-class DecoratorStub(object):
-
+class DecoratorStub:
     def __init__(self):
         self._val = 1
 
@@ -47,7 +53,7 @@ def test_class_access():
 def test_callback_fire_on_change():
     stub = Stub()
     test = MagicMock()
-    add_callback(stub, 'prop1', test)
+    add_callback(stub, "prop1", test)
     stub.prop1 = 5
     test.assert_called_once_with(5)
 
@@ -55,7 +61,7 @@ def test_callback_fire_on_change():
 def test_callbacks_only_called_on_value_change():
     stub = Stub()
     test = MagicMock()
-    add_callback(stub, 'prop1', test)
+    add_callback(stub, "prop1", test)
     stub.prop1 = 5
     test.assert_called_once_with(5)
     stub.prop1 = 5
@@ -65,7 +71,7 @@ def test_callbacks_only_called_on_value_change():
 def test_callbacks_are_instance_specific():
     s1, s2 = Stub(), Stub()
     test = MagicMock()
-    add_callback(s2, 'prop1', test)
+    add_callback(s2, "prop1", test)
     s1.prop1 = 100
     assert test.call_count == 0
 
@@ -73,8 +79,8 @@ def test_callbacks_are_instance_specific():
 def test_remove_callback():
     stub = Stub()
     test = MagicMock()
-    add_callback(stub, 'prop1', test)
-    remove_callback(stub, 'prop1', test)
+    add_callback(stub, "prop1", test)
+    remove_callback(stub, "prop1", test)
     stub.prop1 = 5
     assert test.call_count == 0
 
@@ -82,43 +88,43 @@ def test_remove_callback():
 def test_add_callback_attribute_error_on_bad_name():
     stub = Stub()
     with pytest.raises(AttributeError):
-        add_callback(stub, 'bad_property', None)
+        add_callback(stub, "bad_property", None)
 
 
 def test_add_callback_type_error_if_not_calllback():
     stub = Stub()
     with pytest.raises(TypeError) as exc:
-        add_callback(stub, 'prop3', None)
+        add_callback(stub, "prop3", None)
     assert exc.value.args[0] == "prop3 is not a CallbackProperty"
 
 
 def test_remove_callback_attribute_error_on_bad_name():
     stub = Stub()
     with pytest.raises(AttributeError):
-        remove_callback(stub, 'bad_property', None)
+        remove_callback(stub, "bad_property", None)
 
 
 def test_remove_callback_wrong_function():
     stub = Stub()
     test = MagicMock()
     test2 = MagicMock()
-    add_callback(stub, 'prop1', test)
+    add_callback(stub, "prop1", test)
     with pytest.raises(ValueError) as exc:
-        remove_callback(stub, 'prop1', test2)
-    assert exc.value.args[0].startswith('Callback function not found')
+        remove_callback(stub, "prop1", test2)
+    assert exc.value.args[0].startswith("Callback function not found")
 
 
 def test_remove_non_callback_property():
     stub = Stub()
     with pytest.raises(TypeError) as exc:
-        remove_callback(stub, 'prop3', None)
-    assert exc.value.args[0] == 'prop3 is not a CallbackProperty'
+        remove_callback(stub, "prop3", None)
+    assert exc.value.args[0] == "prop3 is not a CallbackProperty"
 
 
 def test_remove_callback_not_found():
     stub = Stub()
     with pytest.raises(ValueError) as exc:
-        remove_callback(stub, 'prop1', None)
+        remove_callback(stub, "prop1", None)
     assert exc.value.args[0] == "Callback function not found: None"
 
 
@@ -126,7 +132,7 @@ def test_disable_callback():
     stub = Stub()
     test = MagicMock()
 
-    add_callback(stub, 'prop1', test)
+    add_callback(stub, "prop1", test)
     Stub.prop1.disable(stub)
 
     stub.prop1 = 100
@@ -143,8 +149,8 @@ def test_delay_callback():
     test = MagicMock()
     stub = Stub()
 
-    add_callback(stub, 'prop1', test)
-    with delay_callback(stub, 'prop1'):
+    add_callback(stub, "prop1", test)
+    with delay_callback(stub, "prop1"):
         stub.prop1 = 100
         stub.prop1 = 200
         stub.prop1 = 300
@@ -156,9 +162,9 @@ def test_delay_callback_nested():
     test = MagicMock()
     stub = Stub()
 
-    add_callback(stub, 'prop1', test)
-    with delay_callback(stub, 'prop1'):
-        with delay_callback(stub, 'prop1'):
+    add_callback(stub, "prop1", test)
+    with delay_callback(stub, "prop1"):
+        with delay_callback(stub, "prop1"):
             stub.prop1 = 100
             stub.prop1 = 200
             stub.prop1 = 300
@@ -170,8 +176,8 @@ def test_delay_callback_nested():
 def test_delay_callback_not_called_if_unmodified():
     test = MagicMock()
     stub = Stub()
-    add_callback(stub, 'prop1', test)
-    with delay_callback(stub, 'prop1'):
+    add_callback(stub, "prop1", test)
+    with delay_callback(stub, "prop1"):
         pass
     assert test.call_count == 0
 
@@ -180,17 +186,17 @@ def test_callback_with_two_arguments():
     stub = Stub()
     stub.prop1 = 5
     on_change = MagicMock()
-    add_callback(stub, 'prop1', on_change, echo_old=True)
+    add_callback(stub, "prop1", on_change, echo_old=True)
     stub.prop1 = 10
 
     on_change.assert_called_once_with(5, 10)
 
 
-@pytest.mark.parametrize('context_func', (delay_callback, ignore_callback))
+@pytest.mark.parametrize("context_func", (delay_callback, ignore_callback))
 def test_context_on_non_callback(context_func):
     stub = Stub()
     with pytest.raises(TypeError) as exc:
-        with context_func(stub, 'prop3'):
+        with context_func(stub, "prop3"):
             pass
     assert exc.value.args[0] == "prop3 is not a CallbackProperty"
 
@@ -200,10 +206,10 @@ def test_delay_multiple():
     test = MagicMock()
     test2 = MagicMock()
 
-    add_callback(stub, 'prop1', test)
-    add_callback(stub, 'prop2', test2)
+    add_callback(stub, "prop1", test)
+    add_callback(stub, "prop2", test2)
 
-    with delay_callback(stub, 'prop1', 'prop2'):
+    with delay_callback(stub, "prop1", "prop2"):
         stub.prop1 = 50
         stub.prop1 = 100
         stub.prop2 = 200
@@ -219,10 +225,10 @@ def test_ignore_multiple():
     test = MagicMock()
     test2 = MagicMock()
 
-    add_callback(stub, 'prop1', test)
-    add_callback(stub, 'prop2', test2)
+    add_callback(stub, "prop1", test)
+    add_callback(stub, "prop2", test2)
 
-    with ignore_callback(stub, 'prop1', 'prop2'):
+    with ignore_callback(stub, "prop1", "prop2"):
         stub.prop1 = 100
         stub.prop2 = 200
         assert test.call_count == 0
@@ -236,14 +242,14 @@ def test_delay_only_calls_if_changed():
     stub = Stub()
     test = MagicMock()
 
-    add_callback(stub, 'prop1', test)
+    add_callback(stub, "prop1", test)
 
-    with delay_callback(stub, 'prop1'):
+    with delay_callback(stub, "prop1"):
         pass
     assert test.call_count == 0
 
     val = stub.prop1
-    with delay_callback(stub, 'prop1'):
+    with delay_callback(stub, "prop1"):
         stub.prop1 = val
     assert test.call_count == 0
 
@@ -251,7 +257,7 @@ def test_delay_only_calls_if_changed():
 def test_decorator_form():
     stub = DecoratorStub()
     test = MagicMock()
-    add_callback(stub, 'prop', test)
+    add_callback(stub, "prop", test)
 
     assert stub.prop == 2
 
@@ -262,16 +268,14 @@ def test_decorator_form():
 
 
 def test_docstring():
-
-    class Simple(object):
-        a = CallbackProperty(docstring='important')
+    class Simple:
+        a = CallbackProperty(docstring="important")
 
     s = Simple()
-    assert type(s).a.__doc__ == 'important'
+    assert type(s).a.__doc__ == "important"
 
 
 class State(HasCallbackProperties):
-
     a = CallbackProperty()
     b = CallbackProperty()
     c = CallbackProperty()
@@ -279,11 +283,9 @@ class State(HasCallbackProperties):
 
 
 def test_class_add_remove_callback():
-
     state = State()
 
-    class mockclass(object):
-
+    class mockclass:
         def __init__(self):
             self.call_count = 0
             self.args = ()
@@ -295,14 +297,14 @@ def test_class_add_remove_callback():
             self.call_count += 1
 
     test1 = mockclass()
-    state.add_callback('a', test1)
+    state.add_callback("a", test1)
 
     # Deliberaty adding to c twice to make sure it works fine with two callbacks
     test2 = mockclass()
-    state.add_callback('c', test2)
+    state.add_callback("c", test2)
 
     test3 = mockclass()
-    state.add_callback('c', test3, echo_old=True)
+    state.add_callback("c", test3, echo_old=True)
 
     test4 = mockclass()
     state.add_global_callback(test4)
@@ -331,7 +333,7 @@ def test_class_add_remove_callback():
     assert test4.call_count == 3
     assert test4.kwargs == dict(c=1)
 
-    state.remove_callback('a', test1)
+    state.remove_callback("a", test1)
 
     state.a = 2
     state.b = 2
@@ -341,7 +343,7 @@ def test_class_add_remove_callback():
     assert test3.call_count == 2
     assert test4.call_count == 6
 
-    state.remove_callback('c', test2)
+    state.remove_callback("c", test2)
 
     state.a = 3
     state.b = 3
@@ -351,7 +353,7 @@ def test_class_add_remove_callback():
     assert test3.call_count == 3
     assert test4.call_count == 9
 
-    state.remove_callback('c', test3)
+    state.remove_callback("c", test3)
 
     state.a = 4
     state.b = 4
@@ -373,36 +375,33 @@ def test_class_add_remove_callback():
 
 
 def test_class_is_callback_property():
-
     state = State()
-    assert state.is_callback_property('a')
-    assert state.is_callback_property('b')
-    assert state.is_callback_property('c')
-    assert not state.is_callback_property('d')
+    assert state.is_callback_property("a")
+    assert state.is_callback_property("b")
+    assert state.is_callback_property("c")
+    assert not state.is_callback_property("d")
 
 
 def test_class_add_remove_callback_invalid():
-
     def callback():
         pass
 
     state = State()
-    state.z = 'banana'
+    state.z = "banana"
     with pytest.raises(TypeError) as exc:
-        state.add_callback('banana', callback)
+        state.add_callback("banana", callback)
     assert exc.value.args[0] == "attribute 'banana' is not a callback property"
     with pytest.raises(TypeError) as exc:
-        state.remove_callback('banana', callback)
+        state.remove_callback("banana", callback)
     assert exc.value.args[0] == "attribute 'banana' is not a callback property"
 
 
 def test_keep_in_sync():
-
-    class State1(object):
+    class State1:
         a = CallbackProperty()
         b = CallbackProperty()
 
-    class State2(object):
+    class State2:
         c = CallbackProperty()
 
     state1 = State1()
@@ -411,8 +410,8 @@ def test_keep_in_sync():
     state1_control = State1()
     state2_control = State2()
 
-    s1 = keep_in_sync(state1, 'a', state1, 'b')
-    s2 = keep_in_sync(state1, 'a', state2, 'c')
+    s1 = keep_in_sync(state1, "a", state1, "b")
+    s2 = keep_in_sync(state1, "a", state2, "c")
 
     state1.a = 1
     assert state1.b == 1
@@ -444,19 +443,17 @@ def test_keep_in_sync():
 
 
 def test_cleanup_when_objects_destroyed():
-
     state = State()
 
-    class BasicClass():
-
+    class BasicClass:
         def __init__(self, s):
             self.s = s
-            self.s.add_callback('a', self.callback)
+            self.s.add_callback("a", self.callback)
             self.raise_error = False
 
         def callback(self, arg):
             if self.raise_error:
-                raise ValueError('Should never get here')
+                raise ValueError("Should never get here")
 
     def isolated(state):
         c = BasicClass(state)
@@ -469,11 +466,9 @@ def test_cleanup_when_objects_destroyed():
 
 
 def test_cleanup_when_objects_destroyed_kwargs():
-
     state = State()
 
-    class BasicClass():
-
+    class BasicClass:
         def __init__(self, s):
             self.s = s
             self.s.add_global_callback(self.callback)
@@ -481,7 +476,7 @@ def test_cleanup_when_objects_destroyed_kwargs():
 
         def callback(self, **kwargs):
             if self.raise_error:
-                raise ValueError('Should never get here')
+                raise ValueError("Should never get here")
 
     def isolated(state):
         c = BasicClass(state)
@@ -494,19 +489,18 @@ def test_cleanup_when_objects_destroyed_kwargs():
 
 
 def test_delay_global_callback():
-
     # Regression test to make sure that delay_callback works for global
     # callbacks too.
 
     state = State()
 
     test1 = MagicMock()
-    state.add_callback('a', test1)
+    state.add_callback("a", test1)
 
     test2 = MagicMock()
     state.add_global_callback(test2)
 
-    with delay_callback(state, 'a'):
+    with delay_callback(state, "a"):
         state.a = 100
         assert test1.call_count == 0
         assert test2.call_count == 0
@@ -516,7 +510,7 @@ def test_delay_global_callback():
 
     test2.reset_mock()
 
-    with delay_callback(state, 'a'):
+    with delay_callback(state, "a"):
         state.b = 200
         assert test2.call_count == 1
 
@@ -524,7 +518,7 @@ def test_delay_global_callback():
 
     test2.reset_mock()
 
-    with delay_callback(state, 'a', 'b'):
+    with delay_callback(state, "a", "b"):
         state.a = 300
         state.b = 400
         assert test2.call_count == 0
@@ -533,16 +527,15 @@ def test_delay_global_callback():
 
 
 def test_delay_global_callback_stub():
-
     # Make sure that adding the global callback delay functionality doesn't
     # break things when we are dealing with a plain class without HasCallbackProperties
 
     stub = Stub()
 
     test1 = MagicMock()
-    add_callback(stub, 'prop1', test1)
+    add_callback(stub, "prop1", test1)
 
-    with delay_callback(stub, 'prop1'):
+    with delay_callback(stub, "prop1"):
         stub.prop1 = 100
         assert test1.call_count == 0
 
@@ -550,19 +543,18 @@ def test_delay_global_callback_stub():
 
 
 def test_ignore_global_callback():
-
     # Regression test to make sure that ignore_callback works for global
     # callbacks too.
 
     state = State()
 
     test1 = MagicMock()
-    state.add_callback('a', test1)
+    state.add_callback("a", test1)
 
     test2 = MagicMock()
     state.add_global_callback(test2)
 
-    with ignore_callback(state, 'a'):
+    with ignore_callback(state, "a"):
         state.a = 100
         assert test1.call_count == 0
         assert test2.call_count == 0
@@ -572,7 +564,7 @@ def test_ignore_global_callback():
 
     test2.reset_mock()
 
-    with ignore_callback(state, 'a'):
+    with ignore_callback(state, "a"):
         state.b = 200
         assert test2.call_count == 1
 
@@ -580,7 +572,7 @@ def test_ignore_global_callback():
 
     test2.reset_mock()
 
-    with ignore_callback(state, 'a', 'b'):
+    with ignore_callback(state, "a", "b"):
         state.a = 300
         state.b = 400
         assert test2.call_count == 0
@@ -589,16 +581,15 @@ def test_ignore_global_callback():
 
 
 def test_ignore_global_callback_stub():
-
     # Make sure that adding the global callback ignore functionality doesn't
     # break things when we are dealing with a plain class without HasCallbackProperties
 
     stub = Stub()
 
     test1 = MagicMock()
-    add_callback(stub, 'prop1', test1)
+    add_callback(stub, "prop1", test1)
 
-    with ignore_callback(stub, 'prop1'):
+    with ignore_callback(stub, "prop1"):
         stub.prop1 = 100
         assert test1.call_count == 0
 
@@ -606,41 +597,38 @@ def test_ignore_global_callback_stub():
 
 
 def test_delay_in_delayed_callback():
-
     # Regression test for a bug that occurred if a delayed callback included
     # a delay itself.
 
     state = State()
 
     def callback(*args, **kwargs):
-        with delay_callback(state, 'a'):
+        with delay_callback(state, "a"):
             state.a = 2
 
-    state.add_callback('a', callback)
+    state.add_callback("a", callback)
 
-    with delay_callback(state, 'a', 'b'):
+    with delay_callback(state, "a", "b"):
         state.a = 100
 
 
 def test_ignore_in_ignored_callback():
-
     # Regression test for a bug that occurred if a delayed callback included
     # a delay itself.
 
     state = State()
 
     def callback(*args, **kwargs):
-        with ignore_callback(state, 'a'):
+        with ignore_callback(state, "a"):
             state.a = 2
 
-    state.add_callback('a', callback)
+    state.add_callback("a", callback)
 
-    with ignore_callback(state, 'a', 'b'):
+    with ignore_callback(state, "a", "b"):
         state.a = 100
 
 
 def test_validator():
-
     state = State()
     state.a = 1
     state.b = 2.2
@@ -650,22 +638,21 @@ def test_validator():
 
     def preserve_type(old_value, new_value):
         if type(new_value) is not type(old_value):
-            raise TypeError('types should not change')
+            raise TypeError("types should not change")
 
-    state.add_callback('a', add_one, validator=True)
-    state.add_callback('b', preserve_type, validator=True, echo_old=True)
+    state.add_callback("a", add_one, validator=True)
+    state.add_callback("b", preserve_type, validator=True, echo_old=True)
 
     state.a = 3
     assert state.a == 4
 
     state.b = 3.2
 
-    with pytest.raises(TypeError, match='types should not change'):
+    with pytest.raises(TypeError, match="types should not change"):
         state.b = 2
 
 
 def test_global_callback_avoid_multiple():
-
     # Regression test for a bug that caused global callbacks to be
     # called even if the value did not change
 
@@ -680,7 +667,7 @@ def test_global_callback_avoid_multiple():
 
     assert test.call_count == 2
 
-    with delay_callback(state, 'a'):
+    with delay_callback(state, "a"):
         state.a = False
         state.a = False
         assert test.call_count == 2
@@ -689,12 +676,10 @@ def test_global_callback_avoid_multiple():
 
 
 def test_undefined_attribute_decorator():
-
     # Regression test for a bug that caused an error when using the
     # @callback_property decorator and global callbacks
 
     class Foo(HasCallbackProperties):
-
         @callback_property
         def x(self):
             return self._x
@@ -713,7 +698,6 @@ def test_undefined_attribute_decorator():
 
 
 def test_priority_order_twoargs():
-
     mock = MagicMock()
 
     def one_arg(value):
@@ -723,8 +707,8 @@ def test_priority_order_twoargs():
         mock(old, new)
 
     state = State()
-    state.add_callback('a', one_arg, priority=10)
-    state.add_callback('a', two_arg, echo_old=True, priority=1000)
+    state.add_callback("a", one_arg, priority=10)
+    state.add_callback("a", two_arg, echo_old=True, priority=1000)
 
     state.a = 2
     calls = [call(None, 2), call(2)]
@@ -733,8 +717,8 @@ def test_priority_order_twoargs():
     mock.reset_mock()
 
     state2 = State()
-    state2.add_callback('a', one_arg, priority=1000)
-    state2.add_callback('a', two_arg, echo_old=True, priority=10)
+    state2.add_callback("a", one_arg, priority=1000)
+    state2.add_callback("a", two_arg, echo_old=True, priority=10)
 
     state2.a = 7
     calls = [call(7), call(None, 7)]

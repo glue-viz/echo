@@ -1,19 +1,24 @@
 import weakref
-from weakref import WeakKeyDictionary
 from contextlib import contextmanager
 from itertools import chain
-
-from .callback_container import CallbackContainer
+from weakref import WeakKeyDictionary
 
 from .alias import CallbackPropertyAlias
+from .callback_container import CallbackContainer
 
-__all__ = ['CallbackProperty', 'callback_property',
-           'add_callback', 'remove_callback',
-           'delay_callback', 'ignore_callback',
-           'HasCallbackProperties', 'keep_in_sync']
+__all__ = [
+    "CallbackProperty",
+    "callback_property",
+    "add_callback",
+    "remove_callback",
+    "delay_callback",
+    "ignore_callback",
+    "HasCallbackProperties",
+    "keep_in_sync",
+]
 
 
-class CallbackProperty(object):
+class CallbackProperty:
     """
     A property that callback functions can be added to.
 
@@ -71,7 +76,6 @@ class CallbackProperty(object):
         return self._getter(instance)
 
     def __set__(self, instance, value):
-
         try:
             old = self.__get__(instance)
         except AttributeError:  # pragma: no cover
@@ -93,7 +97,6 @@ class CallbackProperty(object):
         return self
 
     def _get_full_info(self, instance):
-
         # Some callback subclasses may contain additional info in addition
         # to the main value, and we need to use this full information when
         # comparing old and new 'values', so this method is used in that
@@ -132,9 +135,9 @@ class CallbackProperty(object):
         if not self.enabled(instance):
             return
         iterators = []
-        if (container := self._callbacks.get(instance, None)):
+        if container := self._callbacks.get(instance, None):
             iterators.append((cb, priority, 1) for cb, priority in container.iterator(priority=True, sort=False))
-        if (container := self._2arg_callbacks.get(instance, None)):
+        if container := self._2arg_callbacks.get(instance, None):
             iterators.append((cb, priority, 2) for cb, priority in container.iterator(priority=True, sort=False))
 
         for callback, _priority, args in sorted(chain(*iterators), key=lambda x: x[1], reverse=True):
@@ -242,7 +245,7 @@ class CallbackProperty(object):
                 cb[instance].remove(func)
                 return
         else:
-            raise ValueError("Callback function not found: %s" % func)
+            raise ValueError(f"Callback function not found: {func}")
 
     def clear_callbacks(self, instance):
         """
@@ -255,20 +258,21 @@ class CallbackProperty(object):
             self._disabled.pop(instance)
 
 
-class HasCallbackProperties(object):
+class HasCallbackProperties:
     """
     A class that adds functionality to subclasses that use callback properties.
     """
 
     def __init__(self):
-        from .containers import ListCallbackProperty, DictCallbackProperty
+        from .containers import DictCallbackProperty, ListCallbackProperty
+
         self._global_callbacks = CallbackContainer()
         self._ignored_properties = set()
         self._delayed_properties = {}
         self._delay_global_calls = {}
         self._callback_wrappers = {}
         for prop_name, prop in self.iter_callback_properties():
-            if isinstance(prop, (ListCallbackProperty, DictCallbackProperty)):
+            if isinstance(prop, ListCallbackProperty | DictCallbackProperty):
                 prop.add_callback(self, self._notify_global_listordict)
 
     def _ignore_global_callbacks(self, properties):
@@ -298,10 +302,11 @@ class HasCallbackProperties(object):
         self._notify_global(**kwargs)
 
     def _notify_global_listordict(self, *args):
-        from .containers import ListCallbackProperty, DictCallbackProperty
+        from .containers import DictCallbackProperty, ListCallbackProperty
+
         properties = {}
         for prop_name, prop in self.iter_callback_properties():
-            if isinstance(prop, (ListCallbackProperty, DictCallbackProperty)):
+            if isinstance(prop, ListCallbackProperty | DictCallbackProperty):
                 callback_listordict = getattr(self, prop_name)
                 if callback_listordict is args[0]:
                     properties[prop_name] = callback_listordict
@@ -312,15 +317,17 @@ class HasCallbackProperties(object):
         """
         Return a list of alias names that point to the given property name.
         """
-        return [attr_name for attr_name in dir(type(self))
-                if self.is_alias(attr_name)
-                and getattr(type(self), attr_name)._target == name]
+        return [
+            attr_name
+            for attr_name in dir(type(self))
+            if self.is_alias(attr_name) and getattr(type(self), attr_name)._target == name
+        ]
 
     def _notify_global(self, **kwargs):
         # Add aliases for any properties being notified (for backward compatibility)
-        kwargs.update({alias: value
-                       for prop_name, value in kwargs.items()
-                       for alias in self._get_aliases_for(prop_name)})
+        kwargs.update(
+            {alias: value for prop_name, value in kwargs.items() for alias in self._get_aliases_for(prop_name)}
+        )
 
         for prop in set(self._delayed_properties) | set(self._ignored_properties):
             if prop in kwargs:
@@ -335,7 +342,7 @@ class HasCallbackProperties(object):
         is_callback = self.is_callback_property(attribute) and not self.is_alias(attribute)
         if is_callback:
             previous_value = getattr(self, attribute, None)
-        super(HasCallbackProperties, self).__setattr__(attribute, value)
+        super().__setattr__(attribute, value)
         if is_callback and value != previous_value:
             self._notify_global(**{attribute: value})
 
@@ -362,7 +369,7 @@ class HasCallbackProperties(object):
             callback that gets called *before* the property is set. The
             validator can return a modified value (for example it can be used
             to change the types of values or change properties in-place) or it
-            can also raise an exception.        """
+            can also raise an exception."""
         if self.is_callback_property(name):
             prop = getattr(type(self), name)
             if self.is_alias(name):
@@ -370,7 +377,7 @@ class HasCallbackProperties(object):
                 prop = prop._target_property
             prop.add_callback(self, callback, echo_old=echo_old, priority=priority, validator=validator)
         else:
-            raise TypeError("attribute '{0}' is not a callback property".format(name))
+            raise TypeError(f"attribute '{name}' is not a callback property")
 
     def remove_callback(self, name, callback):
         """
@@ -394,7 +401,7 @@ class HasCallbackProperties(object):
             except ValueError:  # pragma: nocover
                 pass  # Be forgiving if callback was already removed before
         else:
-            raise TypeError("attribute '{0}' is not a callback property".format(name))
+            raise TypeError(f"attribute '{name}' is not a callback property")
 
     def add_global_callback(self, callback):
         """
@@ -431,7 +438,7 @@ class HasCallbackProperties(object):
             The name of the property to check
         """
         prop = getattr(type(self), name, None)
-        return isinstance(prop, (CallbackProperty, CallbackPropertyAlias))
+        return isinstance(prop, CallbackProperty | CallbackPropertyAlias)
 
     def is_alias(self, name):
         """
@@ -538,7 +545,7 @@ def add_callback(instance, prop, callback, echo_old=False, priority=0, validator
     """
     prop, p = _resolve_callback_property(instance, prop)
     if not isinstance(p, CallbackProperty):
-        raise TypeError("%s is not a CallbackProperty" % prop)
+        raise TypeError(f"{prop} is not a CallbackProperty")
     p.add_callback(instance, callback, echo_old=echo_old, priority=priority, validator=validator)
 
 
@@ -557,7 +564,7 @@ def remove_callback(instance, prop, callback):
     """
     prop, p = _resolve_callback_property(instance, prop)
     if not isinstance(p, CallbackProperty):
-        raise TypeError("%s is not a CallbackProperty" % prop)
+        raise TypeError(f"{prop} is not a CallbackProperty")
     p.remove_callback(instance, callback)
 
 
@@ -588,7 +595,7 @@ def callback_property(getter):
     return cb
 
 
-class delay_callback(object):
+class delay_callback:
     """
     Delay any callback functions from one or more callback properties
 
@@ -627,14 +634,12 @@ class delay_callback(object):
         self.props = tuple(_resolve_callback_property(instance, p)[0] for p in props)
 
     def __enter__(self):
-
         delay_props = {}
 
         for prop in self.props:
-
             p = getattr(type(self.instance), prop)
             if not isinstance(p, CallbackProperty):
-                raise TypeError("%s is not a CallbackProperty" % prop)
+                raise TypeError(f"{prop} is not a CallbackProperty")
 
             if (self.instance, prop) not in self.delay_count:
                 self.delay_count[self.instance, prop] = 1
@@ -649,16 +654,14 @@ class delay_callback(object):
             self.instance._delay_global_callbacks(delay_props)
 
     def __exit__(self, *args):
-
         resume_props = {}
 
         notifications = []
 
         for prop in self.props:
-
             p = getattr(type(self.instance), prop)
             if not isinstance(p, CallbackProperty):  # pragma: no cover
-                raise TypeError("%s is not a CallbackProperty" % prop)
+                raise TypeError(f"{prop} is not a CallbackProperty")
 
             if self.delay_count[self.instance, prop] > 1:
                 self.delay_count[self.instance, prop] -= 1
@@ -712,7 +715,7 @@ def ignore_callback(instance, *props):
     for prop in props:
         p = getattr(type(instance), prop)
         if not isinstance(p, CallbackProperty):
-            raise TypeError("%s is not a CallbackProperty" % prop)
+            raise TypeError(f"{prop} is not a CallbackProperty")
         p.disable(instance)
 
     if isinstance(instance, HasCallbackProperties):
@@ -729,10 +732,8 @@ def ignore_callback(instance, *props):
         instance._unignore_global_callbacks(props)
 
 
-class keep_in_sync(object):
-
+class keep_in_sync:
     def __init__(self, instance1, prop1, instance2, prop2):
-
         self.instance1 = weakref.ref(instance1, self.disable_syncing)
         self.prop1 = prop1
 

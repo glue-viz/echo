@@ -41,4 +41,3 @@ Full documentation is avilable `here <http://echo.readthedocs.org/>`__
    :target: https://dev.azure.com/glue-viz/echo/_build/latest?definitionId=4&branchName=master
 .. |Coverage Status| image:: https://codecov.io/gh/glue-viz/echo/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/glue-viz/echo
-
