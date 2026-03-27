@@ -15,6 +15,11 @@ repos:
       - id: check-added-large-files
       - id: mixed-line-ending
 
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.22.0
+    hooks:
+      - id: zizmor
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.2
     hooks:
