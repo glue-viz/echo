@@ -1,4 +1,3 @@
-
 import importlib.metadata as importlib_metadata
 
 __all__ = ["__version__"]
