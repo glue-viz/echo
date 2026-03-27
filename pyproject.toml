@@ -58,3 +58,18 @@ include-package-data = false
 
 [tool.setuptools.packages]
 find = { namespaces = false }
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "UP",   # pyupgrade
+]
+
+[tool.ruff.lint.per-file-ignores]
+"doc/conf.py" = ["E402"]
