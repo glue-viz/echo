@@ -1,38 +1,39 @@
-import pytest
 import numpy as np
+import pytest
 
-from echo.core import CallbackProperty
 from echo.alias import CallbackPropertyAlias
-from echo.selection import SelectionCallbackProperty, ChoiceSeparator
+from echo.core import CallbackProperty
 from echo.qt.tests.helpers import SKIP_QT_TEST
+from echo.selection import ChoiceSeparator, SelectionCallbackProperty
+
 if SKIP_QT_TEST:
     pytest.skip(allow_module_level=True)
 
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
+
 from echo.qt.connect import connect_list_selection
 
 
-class Example(object):
+class Example:
     a = SelectionCallbackProperty(default_index=1)
-    a_alias = CallbackPropertyAlias('a')
+    a_alias = CallbackPropertyAlias("a")
     b = CallbackProperty()
 
 
 def test_connect_list_selection():
-
     t = Example()
 
-    a_prop = getattr(type(t), 'a')
+    a_prop = getattr(type(t), "a")
     a_prop.set_choices(t, [4, 3.5])
-    a_prop.set_display_func(t, lambda x: 'value: {0}'.format(x))
+    a_prop.set_display_func(t, lambda x: f"value: {x}")
 
     list_widget = QtWidgets.QListWidget()
 
-    c1 = connect_list_selection(t, 'a', list_widget)  # noqa
+    c1 = connect_list_selection(t, "a", list_widget)  # noqa
 
-    assert list_widget.item(0).text() == 'value: 4'
-    assert list_widget.item(1).text() == 'value: 3.5'
+    assert list_widget.item(0).text() == "value: 4"
+    assert list_widget.item(1).text() == "value: 3.5"
     assert list_widget.item(0).data(Qt.UserRole).data == 4
     assert list_widget.item(1).data(Qt.UserRole).data == 3.5
 
@@ -55,7 +56,7 @@ def test_connect_list_selection():
 
     with pytest.raises(ValueError) as exc:
         t.a = 2
-    assert exc.value.args[0] == 'value 2 is not in valid choices: [4, 3.5]'
+    assert exc.value.args[0] == "value 2 is not in valid choices: [4, 3.5]"
 
     t.a = None
     assert len(list_widget.selectedItems()) == 0
@@ -74,9 +75,9 @@ def test_connect_list_selection():
     assert len(list_widget.selectedItems()) == 1
     assert list_widget.selectedItems()[0] is list_widget.item(2)
 
-    assert list_widget.item(0).text() == 'value: 4'
-    assert list_widget.item(1).text() == 'value: 5'
-    assert list_widget.item(2).text() == 'value: 3.5'
+    assert list_widget.item(0).text() == "value: 4"
+    assert list_widget.item(1).text() == "value: 5"
+    assert list_widget.item(2).text() == "value: 3.5"
     assert list_widget.item(0).data(Qt.UserRole).data == 4
     assert list_widget.item(1).data(Qt.UserRole).data == 5
     assert list_widget.item(2).data(Qt.UserRole).data == 3.5
@@ -91,9 +92,9 @@ def test_connect_list_selection():
     assert list_widget.selectedItems()[0] is list_widget.item(1)
     assert list_widget.count() == 3
 
-    assert list_widget.item(0).text() == 'value: 4'
-    assert list_widget.item(1).text() == 'value: 5'
-    assert list_widget.item(2).text() == 'value: 6'
+    assert list_widget.item(0).text() == "value: 4"
+    assert list_widget.item(1).text() == "value: 5"
+    assert list_widget.item(2).text() == "value: 6"
     assert list_widget.item(0).data(Qt.UserRole).data == 4
     assert list_widget.item(1).data(Qt.UserRole).data == 5
     assert list_widget.item(2).data(Qt.UserRole).data == 6
@@ -108,16 +109,16 @@ def test_connect_list_selection():
     assert list_widget.selectedItems()[0] is list_widget.item(0)
     assert list_widget.count() == 1
 
-    assert list_widget.item(0).text() == 'value: 9'
+    assert list_widget.item(0).text() == "value: 9"
     assert list_widget.item(0).data(Qt.UserRole).data == 9
 
     # Now just make sure that ChoiceSeparator works
 
-    separator = ChoiceSeparator('header')
+    separator = ChoiceSeparator("header")
     a_prop.set_choices(t, (separator, 1, 2))
 
     assert list_widget.count() == 3
-    assert list_widget.item(0).text() == 'header'
+    assert list_widget.item(0).text() == "header"
     assert list_widget.item(0).data(Qt.UserRole).data is separator
 
     # And setting choices to an empty iterable shouldn't cause issues
@@ -130,14 +131,13 @@ def test_connect_list_selection():
 
 
 def test_connect_list_widget_selection_invalid():
-
     t = Example()
 
     list_widget = QtWidgets.QListWidget()
 
     with pytest.raises(TypeError) as exc:
-        connect_list_selection(t, 'b', list_widget)
-    assert exc.value.args[0] == 'connect_list_selection requires a SelectionCallbackProperty'
+        connect_list_selection(t, "b", list_widget)
+    assert exc.value.args[0] == "connect_list_selection requires a SelectionCallbackProperty"
 
 
 def test_connect_list_selection_via_alias():
@@ -145,18 +145,18 @@ def test_connect_list_selection_via_alias():
 
     t = Example()
 
-    a_prop = getattr(type(t), 'a')
+    a_prop = getattr(type(t), "a")
     a_prop.set_choices(t, [4, 3.5])
-    a_prop.set_display_func(t, lambda x: 'value: {0}'.format(x))
+    a_prop.set_display_func(t, lambda x: f"value: {x}")
 
     list_widget = QtWidgets.QListWidget()
 
     # Connect via the alias - this should work because the alias
     # points to a SelectionCallbackProperty
-    c1 = connect_list_selection(t, 'a_alias', list_widget)  # noqa
+    c1 = connect_list_selection(t, "a_alias", list_widget)  # noqa
 
-    assert list_widget.item(0).text() == 'value: 4'
-    assert list_widget.item(1).text() == 'value: 3.5'
+    assert list_widget.item(0).text() == "value: 4"
+    assert list_widget.item(1).text() == "value: 3.5"
     assert list_widget.item(0).data(Qt.UserRole).data == 4
     assert list_widget.item(1).data(Qt.UserRole).data == 3.5
 

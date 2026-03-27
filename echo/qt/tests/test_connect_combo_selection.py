@@ -1,37 +1,38 @@
-import pytest
 import numpy as np
+import pytest
 
-from echo.core import CallbackProperty
 from echo.alias import CallbackPropertyAlias
-from echo.selection import SelectionCallbackProperty, ChoiceSeparator
+from echo.core import CallbackProperty
 from echo.qt.tests.helpers import SKIP_QT_TEST
+from echo.selection import ChoiceSeparator, SelectionCallbackProperty
+
 if SKIP_QT_TEST:
     pytest.skip(allow_module_level=True)
 
 from qtpy import QtWidgets
+
 from echo.qt.connect import connect_combo_selection
 
 
-class Example(object):
+class Example:
     a = SelectionCallbackProperty(default_index=1)
-    a_alias = CallbackPropertyAlias('a')
+    a_alias = CallbackPropertyAlias("a")
     b = CallbackProperty()
 
 
 def test_connect_combo_selection():
-
     t = Example()
 
-    a_prop = getattr(type(t), 'a')
+    a_prop = getattr(type(t), "a")
     a_prop.set_choices(t, [4, 3.5])
-    a_prop.set_display_func(t, lambda x: 'value: {0}'.format(x))
+    a_prop.set_display_func(t, lambda x: f"value: {x}")
 
     combo = QtWidgets.QComboBox()
 
-    c1 = connect_combo_selection(t, 'a', combo)  # noqa
+    c1 = connect_combo_selection(t, "a", combo)  # noqa
 
-    assert combo.itemText(0) == 'value: 4'
-    assert combo.itemText(1) == 'value: 3.5'
+    assert combo.itemText(0) == "value: 4"
+    assert combo.itemText(1) == "value: 3.5"
     assert combo.itemData(0).data == 4
     assert combo.itemData(1).data == 3.5
 
@@ -52,7 +53,7 @@ def test_connect_combo_selection():
 
     with pytest.raises(ValueError) as exc:
         t.a = 2
-    assert exc.value.args[0] == 'value 2 is not in valid choices: [4, 3.5]'
+    assert exc.value.args[0] == "value 2 is not in valid choices: [4, 3.5]"
 
     t.a = None
     assert combo.currentIndex() == -1
@@ -69,9 +70,9 @@ def test_connect_combo_selection():
     assert t.a == 3.5
     assert combo.currentIndex() == 2
 
-    assert combo.itemText(0) == 'value: 4'
-    assert combo.itemText(1) == 'value: 5'
-    assert combo.itemText(2) == 'value: 3.5'
+    assert combo.itemText(0) == "value: 4"
+    assert combo.itemText(1) == "value: 5"
+    assert combo.itemText(2) == "value: 3.5"
     assert combo.itemData(0).data == 4
     assert combo.itemData(1).data == 5
     assert combo.itemData(2).data == 3.5
@@ -85,9 +86,9 @@ def test_connect_combo_selection():
     assert combo.currentIndex() == 1
     assert combo.count() == 3
 
-    assert combo.itemText(0) == 'value: 4'
-    assert combo.itemText(1) == 'value: 5'
-    assert combo.itemText(2) == 'value: 6'
+    assert combo.itemText(0) == "value: 4"
+    assert combo.itemText(1) == "value: 5"
+    assert combo.itemText(2) == "value: 6"
     assert combo.itemData(0).data == 4
     assert combo.itemData(1).data == 5
     assert combo.itemData(2).data == 6
@@ -101,16 +102,16 @@ def test_connect_combo_selection():
     assert combo.currentIndex() == 0
     assert combo.count() == 1
 
-    assert combo.itemText(0) == 'value: 9'
+    assert combo.itemText(0) == "value: 9"
     assert combo.itemData(0).data == 9
 
     # Now just make sure that ChoiceSeparator works
 
-    separator = ChoiceSeparator('header')
+    separator = ChoiceSeparator("header")
     a_prop.set_choices(t, (separator, 1, 2))
 
     assert combo.count() == 3
-    assert combo.itemText(0) == 'header'
+    assert combo.itemText(0) == "header"
     assert combo.itemData(0).data is separator
 
     # And setting choices to an empty iterable shouldn't cause issues
@@ -123,14 +124,13 @@ def test_connect_combo_selection():
 
 
 def test_connect_combo_selection_invalid():
-
     t = Example()
 
     combo = QtWidgets.QComboBox()
 
     with pytest.raises(TypeError) as exc:
-        connect_combo_selection(t, 'b', combo)
-    assert exc.value.args[0] == 'connect_combo_selection requires a SelectionCallbackProperty'
+        connect_combo_selection(t, "b", combo)
+    assert exc.value.args[0] == "connect_combo_selection requires a SelectionCallbackProperty"
 
 
 def test_connect_combo_selection_via_alias():
@@ -138,18 +138,18 @@ def test_connect_combo_selection_via_alias():
 
     t = Example()
 
-    a_prop = getattr(type(t), 'a')
+    a_prop = getattr(type(t), "a")
     a_prop.set_choices(t, [4, 3.5])
-    a_prop.set_display_func(t, lambda x: 'value: {0}'.format(x))
+    a_prop.set_display_func(t, lambda x: f"value: {x}")
 
     combo = QtWidgets.QComboBox()
 
     # Connect via the alias - this should work because the alias
     # points to a SelectionCallbackProperty
-    c1 = connect_combo_selection(t, 'a_alias', combo)  # noqa
+    c1 = connect_combo_selection(t, "a_alias", combo)  # noqa
 
-    assert combo.itemText(0) == 'value: 4'
-    assert combo.itemText(1) == 'value: 3.5'
+    assert combo.itemText(0) == "value: 4"
+    assert combo.itemText(1) == "value: 3.5"
     assert combo.itemData(0).data == 4
     assert combo.itemData(1).data == 3.5
 

@@ -1,10 +1,10 @@
 import weakref
 from functools import partial
 
-__all__ = ['CallbackContainer']
+__all__ = ["CallbackContainer"]
 
 
-class CallbackContainer(object):
+class CallbackContainer:
     """
     A list-like container for callback functions. We need to be careful with
     storing references to methods, because if a callback method is on a class
@@ -30,17 +30,13 @@ class CallbackContainer(object):
             raise TypeError("Only callable values can be stored in CallbackContainer")
 
         elif self.is_bound_method(value):
-
             # We are dealing with a bound method. Method references aren't
             # persistent, so instead we store a reference to the function
             # and instance.
 
-            value = (weakref.ref(value.__func__),
-                     weakref.ref(value.__self__, self._auto_remove),
-                     priority)
+            value = (weakref.ref(value.__func__), weakref.ref(value.__self__, self._auto_remove), priority)
 
         else:
-
             value = (value, priority)
 
         return value
@@ -110,15 +106,14 @@ class CallbackContainer(object):
                 yield result
 
     def __iter__(self):
-        for callback in self.iterator():
-            yield callback
+        yield from self.iterator()
 
     def __len__(self):
         return len(self.callbacks)
 
     @staticmethod
     def is_bound_method(func):
-        return hasattr(func, '__func__') and getattr(func, '__self__', None) is not None
+        return hasattr(func, "__func__") and getattr(func, "__self__", None) is not None
 
     def append(self, value, priority=0):
         # If we already have the same callback with the same priority, we can ignore

@@ -1,7 +1,7 @@
-__all__ = ['CallbackPropertyAlias']
+__all__ = ["CallbackPropertyAlias"]
 
 
-class CallbackPropertyAlias(object):
+class CallbackPropertyAlias:
     """
     An alias for a CallbackProperty that redirects access to a target property.
 
@@ -51,6 +51,7 @@ class CallbackPropertyAlias(object):
     def _warn(self):
         if self._deprecated:
             import warnings
+
             message = self._warning or f"'{self._name}' is deprecated, use '{self._target}' instead"
             warnings.warn(message, DeprecationWarning, stacklevel=3)
 
@@ -67,11 +68,10 @@ class CallbackPropertyAlias(object):
     def __getattr__(self, attr):
         # Proxy attribute access to the target property (e.g., for
         # SelectionCallbackProperty.get_choices, set_choices, etc.)
-        if attr.startswith('_'):
+        if attr.startswith("_"):
             raise AttributeError(attr)
         if self._owner is None:
-            raise AttributeError(
-                f"Cannot access '{attr}' before class is fully defined")
+            raise AttributeError(f"Cannot access '{attr}' before class is fully defined")
         target_prop = getattr(self._owner, self._target)
         return getattr(target_prop, attr)
 

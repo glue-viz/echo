@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.getLogger('echo')
+logger = logging.getLogger("echo")
 
 # Global flag: when True, new widgets are automatically instrumented
 _comm_logging_enabled = False
@@ -41,7 +41,7 @@ def _enable_comm_logging_if_requested(widget):
     widget_id = id(widget)
     if widget_id in _patched_widgets:
         return
-    if not hasattr(widget, '_send') or not hasattr(widget, 'set_state'):
+    if not hasattr(widget, "_send") or not hasattr(widget, "set_state"):
         return
 
     original_send = widget._send
@@ -51,13 +51,13 @@ def _enable_comm_logging_if_requested(widget):
     label = type(widget).__name__
 
     def _logged_send(msg, buffers=None):
-        if msg.get('method') == 'update':
-            state = msg.get('state', {})
-            logger.debug('[PY->VUE] %s: %s', label, repr(state))
+        if msg.get("method") == "update":
+            state = msg.get("state", {})
+            logger.debug("[PY->VUE] %s: %s", label, repr(state))
         return original_send(msg, buffers=buffers)
 
     def _logged_set_state(sync_data):
-        logger.debug('[VUE->PY] %s: %s', label, repr(sync_data))
+        logger.debug("[VUE->PY] %s: %s", label, repr(sync_data))
         return original_set_state(sync_data)
 
     widget._send = _logged_send

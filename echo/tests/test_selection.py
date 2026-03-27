@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from ..core import HasCallbackProperties, delay_callback
-from ..selection import SelectionCallbackProperty, ChoiceSeparator
+from ..selection import ChoiceSeparator, SelectionCallbackProperty
 
 
 class Example(HasCallbackProperties):
@@ -11,8 +12,7 @@ class Example(HasCallbackProperties):
     c = SelectionCallbackProperty(default_index=-1)
 
 
-class TestSelectionCallbackProperty():
-
+class TestSelectionCallbackProperty:
     def setup_method(self, method):
         self.state = Example()
         self.a = Example.a
@@ -31,7 +31,6 @@ class TestSelectionCallbackProperty():
         assert self.state.a is None
 
     def test_set_value(self):
-
         # Since there are no choices set yet, the properties cannot be set to
         # any values yet.
         with pytest.raises(ValueError) as exc:
@@ -49,7 +48,6 @@ class TestSelectionCallbackProperty():
         assert exc.value.args[0] == "value 3 is not in valid choices: [1, 2]"
 
     def test_value_constant(self):
-
         # Make sure that the value is preserved if possible
 
         self.a.set_choices(self.state, [1, 2])
@@ -65,7 +63,6 @@ class TestSelectionCallbackProperty():
         assert self.state.a == 1
 
     def test_get_choices(self):
-
         self.a.set_choices(self.state, [1, 2])
         self.a.get_choices == [1, 2]
 
@@ -73,29 +70,27 @@ class TestSelectionCallbackProperty():
         self.a.get_choices == [2, 5, 3]
 
     def test_display_func(self):
-
-        separator = ChoiceSeparator('header')
+        separator = ChoiceSeparator("header")
 
         self.a.set_choices(self.state, [separator, 1, 2])
-        self.a.get_choice_labels(self.state) == ['header', '1', '2']
+        self.a.get_choice_labels(self.state) == ["header", "1", "2"]
         assert self.a.get_display_func(self.state) is None
         assert self.b.get_display_func(self.state) is None
 
         def val(x):
-            return 'val{0}'.format(x)
+            return f"val{x}"
 
         self.a.set_display_func(self.state, val)
-        self.a.get_choice_labels(self.state) == ['header', 'val1', 'val2']
+        self.a.get_choice_labels(self.state) == ["header", "val1", "val2"]
         assert self.a.get_display_func(self.state) is val
         assert self.b.get_display_func(self.state) is None
 
     def test_callbacks(self):
-
         # Make sure that callbacks are called when either choices or selection
         # are changed
 
         func = MagicMock()
-        self.state.add_callback('a', func)
+        self.state.add_callback("a", func)
 
         self.a.set_choices(self.state, [1, 2, 3])
         func.assert_called_with(1)
@@ -107,25 +102,23 @@ class TestSelectionCallbackProperty():
         func.assert_called_with(4)
 
     def test_choice_separator(self):
-
-        separator = ChoiceSeparator('header')
+        separator = ChoiceSeparator("header")
         self.a.set_choices(self.state, [separator, 1, 2])
 
         assert self.state.a == 1
 
-        separator = ChoiceSeparator('header')
+        separator = ChoiceSeparator("header")
         self.a.set_choices(self.state, [separator])
 
         assert self.state.a is None
 
     def test_delay(self):
-
         func = MagicMock()
-        self.state.add_callback('a', func)
+        self.state.add_callback("a", func)
 
         # Here we set the choices and as a result the selection changes from
         # None to a value, so the callback is called after the delay block
-        with delay_callback(self.state, 'a'):
+        with delay_callback(self.state, "a"):
             self.a.set_choices(self.state, [4, 5, 6])
             assert func.call_count == 0
         func.assert_called_once_with(4)
@@ -133,7 +126,7 @@ class TestSelectionCallbackProperty():
 
         # Check that the callback gets called even if only the choices
         # but not the selection are changed in a delay block
-        with delay_callback(self.state, 'a'):
+        with delay_callback(self.state, "a"):
             self.a.set_choices(self.state, [1, 2, 4])
             assert func.call_count == 0
         func.assert_called_once_with(4)
