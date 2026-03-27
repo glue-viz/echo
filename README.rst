@@ -1,4 +1,4 @@
-|Azure Status| |Coverage status|
+|CI Status| |Coverage Status| |PyPI Version|
 
 echo: Callback Properties in Python
 ===================================
@@ -37,7 +37,9 @@ CalllbackProperties can also be built using decorators
 
 Full documentation is avilable `here <http://echo.readthedocs.org/>`__
 
-.. |Azure Status| image:: https://dev.azure.com/glue-viz/echo/_apis/build/status/glue-viz.echo?branchName=master
-   :target: https://dev.azure.com/glue-viz/echo/_build/latest?definitionId=4&branchName=master
-.. |Coverage Status| image:: https://codecov.io/gh/glue-viz/echo/branch/master/graph/badge.svg
+.. |CI Status| image:: https://github.com/glue-viz/echo/actions/workflows/ci_workflows.yml/badge.svg
+   :target: https://github.com/glue-viz/echo/actions/workflows/ci_workflows.yml
+.. |Coverage Status| image:: https://codecov.io/gh/glue-viz/echo/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/glue-viz/echo
+.. |PyPI Version| image:: https://img.shields.io/pypi/v/echo.svg
+   :target: https://pypi.org/project/echo/
