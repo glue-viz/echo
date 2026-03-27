@@ -292,6 +292,8 @@ def autoconnect_callbacks_to_vue(instance, widget, template=None, extras=None,
         handler_cls = HANDLERS[wtype]
         for prop_name in prop_names:
             if not instance.is_callback_property(prop_name):
+                if widget.has_trait(prop_name):
+                    continue
                 warnings.warn(
                     f"Vue template references '{prop_name}' (type={wtype}) "
                     f"but '{prop_name}' is not a callback property on "
