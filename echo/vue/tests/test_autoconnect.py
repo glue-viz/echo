@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 traitlets = pytest.importorskip("traitlets")
@@ -160,6 +162,23 @@ def test_template_warns_on_unmatched_ref():
     widget = SimpleWidget()
     with pytest.warns(UserWarning, match="'nonexistent' is not a callback property"):
         autoconnect_callbacks_to_vue(state, widget, template=template)
+
+
+def test_no_warning_when_widget_has_trait():
+    """No warning when template references a trait that exists on the widget but not on the state."""
+    template = '<template><v-text-field v-model="custom_txt" /><v-switch v-model="x_log" /></template>'
+    state = ViewerState()
+
+    class WidgetWithTrait(traitlets.HasTraits):
+        custom_txt = traitlets.Unicode('hello').tag(sync=True)
+
+    widget = WidgetWithTrait()
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        handlers = autoconnect_callbacks_to_vue(state, widget, template=template)
+    # custom_txt should be skipped (not connected), x_log should be connected
+    assert 'custom_txt' not in handlers
+    assert 'x_log' in handlers
 
 
 def test_template_empty():
