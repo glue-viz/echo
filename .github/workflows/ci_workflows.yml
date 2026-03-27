@@ -12,7 +12,7 @@ permissions: {}
 
 jobs:
   tests:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@a2e0af7c20b84890b3a72de89c24c3382d6847fb  # v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@e97344095b099e1d729fe97429078c9975921d8a  # v2
     with:
       coverage: codecov
       display: true
@@ -76,7 +76,7 @@ jobs:
 
   build:
     needs: tests
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@a2e0af7c20b84890b3a72de89c24c3382d6847fb  # v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@e97344095b099e1d729fe97429078c9975921d8a  # v2
     with:
       save_artifacts: true
       upload_to_pypi: false
