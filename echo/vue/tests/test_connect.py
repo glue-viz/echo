@@ -1,6 +1,7 @@
 import pytest
 
 traitlets = pytest.importorskip("traitlets")
+ipywidgets = pytest.importorskip("ipywidgets")
 
 from echo import (  # noqa: E402  # noqa: E402
     CallbackProperty,
@@ -8,7 +9,9 @@ from echo import (  # noqa: E402  # noqa: E402
     HasCallbackProperties,
     ListCallbackProperty,
     SelectionCallbackProperty,
+    delay_callback,
 )
+from echo.vue._autoconnect import autoconnect_callbacks_to_vue  # noqa: E402
 from echo.vue._connect import (  # noqa: E402
     connect_any,
     connect_bool,
@@ -360,3 +363,69 @@ def test_transforms(connect_cls, prop, initial, new_state, new_widget):
     setattr(widget, prop, new_widget)
     assert getattr(state, prop) == new_widget
     conn.disconnect()
+
+
+class CommTrackingWidget(ipywidgets.DOMWidget):
+    """DOMWidget subclass that captures comm messages instead of sending them.
+
+    Uses the real ipywidgets hold_sync/send_state/notify_change pipeline
+    but overrides _send and notify_change to work without a live kernel.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sends = []
+
+    def _send(self, msg, buffers=None):
+        self.sends.append(msg)
+
+    def notify_change(self, change):
+        # Replicate the ipywidgets notify_change logic but without
+        # the comm/kernel guard that blocks send_state in test envs.
+        name = change["name"]
+        if name in self.keys and self._should_send_property(name, getattr(self, name)):
+            self.send_state(key=name)
+        super(ipywidgets.DOMWidget, self).notify_change(change)
+
+
+class FourPropState(HasCallbackProperties):
+    a = CallbackProperty(0.0)
+    b = CallbackProperty(0.0)
+    c = CallbackProperty(0.0)
+    d = CallbackProperty(0.0)
+
+
+FOUR_SLIDER_TEMPLATE = """
+<template>
+    <v-slider :value.sync="a" />
+    <v-slider :value.sync="b" />
+    <v-slider :value.sync="c" />
+    <v-slider :value.sync="d" />
+</template>
+"""
+
+
+def test_delay_callback_batches_comms():
+    """When delay_callback exits with multiple changed properties,
+    only one comm message should be sent to the frontend."""
+    state = FourPropState()
+    widget = CommTrackingWidget()
+    autoconnect_callbacks_to_vue(state, widget, template=FOUR_SLIDER_TEMPLATE)
+
+    # Clear any messages from initial setup
+    widget.sends.clear()
+
+    with delay_callback(state, "a", "b", "c", "d"):
+        state.a = 1.0
+        state.b = 2.0
+        state.c = 3.0
+        state.d = 4.0
+
+    # All four values should have synced to the widget
+    assert widget.a == 1.0
+    assert widget.b == 2.0
+    assert widget.c == 3.0
+    assert widget.d == 4.0
+
+    # Should be one batched comm message, not four individual ones
+    assert len(widget.sends) == 1

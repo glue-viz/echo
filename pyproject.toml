@@ -40,6 +40,7 @@ vue = [
 test = [
   "pytest",
   "pytest-cov",
+  "ipywidgets",
 ]
 
 [project.urls]
