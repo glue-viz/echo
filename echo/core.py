@@ -1,5 +1,5 @@
 import weakref
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from itertools import chain
 from weakref import WeakKeyDictionary
 
@@ -271,6 +271,7 @@ class HasCallbackProperties:
         self._delayed_properties = {}
         self._delay_global_calls = {}
         self._callback_wrappers = {}
+        self._notify_context_managers = []
         for prop_name, prop in self.iter_callback_properties():
             if isinstance(prop, ListCallbackProperty | DictCallbackProperty):
                 prop.add_callback(self, self._notify_global_listordict)
@@ -677,8 +678,15 @@ class delay_callback:
         if isinstance(self.instance, HasCallbackProperties):
             self.instance._process_delayed_global_callbacks(resume_props)
 
-        for p, args in notifications:
-            p.notify(*args)
+        if cms := getattr(self.instance, "_notify_context_managers", None):
+            with ExitStack() as stack:
+                for cm_factory in cms:
+                    stack.enter_context(cm_factory())
+                for p, args in notifications:
+                    p.notify(*args)
+        else:
+            for p, args in notifications:
+                p.notify(*args)
 
 
 @contextmanager

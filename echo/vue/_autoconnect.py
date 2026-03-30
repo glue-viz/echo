@@ -317,4 +317,9 @@ def autoconnect_callbacks_to_vue(
     if hasattr(widget, "send_state") and sync_keys:
         widget.send_state(key=sync_keys)
 
+    # Register hold_sync so that delay_callback batches widget updates
+    # into a single comm message instead of one per property.
+    if hasattr(widget, "hold_sync") and hasattr(instance, "_notify_context_managers"):
+        instance._notify_context_managers.append(widget.hold_sync)
+
     return connections
