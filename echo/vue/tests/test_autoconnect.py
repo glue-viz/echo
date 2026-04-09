@@ -759,9 +759,7 @@ def test_prefix_template_bidirectional():
     """prefix maps callback properties to prefixed widget traitlets."""
     state = ViewerState()
     widget = SimpleWidget()
-    handlers = autoconnect_callbacks_to_vue(
-        state, widget, template=PREFIXED_TEMPLATE, prefix="state_"
-    )
+    handlers = autoconnect_callbacks_to_vue(state, widget, template=PREFIXED_TEMPLATE, prefix="state_")
 
     assert "x_log" in handlers
     assert "x_min" in handlers
@@ -813,9 +811,7 @@ def test_prefix_only():
     """prefix works with the only parameter."""
     state = ViewerState()
     widget = SimpleWidget()
-    handlers = autoconnect_callbacks_to_vue(
-        state, widget, only={"x_min": "float", "x_log": "bool"}, prefix="s_"
-    )
+    handlers = autoconnect_callbacks_to_vue(state, widget, only={"x_min": "float", "x_log": "bool"}, prefix="s_")
     assert set(handlers) == {"x_min", "x_log"}
     assert hasattr(widget, "s_x_min")
     assert hasattr(widget, "s_x_log")
@@ -834,9 +830,7 @@ def test_prefix_infer_from_python():
 
     state = SmallState()
     widget = SimpleWidget()
-    handlers = autoconnect_callbacks_to_vue(
-        state, widget, infer_properties_from="python", prefix="vue_"
-    )
+    handlers = autoconnect_callbacks_to_vue(state, widget, infer_properties_from="python", prefix="vue_")
     assert "value" in handlers
     assert hasattr(widget, "vue_value")
     state.value = 99

@@ -279,10 +279,7 @@ def autoconnect_callbacks_to_vue(
         if prefix:
             stripped = {}
             for wtype, names in refs.items():
-                stripped[wtype] = {
-                    name[len(prefix):] if name.startswith(prefix) else name
-                    for name in names
-                }
+                stripped[wtype] = {name[len(prefix) :] if name.startswith(prefix) else name for name in names}
             refs = stripped
 
         if extras:
@@ -328,7 +325,15 @@ def autoconnect_callbacks_to_vue(
                     widget_prop = prefix + prop_name
             else:
                 widget_prop = None
-            handler = handler_cls(instance, prop_name, widget, widget_prop=widget_prop, to_widget=to_w, from_widget=from_w, initial_sync=False)
+            handler = handler_cls(
+                instance,
+                prop_name,
+                widget,
+                widget_prop=widget_prop,
+                to_widget=to_w,
+                from_widget=from_w,
+                initial_sync=False,
+            )
             connections[prop_name] = handler
 
     # Set the initial values, enable sync, and send all state in one
