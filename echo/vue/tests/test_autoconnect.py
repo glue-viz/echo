@@ -738,3 +738,108 @@ def test_infer_from_python_with_extras():
     assert widget.value == "10"
     widget.value = "42"
     assert state.value == 42
+
+
+# --- Prefix tests ---
+
+
+PREFIXED_TEMPLATE = """
+<template>
+    <div>
+        <v-switch v-model="state_x_log" />
+        <v-slider :value.sync="state_x_min" />
+        <v-text-field v-model="state_title" />
+        <v-select :items="state_x_att_items" v-model="state_x_att_selected" />
+    </div>
+</template>
+"""
+
+
+def test_prefix_template_bidirectional():
+    """prefix maps callback properties to prefixed widget traitlets."""
+    state = ViewerState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(
+        state, widget, template=PREFIXED_TEMPLATE, prefix="state_"
+    )
+
+    assert "x_log" in handlers
+    assert "x_min" in handlers
+    assert "title" in handlers
+    assert "x_att" in handlers
+
+    # Widget traits should have the prefix
+    assert hasattr(widget, "state_x_log")
+    assert hasattr(widget, "state_x_min")
+    assert hasattr(widget, "state_title")
+    assert hasattr(widget, "state_x_att_items")
+    assert hasattr(widget, "state_x_att_selected")
+
+    # Unprefixed traits should NOT exist
+    assert not hasattr(widget, "x_log")
+    assert not hasattr(widget, "x_min")
+    assert not hasattr(widget, "title")
+
+    # Bool: state -> widget -> state
+    assert widget.state_x_log is False
+    state.x_log = True
+    assert widget.state_x_log is True
+    widget.state_x_log = False
+    assert state.x_log is False
+
+    # Float: state -> widget -> state
+    assert widget.state_x_min == -10.0
+    state.x_min = 5.0
+    assert widget.state_x_min == 5.0
+    widget.state_x_min = 99.0
+    assert state.x_min == 99.0
+
+    # Text: state -> widget -> state
+    assert widget.state_title == "My Plot"
+    state.title = "New"
+    assert widget.state_title == "New"
+    widget.state_title = "From Widget"
+    assert state.title == "From Widget"
+
+    # Selection: state -> widget -> state
+    assert len(widget.state_x_att_items) == 3
+    state.x_att = "z"
+    assert widget.state_x_att_selected == 2
+    widget.state_x_att_selected = 1
+    assert state.x_att == "y"
+
+
+def test_prefix_only():
+    """prefix works with the only parameter."""
+    state = ViewerState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(
+        state, widget, only={"x_min": "float", "x_log": "bool"}, prefix="s_"
+    )
+    assert set(handlers) == {"x_min", "x_log"}
+    assert hasattr(widget, "s_x_min")
+    assert hasattr(widget, "s_x_log")
+
+    state.x_min = 42.0
+    assert widget.s_x_min == 42.0
+    widget.s_x_log = True
+    assert state.x_log is True
+
+
+def test_prefix_infer_from_python():
+    """prefix works with infer_properties_from='python'."""
+
+    class SmallState(HasCallbackProperties):
+        value = CallbackProperty(10)
+
+    state = SmallState()
+    widget = SimpleWidget()
+    handlers = autoconnect_callbacks_to_vue(
+        state, widget, infer_properties_from="python", prefix="vue_"
+    )
+    assert "value" in handlers
+    assert hasattr(widget, "vue_value")
+    state.value = 99
+    assert widget.vue_value == 99
+    widget.vue_value = 7
+    assert state.value == 7

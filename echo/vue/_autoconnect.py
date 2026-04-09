@@ -181,7 +181,7 @@ def _parse_extras(extras):
 
 
 def autoconnect_callbacks_to_vue(
-    instance, widget, template=None, extras=None, only=None, skip=None, infer_properties_from="vue"
+    instance, widget, template=None, extras=None, only=None, skip=None, infer_properties_from="vue", prefix=""
 ):
     """
     Connect callback properties on ``instance`` to traitlets on
@@ -229,6 +229,12 @@ def autoconnect_callbacks_to_vue(
         ``extras``.
     skip : set, optional
         Property names to skip (no warning, no connection).
+    prefix : str, optional
+        A prefix to prepend to the widget traitlet names. For example,
+        with ``prefix='state_'``, a callback property ``x_min`` will
+        sync to a widget traitlet named ``state_x_min``. When using
+        ``infer_properties_from='vue'``, the template should reference
+        the prefixed names (e.g. ``state_x_min``).
 
     Returns
     -------
@@ -268,6 +274,17 @@ def autoconnect_callbacks_to_vue(
         refs = _parse_template(template)
         transforms = {}
 
+        # When a prefix is set, template bindings use prefixed names
+        # (e.g. state_x_min) — strip the prefix to get callback property names.
+        if prefix:
+            stripped = {}
+            for wtype, names in refs.items():
+                stripped[wtype] = {
+                    name[len(prefix):] if name.startswith(prefix) else name
+                    for name in names
+                }
+            refs = stripped
+
         if extras:
             extra_refs, transforms = _parse_extras(extras)
             # Extras override any template-discovered type for the same
@@ -293,7 +310,8 @@ def autoconnect_callbacks_to_vue(
         handler_cls = HANDLERS[wtype]
         for prop_name in prop_names:
             if not instance.is_callback_property(prop_name):
-                if widget.has_trait(prop_name):
+                widget_prop_check = prefix + prop_name if prefix else prop_name
+                if widget.has_trait(widget_prop_check):
                     continue
                 warnings.warn(
                     f"Vue template references '{prop_name}' (type={wtype}) "
@@ -303,7 +321,14 @@ def autoconnect_callbacks_to_vue(
                 )
                 continue
             to_w, from_w = transforms.get(prop_name, (None, None))
-            handler = handler_cls(instance, prop_name, widget, to_widget=to_w, from_widget=from_w, initial_sync=False)
+            if prefix:
+                if wtype == "selection":
+                    widget_prop = prefix + prop_name + "_selected"
+                else:
+                    widget_prop = prefix + prop_name
+            else:
+                widget_prop = None
+            handler = handler_cls(instance, prop_name, widget, widget_prop=widget_prop, to_widget=to_w, from_widget=from_w, initial_sync=False)
             connections[prop_name] = handler
 
     # Set the initial values, enable sync, and send all state in one
