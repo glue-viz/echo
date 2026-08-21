@@ -152,6 +152,7 @@ class TestConnectChoice:
         items = self.widget.color_items
         assert len(items) == 3
         assert items[0]["text"] == "RED"
+        assert items[0]["title"] == "RED"
         assert items[1]["text"] == "GREEN"
         assert items[2]["text"] == "BLUE"
 

@@ -213,7 +213,7 @@ class connect_choice(BaseConnection):
         self._updating = True
         try:
             choices, labels = self._get_choices()
-            items = [{"text": label, "value": i} for i, label in enumerate(labels)]
+            items = [{"text": label, "title": label, "value": i} for i, label in enumerate(labels)]
             setattr(self._widget, self._items_prop, items)
             current = getattr(self._instance, self._prop)
             if current in choices:
