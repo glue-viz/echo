@@ -62,12 +62,21 @@ The connection type is inferred from the Vue component tag:
 * ``v-select``, ``v-combobox``, ``v-autocomplete`` -- selection property
 
 For custom components not in the default mapping, use the ``echo-type``
-attribute to specify the connection type::
+attribute to specify the connection type. With ipyvue/ipyvuetify 1.x
+(Vue/Vuetify 2), use ``:value.sync``::
 
     <glue-float-field :value.sync="x_min" echo-type="float" />
 
+With ipyvue/ipyvuetify 3.x (Vue/Vuetify 3), use the argument-based
+``v-model:value`` syntax::
+
+    <glue-float-field v-model:value="x_min" echo-type="float" />
+
 The supported ``echo-type`` values are: ``bool``, ``int``, ``float``,
 ``text``, ``selection``, ``list``, ``dict``, and ``any``.
+
+Selection items contain both a ``text`` key for ipyvuetify 1.x (Vuetify 2)
+and a ``title`` key for ipyvuetify 3.x (Vuetify 3).
 
 Only properties referenced in the template that match callback properties
 on the state object are connected. A warning is issued if the template
