@@ -151,10 +151,9 @@ class TestConnectChoice:
     def test_items_populated(self):
         items = self.widget.color_items
         assert len(items) == 3
-        assert items[0]["text"] == "RED"
-        assert items[0]["title"] == "RED"
-        assert items[1]["text"] == "GREEN"
-        assert items[2]["text"] == "BLUE"
+        assert items[0]["text"] == items[0]["title"] == "RED"
+        assert items[1]["text"] == items[1]["title"] == "GREEN"
+        assert items[2]["text"] == items[2]["title"] == "BLUE"
 
     def test_state_to_widget(self):
         self.state.color = "blue"
