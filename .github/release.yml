@@ -1,7 +1,12 @@
 changelog:
   exclude:
     authors:
-      - pre-commit-ci
+      - dependabot[bot]
+      - pre-commit-ci[bot]
+    labels:
+      - no-changelog-entry-needed
+      - skip-changelog
+
   categories:
     - title: Bug Fixes
       labels:
@@ -11,7 +16,7 @@ changelog:
         - enhancement
     - title: Documentation
       labels:
-        - Documentation
+        - documentation
     - title: Performance
       labels:
         - performance
