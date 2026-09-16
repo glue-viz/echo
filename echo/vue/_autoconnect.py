@@ -41,7 +41,7 @@ TAG_TYPE_MAP = {
 }
 
 # Attribute names that bind a Vue template expression to a traitlet.
-_BINDING_ATTRS = {"v-model", ":items", ":value.sync", "v-model.number"}
+_BINDING_ATTRS = {"v-model", ":items", ":value.sync", "v-model.number", "v-model:value"}
 
 
 class _TemplateParser(HTMLParser):

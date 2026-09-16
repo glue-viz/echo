@@ -226,9 +226,10 @@ def test_text_field_number_type():
     assert "text" not in refs
 
 
-def test_unknown_tag_warns():
+@pytest.mark.parametrize("binding", [':value.sync="x_min"', 'v-model:value="x_min"'])
+def test_unknown_tag_warns(binding):
     """Unknown tag without echo-type warns and skips."""
-    template = '<template><glue-float-field :value.sync="x_min" /></template>'
+    template = f"<template><glue-float-field {binding} /></template>"
     state = ViewerState()
     widget = SimpleWidget()
     with pytest.warns(UserWarning, match="unknown tag.*no echo-type"):
@@ -238,7 +239,7 @@ def test_unknown_tag_warns():
 
 def test_unknown_tag_with_echo_type():
     """Unknown tag with echo-type works correctly."""
-    template = '<template><glue-float-field :value.sync="x_min" echo-type="float" /></template>'
+    template = '<template><glue-float-field v-model:value="x_min" echo-type="float" /></template>'
     state = ViewerState()
     widget = SimpleWidget()
     handlers = autoconnect_callbacks_to_vue(state, widget, template=template)
