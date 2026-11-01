@@ -14,7 +14,7 @@ jobs:
   tests:
     permissions:
       id-token: write
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@e5af21e4ae37af089a73bb032e10b78b0e746174  # v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1  # v2
     with:
       coverage: codecov-oidc
       display: true
@@ -78,7 +78,7 @@ jobs:
 
   build:
     needs: tests
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@e5af21e4ae37af089a73bb032e10b78b0e746174  # v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1  # v2
     with:
       save_artifacts: true
       upload_to_pypi: false
@@ -96,11 +96,11 @@ jobs:
       id-token: write
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           merge-multiple: true
           pattern: dist-*
           path: dist
 
       - name: Run upload
-        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247  # release/v1
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # release/v1
