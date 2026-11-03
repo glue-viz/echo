@@ -604,3 +604,121 @@ def test_list_multiple():
 
     assert test1.call_count == 2
     assert test2.call_count == 2
+
+
+def require_int(value):
+    if not isinstance(value, int):
+        raise TypeError(f"{value!r} is not an integer")
+    return value
+
+
+class ValidatedList(HasCallbackProperties):
+    prop = ListCallbackProperty(item_validator=require_int)
+    doubled = ListCallbackProperty(item_validator=lambda value: value * 2)
+
+
+class ValidatedDict(HasCallbackProperties):
+    prop = DictCallbackProperty(item_validator=require_int)
+    doubled = DictCallbackProperty(item_validator=lambda value: value * 2)
+
+
+@pytest.mark.parametrize(
+    "modify",
+    [
+        lambda prop: prop.append("a"),
+        lambda prop: prop.extend([3, "a"]),
+        lambda prop: prop.insert(0, "a"),
+        lambda prop: prop.__setitem__(0, "a"),
+        lambda prop: prop.__setitem__(slice(None), [3, "a"]),
+    ],
+)
+def test_list_property_item_validator_in_place(modify):
+    stub = ValidatedList()
+    stub.prop = [1, 2]
+    callback = MagicMock()
+    stub.add_callback("prop", callback)
+
+    with pytest.raises(TypeError, match="'a' is not an integer"):
+        modify(stub.prop)
+
+    assert stub.prop == [1, 2]
+    assert callback.call_count == 0
+
+
+def test_list_property_item_validator_assignment():
+    stub = ValidatedList()
+    stub.prop = [1, 2]
+    callback = MagicMock()
+    stub.add_callback("prop", callback)
+
+    # A failed assignment leaves the existing list in place
+    with pytest.raises(TypeError, match="'a' is not an integer"):
+        stub.prop = [3, "a"]
+    assert stub.prop == [1, 2]
+    assert callback.call_count == 0
+
+    # The validator still applies to the list after it has been replaced
+    stub.prop = [3]
+    with pytest.raises(TypeError, match="'a' is not an integer"):
+        stub.prop.append("a")
+    assert stub.prop == [3]
+
+
+def test_list_property_item_validator_modifies_items():
+    stub = ValidatedList()
+    stub.doubled = [1, 2]
+    stub.doubled.append(3)
+    stub.doubled[0] = 4
+    assert stub.doubled == [8, 4, 6]
+
+
+def test_list_property_item_validator_default():
+    class InvalidDefault(HasCallbackProperties):
+        prop = ListCallbackProperty(["a"], item_validator=require_int)
+
+    with pytest.raises(TypeError, match="'a' is not an integer"):
+        InvalidDefault().prop
+
+
+@pytest.mark.parametrize(
+    "modify",
+    [
+        lambda prop: prop.__setitem__("b", "a"),
+        lambda prop: prop.update({"c": 3, "b": "a"}),
+    ],
+)
+def test_dict_property_item_validator_in_place(modify):
+    stub = ValidatedDict()
+    stub.prop = {"x": 1}
+    callback = MagicMock()
+    stub.add_callback("prop", callback)
+
+    with pytest.raises(TypeError, match="'a' is not an integer"):
+        modify(stub.prop)
+
+    assert stub.prop == {"x": 1}
+    assert callback.call_count == 0
+
+
+def test_dict_property_item_validator_assignment():
+    stub = ValidatedDict()
+    stub.prop = {"x": 1}
+
+    # A failed assignment leaves the existing dictionary in place
+    with pytest.raises(TypeError, match="'a' is not an integer"):
+        stub.prop = {"y": "a"}
+    assert stub.prop == {"x": 1}
+
+    # The validator still applies to the dictionary after it has been replaced
+    stub.prop = {"y": 2}
+    with pytest.raises(TypeError, match="'a' is not an integer"):
+        stub.prop["z"] = "a"
+    assert stub.prop == {"y": 2}
+
+
+def test_dict_property_item_validator_modifies_values():
+    stub = ValidatedDict()
+    stub.doubled = {"x": 1}
+    stub.doubled["y"] = 2
+    stub.doubled.update({"z": 3})
+    assert stub.doubled == {"x": 2, "y": 4, "z": 6}

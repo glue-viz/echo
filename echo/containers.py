@@ -203,7 +203,20 @@ class dynamic_callback:
 class ListCallbackProperty(CallbackProperty):
     """
     A list property that calls callbacks when its contents are modified
+
+    Parameters
+    ----------
+    item_validator : func, optional
+        A function that is called with each item before it is added to the
+        list, whether the list is assigned as a whole or modified in place.
+        It can return the item as-is, modify it, or raise an exception to
+        prevent the change. All other arguments are passed to
+        `~echo.CallbackProperty`.
     """
+
+    def __init__(self, *args, item_validator=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._item_validator = item_validator
 
     def _default_getter(self, instance, owner=None):
         if instance not in self._values:
@@ -214,9 +227,16 @@ class ListCallbackProperty(CallbackProperty):
         if not isinstance(value, list):
             raise TypeError("callback property should be a list")
 
+        # Validate the items before replacing the existing list so that a
+        # failed validation leaves the property unchanged
+        if self._item_validator is not None:
+            value = [self._item_validator(item) for item in value]
+
         dcb = dynamic_callback()
 
         wrapped_list = CallbackList(dcb, value)
+        if self._item_validator is not None:
+            wrapped_list.add_callback(self._item_validator, validator=True)
         _instance = weakref.ref(instance)
 
         def callback(*args, **kwargs):
@@ -231,7 +251,20 @@ class ListCallbackProperty(CallbackProperty):
 class DictCallbackProperty(CallbackProperty):
     """
     A dictionary property that calls callbacks when its contents are modified
+
+    Parameters
+    ----------
+    item_validator : func, optional
+        A function that is called with each value (not key) before it is added
+        to the dictionary, whether the dictionary is assigned as a whole or
+        modified in place. It can return the value as-is, modify it, or raise
+        an exception to prevent the change. All other arguments are passed to
+        `~echo.CallbackProperty`.
     """
+
+    def __init__(self, *args, item_validator=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._item_validator = item_validator
 
     def _default_getter(self, instance, owner=None):
         if instance not in self._values:
@@ -242,9 +275,16 @@ class DictCallbackProperty(CallbackProperty):
         if not isinstance(value, dict):
             raise TypeError("Callback property should be a dictionary.")
 
+        # Validate the values before replacing the existing dictionary so that
+        # a failed validation leaves the property unchanged
+        if self._item_validator is not None:
+            value = {key: self._item_validator(item) for key, item in value.items()}
+
         dcb = dynamic_callback()
 
         wrapped_dict = CallbackDict(dcb, value)
+        if self._item_validator is not None:
+            wrapped_dict.add_callback(self._item_validator, validator=True)
         _instance = weakref.ref(instance)
 
         def callback(*args, **kwargs):
