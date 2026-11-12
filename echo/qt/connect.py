@@ -417,6 +417,18 @@ def _find_combo_text(widget, value):
         return i
 
 
+def _enum_to_int(value):
+    # Qt enums and flags are Python enums in Qt 6 bindings but are int-like
+    # in Qt 5 bindings.
+    return value.value if hasattr(value, "value") else int(value)
+
+
+# The role under which QStandardItem stores its flags, and the default role
+# used by QStandardItem.setData
+_ITEM_FLAGS_ROLE = _enum_to_int(Qt.UserRole) - 1
+_ITEM_DATA_ROLE = _enum_to_int(Qt.UserRole) + 1
+
+
 class connect_combo_selection(BaseConnection):
     def __init__(self, instance, prop, widget):
         prop_obj = getattr(type(instance), prop)
@@ -455,10 +467,24 @@ class connect_combo_selection(BaseConnection):
 
                 # We interpret None data as being disabled rows (used for headers)
                 if isinstance(choice, ChoiceSeparator):
-                    item = combo_model.item(index)
+                    # We deliberately go through the model rather than
+                    # fetching the QStandardItem with combo_model.item(index).
+                    # With PySide, the Python wrapper for the item is kept
+                    # alive by the wrapper for the model, but the underlying
+                    # C++ item is deleted the next time the combo box is
+                    # cleared, and this leads to segmentation faults when the
+                    # model is later garbage collected.
+                    model_index = combo_model.index(index, 0)
+                    flags = combo_model.flags(model_index) & ~(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                    # QStandardItem stores its flags under the Qt.UserRole - 1
+                    # role, so setting this is equivalent to item.setFlags
+                    combo_model.setData(model_index, _enum_to_int(flags), _ITEM_FLAGS_ROLE)
                     palette = self._widget.palette()
-                    item.setFlags(item.flags() & ~(Qt.ItemIsSelectable | Qt.ItemIsEnabled))
-                    item.setData(palette.color(QtGui.QPalette.Disabled, QtGui.QPalette.Text))
+                    combo_model.setData(
+                        model_index,
+                        palette.color(QtGui.QPalette.Disabled, QtGui.QPalette.Text),
+                        _ITEM_DATA_ROLE,
+                    )
 
             choices_updated = True
 

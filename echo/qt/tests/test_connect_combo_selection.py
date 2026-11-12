@@ -1,3 +1,5 @@
+import gc
+
 import numpy as np
 import pytest
 
@@ -10,6 +12,7 @@ if SKIP_QT_TEST:
     pytest.skip(allow_module_level=True)
 
 from qtpy import QtWidgets
+from qtpy.QtCore import Qt
 
 from echo.qt.connect import connect_combo_selection
 
@@ -114,6 +117,15 @@ def test_connect_combo_selection():
     assert combo.itemText(0) == "header"
     assert combo.itemData(0).data is separator
 
+    # The separator should be neither enabled nor selectable, in contrast to
+    # the other choices
+
+    model = combo.model()
+    assert not model.flags(model.index(0, 0)) & Qt.ItemIsEnabled
+    assert not model.flags(model.index(0, 0)) & Qt.ItemIsSelectable
+    assert model.flags(model.index(1, 0)) & Qt.ItemIsEnabled
+    assert model.flags(model.index(1, 0)) & Qt.ItemIsSelectable
+
     # And setting choices to an empty iterable shouldn't cause issues
 
     a_prop.set_choices(t, ())
@@ -121,6 +133,32 @@ def test_connect_combo_selection():
 
     # Try including an array in the choices
     a_prop.set_choices(t, (4, 5, np.array([1, 2, 3])))
+
+
+def test_connect_combo_selection_separator_garbage_collection():
+    # Regression test for a segmentation fault with PySide, which happened if
+    # choices that included separators were replaced and the combo box was
+    # then garbage collected. This was because Python wrappers for the items
+    # for the separators were kept alive after the items had been deleted.
+
+    t = Example()
+    a_prop = getattr(type(t), "a")
+
+    combo = QtWidgets.QComboBox()
+    connection = connect_combo_selection(t, "a", combo)
+
+    for iteration in range(10):
+        choices = [ChoiceSeparator(f"header {iteration}")]
+        choices += list(range(iteration + 1))
+        choices += [ChoiceSeparator("other header"), -1]
+        a_prop.set_choices(t, choices)
+        assert combo.count() == len(choices)
+
+    # Put the combo box in a reference cycle so that it is only deleted by
+    # the garbage collector
+    combo.cycle = combo
+    del combo, connection
+    gc.collect()
 
 
 def test_connect_combo_selection_invalid():
